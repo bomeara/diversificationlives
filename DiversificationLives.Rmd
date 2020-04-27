@@ -1,0 +1,47 @@
+---
+title: "Diversification Lives"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, cache=TRUE)
+```
+
+Brownian motion is at the heart of many comparative methods: independent contrasts, ancestral state reconstruction, and more rely on this model. Evolutionary trends are long a topic of great interest in comparative methods: horses getting bigger with fewer toes, evolutionary arms races between predators and prey, and more. It is trivial to add a parameter to Brownian motion models to allow for the mean to evolve along a trend; the likelihood for such models given actual data is finite, and the simple no trend model is even nested within the trend model, so comparisons between a trend and no trend model is very easy. One could do a lot of great biology if you could compare these models on trees of modern taxa, but it's impossible: the likelihood of any trend model on a tree with equal root to top lengths for all taxa is exactly identical. So much as we might want to use this, these models are not identifiable for these kinds of trees.
+
+However, it's a long way from saying these models aren't identifiable to saying any model using Brownian motion is impossible to use on trees of modern taxa. We can compare Brownian motion models with more complex models that are identifiable, such as Ornstein-Uhlenbeck models, Brownian models with more than one rate, models where the rate changes over time, and much more. So yes, Brownian motion with a trend models are unidentifiable on chronograms of modern taxa, but we do not say that any model that attempts to estimate rates of evolution on such trees are impossible. Some models in this space give the same likelihoods and cannot be distinguished, but many others can -- this calls for care and analysis, not panic.
+
+Louca and Pennell (2020) found that models trying to estimate speciation and extinction rates changing through time, with all taxa at a given time having identical rates, were not uniquely identifiable. This is of real, practical concern: thousands of papers have used these methods and draw conclusions based on which models fit best or, less often, based on parameter estimates from these models. This is a significant, surprising discovery: any conclusions based on LTT / laser / treepar / __ need to be questioned; __,000 papers cite these papers. However, this paper, and the Pagel (2020) commentary on it, draw conclusions about the impossibility of any estimation of speciation, extinction, or diversification rates from trees due to the failure of one subset of methods that seek to do this. In fact, the possibility of trait-dependent diversification models still working is left unresolved (Louca and Pennell (2020), S.6) -- the authors believe the chance of identifiability is slim but acknowledge this is not proven. It could be worth distinguishing the methods that are weeds from those that are useful before burning a field to the ground.
+
+For models that do not change speciation and extinction over time, there is a well-behaved likelihood surface (Pagel et al. 1994), complete with a peak. 
+
+```{r plotsurface}
+library(geiger)
+library(TreePar)
+library(ggplot2)
+true.b <- 0.4
+true.d <- 0.2
+npoints <- 101
+phy <- geiger::sim.bdtree(b=true.b, d=true.d, stop="time",t=20, seed=1859)
+phy.pruned <- geiger::drop.extinct(phy)
+b.vector <- seq(from=0,to=1, length.out=npoints)+1/(10*npoints) #offset just a smidge to deal with TreePar's failure to handle b==d
+d.vector <- seq(from=0,to=1, length.out=npoints)
+parameters <- expand.grid(b=b.vector, d=d.vector, negloglikelihood=NA)
+parameters <- subset(parameters, b>0)
+x <- ape::branching.times(phy.pruned)
+for (i in sequence(nrow(parameters))) {
+  parameters$negloglikelihood[i] <- TreePar::LikConstant(lambda=parameters$b[i], mu=parameters$d[i], sampling=1, x=x)
+}
+#p <- ggplot(parameters, aes(x=d, y=b, z=negloglikelihood)) + geom_contour_filled()
+# smooth it a bit -- handles the case of TreePar failing if b=d
+# parameters.smoothed <- akima::interp(parameters$b, parameters$d, parameters$negloglikelihood, xo=seq(min(parameters$b), max(parameters$b), length = 1000),
+#                    yo=seq(min(parameters$d), max(parameters$d), length = 1000))
+# parameters.df <- data.frame(b=parameters.smoothed$x, d=parameters.smoothed$y, negloglikelihood=parameters.smoothed$z)
+p <- ggplot(parameters) + geom_contour(aes(x=d, y=b, z=negloglikelihood), color="darkgray", bins=100)
+p <- p+annotate("text", x=true.d, y=true.b, label="Truth")
+p <- p+annotate("text", x=parameters$d[which.min(parameters$negloglikelihood)], y=parameters$b[which.min(parameters$negloglikelihood)], label="MLE")
+p
+```
+
+
+
