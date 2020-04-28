@@ -1,7 +1,6 @@
 ---
 title: "Diversification Lives"
 output:
-  word_document: default
   pdf_document: default
   html_document: default
 ---
@@ -16,12 +15,14 @@ However, it's a long way from saying these models aren't identifiable to saying 
 
 Louca and Pennell (2020) found that models trying to estimate speciation and extinction rates changing through time, with all taxa at a given time having identical rates, were not uniquely identifiable. This is of real, practical concern: thousands of papers have used these methods and draw conclusions based on which models fit best or, less often, based on parameter estimates from these models. This is a significant, surprising discovery: any conclusions based on LTT / laser / treepar / __ need to be questioned; __,000 papers cite these papers. However, this paper, and the Pagel (2020) commentary on it, draw conclusions about the impossibility of any estimation of speciation, extinction, or diversification rates from trees due to the failure of one subset of methods that seek to do this. In fact, the possibility of trait-dependent diversification models still working is left unresolved (Louca and Pennell (2020), S.6) -- the authors believe the chance of identifiability is slim but acknowledge this is not proven. It could be worth distinguishing the methods that are weeds from those that are useful before burning a field to the ground.
 
-For models that do not change speciation and extinction over time, there is a well-behaved likelihood surface (Pagel et al. 1994), complete with a peak. 
+For models that do not change speciation and extinction over time, there is a well-behaved likelihood surface (Nee et al. 1994), complete with a peak. 
 
-```{r plotsurface}
+```{r plotsurface, fig.cap="Likelihood surface for constant rate birth death model. Birth rate = 0.4, death rate = 0.2, total time of 20. MLE shows the maximum likelihood point; Actual shows the true generating values; the red contour line shows all the points within 2 lnL units of the best point."}
 library(geiger)
 library(TreePar)
 library(ggplot2)
+library(phytools)
+#library(interp)
 true.b <- 0.4
 true.d <- 0.2
 npoints <- 101
@@ -40,11 +41,74 @@ for (i in sequence(nrow(parameters))) {
 # parameters.smoothed <- akima::interp(parameters$b, parameters$d, parameters$negloglikelihood, xo=seq(min(parameters$b), max(parameters$b), length = 1000),
 #                    yo=seq(min(parameters$d), max(parameters$d), length = 1000))
 # parameters.df <- data.frame(b=parameters.smoothed$x, d=parameters.smoothed$y, negloglikelihood=parameters.smoothed$z)
-p <- ggplot(parameters) + geom_contour(aes(x=d, y=b, z=negloglikelihood), color="darkgray", bins=100)
-p <- p+annotate("text", x=true.d, y=true.b, label="Truth")
-p <- p+annotate("text", x=parameters$d[which.min(parameters$negloglikelihood)], y=parameters$b[which.min(parameters$negloglikelihood)], label="MLE")
+p <- ggplot(parameters) + geom_contour_filled(aes(x=d, y=b, z=negloglikelihood),  bins=25) + geom_contour(aes(x=d, y=b, z=negloglikelihood), color="darkgray", bins=100) + geom_contour(aes(x=d, y=b, z=negloglikelihood), color="red", breaks=2+min(parameters$negloglikelihood)) + theme(legend.position = "none") + coord_equal()
+p <- p+annotate("text", x=true.d, y=true.b, label="Truth", color="white")
+p <- p+annotate("text", x=parameters$d[which.min(parameters$negloglikelihood)], y=parameters$b[which.min(parameters$negloglikelihood)], label="MLE", color="white")
 print(p)
+
+# parameters$ef <- parameters$d/parameters$b
+# parameters$netdiv <- parameters$b - parameters$d
+# 
+# parameters.truncated <- parameters
+# parameters.truncated <- subset(parameters.truncated, ef<2)
+# 
+# q <- ggplot(parameters.truncated) + geom_point(aes(x=ef, y=netdiv))
+
+# parameters.interp <- interp::interp(x=parameters$ef, y=parameters$netdiv, z=parameters$negloglikelihood, output = "points", xo=seq(from=0, to=2, length.out=npoints), yo=seq(from=min(parameters$netdiv), to=max(parameters$netdiv), length.out=npoints))
+# parameters.interp.df <- data.frame(ef=parameters.interp$x, netdiv=parameters.interp$y, negloglikelihood=parameters.interp$z)
+# 
+# q <- ggplot(parameters.interp.df) + geom_contour_filled(aes(x=ef, y=netdiv, z=negloglikelihood),  bins=25) + geom_contour(aes(x=ef, y=netdiv, z=negloglikelihood), color="darkgray", bins=100)
+
+#+ geom_contour(aes(x=d, y=b, z=negloglikelihood), color="red", breaks=2+min(parameters.interpt.df$negloglikelihood)) + theme(legend.position = "none") + coord_equal()
+#q <- q+annotate("text", x=true.d, y=true.b, label="Truth", color="white")
+#q <- q+annotate("text", x=parameters$d[which.min(parameters$negloglikelihood)], y=parameters$b[which.min(parameters$negloglikelihood)], label="MLE", color="white")
+print(q)
 ```
 
+As shown by the above plot (which mimics a similar one by Nee et al. 1994), there is a well-defined peak, albeit substantial uncertainty: not surprising, given the size of this tree (`r ape::Ntip(phy.pruned)` taxa), but it has long been known that extinction is hard to estimate (Nee__), but not impossible (___us__). The identifiability issues of models that allow speciation and/or extinction rates to gradually change have also long been known, but sadly ignored. Kubo and Iwasa (1995) showed that a gradual speciation rate change model with constant extinction rate could produce the same lineage through time curve as a constant speciation rate model with gradual extinction rate change, but, rather than just presenting this troubling special case, as their work was categorized by Louca and Pennell (2020), they explicitly state that "There are infinitely many cases intermediate between these two that also generate the same ln(N_t) pattern, in which both the branching rate and the extinction rate change with time." 
 
+So, for the past quarter century, we should have known that attempting to estimate gradually changing speciation and/or extinction rates over trees leads to identifiability issues. And yet the field has merrily moved on with such methods (_____). How is this? One may be that this paper was largely overlooked: it has only 55 citations, and much citation seems to be regarding this paper as an early demonstration of the difficulty of estimating extinction rates on trees of extant taxa, which is indeed a main point. This paper is less pessimistic than Louca and Pennell (2020) or Pagel (2020), for example, showing that a discrete increase in speciation rate can be detected, perhaps another reason for ignoring its cautions. Another is that scientists have been willing to fix parameters to make models based on lineage through time data tractable, collapsing the model identifiability issue. Many early methods assumed extinction rate was zero (___), despite spectactular counterexamples (__Irish elk__). Later methods allowed extinction rate to be higher than zero, but constant over time (____), or, less commonly, fixed speciation rate as constant but allowed extinction to vary (___). This has led to to a focus on net diversification or speciation since they are easier to estimate and more typically allowed to vary, even though there is ample evidence that extinction rate can vary dramatically and importantly. 
+
+However, all the caveats raised by Kubo and Iwasa (1995) and Louca and Pennell (2020) apply to models with at least one of speciation or extinction rates smoothly varying over the tree, with every taxon at a given time point experiencing the same rates. [Note that Kubo and Iwasa (1995), do caution about the practical difficulties of estimating extinction rate as well, even in the constant case]. We do know unchanging speciation and extinction rates are identifiable (___). Adding unknown sampling fraction (Stadler ___), makes it possible to estimate only two of speciation, extinction, or sampling fraction, but, of these, biologists may be most willing to use non-phylogenetic external estimates of sampling fraction. So, for a given tree with constant speciation and extinction rate and known sampling fraction, we can estimate these two rates. 
+
+What about two trees? If for a single tree we can estimate speciation and extinction rates, surely we can repeat this for a different tree and get its own estimates. But of course, no trees are completely independent: they are subtrees of a larger tree. If we assume these two trees are sister clades, we can estimate one set of rates for the left clade and one for the right clade. 
+
+```{r twotrees}
+left <- geiger::sim.bdtree(b=true.b, d=0, stop="taxa",n=20, seed=1994)
+left$tip.label <- gsub("s","A", left$tip.label)
+right <- geiger::sim.bdtree(b=3*true.b, d=0, stop="taxa",n=20, seed=1995)
+right$tip.label <- gsub("s","B", right$tip.label)
+
+left$root.edge <- 0.1*max(branching.times(left))
+right$root.edge <- max(branching.times(left)) - max(branching.times(right))
+together <- ape::bind.tree(left, right)
+tips <- c(rep(0, ape::Ntip(left)), rep(1, ape::Ntip(right)))
+names(tips) <- c(left$tip.label, right$tip.label)
+phytools::plotBranchbyTrait(together, tips, mode="tips", legend=FALSE)
+```
+
+Well then, what if we can take a chunk of one clade and put it on the other clade?  
+
+```{r swap}
+subclades.right <- phytools::getCladesofSize(right, clade.size=2)
+chosen <- subclades.right[[which(lapply(subclades.right, ape::Ntip)==2)[1]]]
+together.swap <- drop.tip(together, chosen$tip.label)
+chosen.depth <- max(branching.times(chosen))
+together.swap <- ape::bind.tree(together.swap,chosen, where=which(together.swap$tip.label=="A7"), position=chosen.depth)
+phytools::plotBranchbyTrait(together.swap, tips, mode="tips", legend=FALSE)
+```
+
+In theory, if we know the mapping, we can still estimate the speciation and extinction rates on the red and blue parts of the tree.
+
+Now imagine a more complex mapping of traits on a tree:
+
+```{r nni}
+together.sse <- geiger::sim.bdtree(b=true.b, d=0, stop="taxa",n=40, seed=2007)
+together.sse$tip.label <- sample(together$tip.label, size=length(together$tip.label), replace=FALSE)
+phytools::plotBranchbyTrait(together.sse, tips, mode="tips", legend=FALSE)
+```
+
+If we have a perfect mapping of which parts are from which tree, we could separately estimate the speciation and extinction rates for each.
+
+This is almost BiSSE (Maddison et al. 2007), but it requires a character model, as well.
 
