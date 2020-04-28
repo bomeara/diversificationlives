@@ -1,6 +1,9 @@
 ---
 title: "Diversification Lives"
-output: html_document
+output:
+  word_document: default
+  pdf_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -40,7 +43,7 @@ for (i in sequence(nrow(parameters))) {
 p <- ggplot(parameters) + geom_contour(aes(x=d, y=b, z=negloglikelihood), color="darkgray", bins=100)
 p <- p+annotate("text", x=true.d, y=true.b, label="Truth")
 p <- p+annotate("text", x=parameters$d[which.min(parameters$negloglikelihood)], y=parameters$b[which.min(parameters$negloglikelihood)], label="MLE")
-p
+print(p)
 ```
 
 
