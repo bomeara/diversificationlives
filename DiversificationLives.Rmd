@@ -9,42 +9,98 @@ output:
 knitr::opts_chunk$set(echo = FALSE, cache=TRUE)
 ```
 
-Brownian motion is at the heart of many comparative methods: independent contrasts, ancestral state reconstruction, and more rely on this model. Evolutionary trends are long a topic of great interest in comparative methods: horses getting bigger with fewer toes, evolutionary arms races between predators and prey, and more. It is trivial to add a parameter to Brownian motion models to allow for the mean to evolve along a trend; the likelihood for such models given actual data is finite, and the simple no trend model is even nested within the trend model, so comparisons between a trend and no trend model is very easy. One could do a lot of great biology if you could compare these models on trees of modern taxa, but it's impossible: the likelihood of any trend model on a tree with equal root to top lengths for all taxa is exactly identical. So much as we might want to use this, these models are not identifiable for these kinds of trees.
+There has long been a debate in phylogenetics about the possibility of estimating speciation and extinction rates from trees of extant species. Nee et al. (1994) showed that, mathematically, both rates could be estimated; Kubo and Iwasa (1995) showed that estimation of extinction rate had high uncertainty and that an infinite array of models with gradually changing speciation and/or extinction rates would be indistiguishable; Rabosky (___) showed that a constant rate model could get bad estimates if the true model were one with rapidly changing speciation rates; Beaulieu and O'Meara (__) showed that for more biologically plausible models and large enough trees that a constant rate model could still work. There are a wide variety of papers developing models that seek to fit changing speciation or extinction rates using modern trees (___), some, given the empirical difficulties in estimating extinction rates, seek to estimate just their difference, the diversification rate (_____), often by assuming extinction rate is constant. There are also a wide array of models that examine the correlation of traits with diversification, speciation, and/or extinction rates (______), collectively known as SSE models (for state speciation and extinction). There are over __,000 papers that cite these models.
 
-However, it's a long way from saying these models aren't identifiable to saying any model using Brownian motion is impossible to use on trees of modern taxa. We can compare Brownian motion models with more complex models that are identifiable, such as Ornstein-Uhlenbeck models, Brownian models with more than one rate, models where the rate changes over time, and much more. So yes, Brownian motion with a trend models are unidentifiable on chronograms of modern taxa, but we do not say that any model that attempts to estimate rates of evolution on such trees are impossible. Some models in this space give the same likelihoods and cannot be distinguished, but many others can -- this calls for care and analysis, not panic.
+Louca and Pennell (2020), and the Pagel (2020) commentary on this, put all of this enterprise in doubt. Formally, Louca and Pennell (2020) present a substantially similar argument, though much more detailed, to the one presented by Kubo and Iwasa (1995) a quarter century ago that for a given phylogeny, there are an infinite array of models that have speciation and/or extinction rate smoothly vary through time that can equally well fit the tree. Their solution is not to give up all analyses of how diversification has changed through time from modern chronograms, but instead use the pulled diversification rate to examine patterns of variation through time: look at one parameter that does not map to a biological process, in the same way that effective population size is a useful parameter in population genetics that does not map directly to a readily observable biological estimate like census population size. However, the popular interpretation of their work, assisted by reviews such as Pagel (2020), is that any attempt to learn about diversification from modern chronograms is futile. This interpretation is not correct.
 
-Louca and Pennell (2020) found that models trying to estimate speciation and extinction rates changing through time, with all taxa at a given time having identical rates, were not uniquely identifiable. This is of real, practical concern: thousands of papers have used these methods and draw conclusions based on which models fit best or, less often, based on parameter estimates from these models. This is a significant, surprising discovery: any conclusions based on LTT / laser / treepar / __ need to be questioned; __,000 papers cite these papers. However, this paper, and the Pagel (2020) commentary on it, draw conclusions about the impossibility of any estimation of speciation, extinction, or diversification rates from trees due to the failure of one subset of methods that seek to do this. In fact, the possibility of trait-dependent diversification models still working is left unresolved (Louca and Pennell (2020), S.6) -- the authors believe the chance of identifiability is slim but acknowledge this is not proven. It could be worth distinguishing the methods that are weeds from those that are useful before burning a field to the ground.
+We focus here on SSE models. These models are known to have issues. Maddison and FitzJohn (2015) show that single changes in characters may be overinterpreted as showing strong evidence for a diversification pattern change. If a tree evolves under a process where diversification patterns may change on some branches, these methods may try to correlate these changes with a character if forced to choose between that and an incorrect model of homogeneous patterns (Rabosky and Golberg (); Beaulieu and O'Meara ()), though this may reflect more misapplication of statistics by biologists than a flaw in the methods per se (Beaulieu and O'Meara ()). There might need to be a lot of data to infer rates accurately (Davis ()). There are approaches that can deal with some of these issues: check to see if there is a consistent diversification pattern across trait origins (Beaulieu achene), provide rich models that allow rate variation not to be shoehorned into available characters (hisse___, geohisse__), etc. But what does this new work suggest for these?
+
+In fact, the possibility of trait-dependent diversification models still working is left unresolved (Louca and Pennell (2020), S.6) -- the authors believe the chance of identifiability is slim but acknowledge this is not proven. It could be worth distinguishing the methods that are weeds from those that are useful before burning a field to the ground.
 
 For models that do not change speciation and extinction over time, there is a well-behaved likelihood surface (Nee et al. 1994), complete with a peak. 
 
-```{r plotsurface, fig.cap="Likelihood surface for constant rate birth death model. Birth rate = 0.4, death rate = 0.2, total time of 20. MLE shows the maximum likelihood point; Actual shows the true generating values; the red contour line shows all the points within 2 lnL units of the best point."}
+```{r plotsurface, warning=FALSE, fig.cap="Likelihood surface for constant rate birth death model from four simulations with the same parameters. Birth rate = 0.4, death rate = 0.2, total time of 20. The black dot shows the maximum likelihood point; The open circle shows the true generating values; the red contour line shows all the points within 2 lnL units of the best point. Other contour lines are 1, 5, and 10 lnL units away from the optimum"}
 library(geiger)
 library(TreePar)
 library(ggplot2)
 library(phytools)
-#library(interp)
+library(gridExtra)
+library(metR)
+
 true.b <- 0.4
 true.d <- 0.2
-npoints <- 101
-phy <- geiger::sim.bdtree(b=true.b, d=true.d, stop="time",t=20, seed=1859)
-phy.pruned <- geiger::drop.extinct(phy)
-b.vector <- seq(from=0,to=1, length.out=npoints)+1/(10*npoints) #offset just a smidge to deal with TreePar's failure to handle b==d
-d.vector <- seq(from=0,to=1, length.out=npoints)
-parameters <- expand.grid(b=b.vector, d=d.vector, negloglikelihood=NA)
-parameters <- subset(parameters, b>0)
-x <- ape::branching.times(phy.pruned)
-for (i in sequence(nrow(parameters))) {
-  parameters$negloglikelihood[i] <- TreePar::LikConstant(lambda=parameters$b[i], mu=parameters$d[i], sampling=1, x=x)
+true.netdiv <- true.b - true.d
+true.ef <- true.d/true.b
+npoints <- 51
+maxtime <- 20
+
+netdiv.vector <- seq(from=0, to=0.7, length.out=npoints)
+ef.vector <- seq(from=0, to=1, length.out=npoints+1)
+ef.vector <- ef.vector[-length(ef.vector)] #cout out exactly ef==1
+
+seeds <- c(1831, 1836, 1839, 1859) # Darwin biography easter eggs; also makes sure we know what to expect consistently
+
+SimAndPlot <- function(seed, netdiv.vector, ef.vector, maxtime) {
+
+  results <- expand.grid(netdiv=netdiv.vector, ef=ef.vector, negloglikelihood=NA)
+  
+  results$b <- results$netdiv/(1-results$ef)
+  results$d <- (results$netdiv*results$ef)/(1-results$ef)
+  
+  
+  
+  
+  #library(interp)
+  
+  
+  phy <- geiger::sim.bdtree(b=true.b, d=true.d, stop="time",t=maxtime, seed=seed)
+  phy.pruned <- geiger::drop.extinct(phy)
+  # b.vector <- seq(from=0,to=1, length.out=npoints)+1/(10*npoints) #offset just a smidge to deal with TreePar's failure to handle b==d
+  # d.vector <- seq(from=0,to=1, length.out=npoints)
+  # parameters <- expand.grid(b=b.vector, d=d.vector, negloglikelihood=NA)
+  # parameters <- subset(parameters, b>0)
+  x <- ape::branching.times(phy.pruned)
+  for (i in sequence(nrow(results))) {
+    results$negloglikelihood[i] <- TreePar::LikConstant(lambda=results$b[i], mu=results$d[i], sampling=1, x=x)
+  }
+  #results[!is.finite(results$negloglikelihood),] <- max(results$negloglikelihood, na.rm=TRUE)
+  #p <- ggplot(parameters, aes(x=d, y=b, z=negloglikelihood)) + geom_contour_filled()
+  # smooth it a bit -- handles the case of TreePar failing if b=d
+  # parameters.smoothed <- akima::interp(parameters$b, parameters$d, parameters$negloglikelihood, xo=seq(min(parameters$b), max(parameters$b), length = 1000),
+  #                    yo=seq(min(parameters$d), max(parameters$d), length = 1000))
+  # parameters.df <- data.frame(b=parameters.smoothed$x, d=parameters.smoothed$y, negloglikelihood=parameters.smoothed$z)
+  
+    min.lik <- min(results$negloglikelihood, na.rm=TRUE)
+
+  p <- ggplot(results) + theme(legend.position = "none") + coord_equal()
+ # p <- p + geom_contour_filled(aes(x=ef, y=netdiv, z=negloglikelihood)) + scale_fill_viridis_d()
+    #p <- p + geom_contour_filled(aes(x=ef, y=netdiv, z=negloglikelihood),  breaks=seq(from=2, to=10, length.out=50)+min.lik) + scale_fill_viridis_d()
+
+  #p <- p + geom_contour_filled(aes(x=ef, y=netdiv, z=negloglikelihood),  bins=100) + geom_contour(aes(x=ef, y=netdiv, z=negloglikelihood), color="darkgray", bins=25)
+  #p <- p + geom_contour_filled(aes(x=ef, y=netdiv, z=negloglikelihood),  bins=100)
+  #p <- p + geom_contour(aes(x=ef, y=netdiv, z=negloglikelihood, color="black"), breaks=2+min(results$negloglikelihood))
+    p <- p + geom_contour(aes(x=ef, y=netdiv, z=negloglikelihood), colour="darkgray", breaks=c(1,5,10)+min.lik)
+     p <- p + geom_contour(aes(x=ef, y=netdiv, z=negloglikelihood), colour="red", breaks=c(2)+min.lik)
+     
+     
+
+  #p <- p+annotate("text", x=true.ef, y=true.netdiv, label="T", color="red")
+    p <- p+geom_point(aes( x=true.ef, y=true.netdiv, fill="blue"), shape=1)
+    p <- p + xlim(min(results$ef), max(results$ef)) + ylim(min(results$netdiv), max(results$netdiv))
+  #p <- p+annotate("text", x=results$ef[which.min(results$negloglikelihood)], y=results$netdiv[which.min(results$negloglikelihood)], label="*", color="white")
+  p <- p+geom_point(aes( x=results$ef[which.min(results$negloglikelihood)], y=results$netdiv[which.min(results$negloglikelihood)], fill="white"))
+  label.df <- data.frame(name=c("Truth", "MLE"), x=c(true.ef, results$ef[which.min(results$negloglikelihood)]), y=c(true.netdiv, results$netdiv[which.min(results$negloglikelihood)]), stringsAsFactors = FALSE)
+  p <- p + ggtitle(paste0("Tree of ", ape::Ntip(phy.pruned), " taxa"))
+  #p <- p + geom_text_repel(aes(x=x, y=y, label=name, color="white", segment.color = 'grey50'),data=label.df)
+  p
 }
-#p <- ggplot(parameters, aes(x=d, y=b, z=negloglikelihood)) + geom_contour_filled()
-# smooth it a bit -- handles the case of TreePar failing if b=d
-# parameters.smoothed <- akima::interp(parameters$b, parameters$d, parameters$negloglikelihood, xo=seq(min(parameters$b), max(parameters$b), length = 1000),
-#                    yo=seq(min(parameters$d), max(parameters$d), length = 1000))
-# parameters.df <- data.frame(b=parameters.smoothed$x, d=parameters.smoothed$y, negloglikelihood=parameters.smoothed$z)
-p <- ggplot(parameters) + geom_contour_filled(aes(x=d, y=b, z=negloglikelihood),  bins=25) + geom_contour(aes(x=d, y=b, z=negloglikelihood), color="darkgray", bins=100) + geom_contour(aes(x=d, y=b, z=negloglikelihood), color="red", breaks=2+min(parameters$negloglikelihood)) + theme(legend.position = "none") + coord_equal()
-p <- p+annotate("text", x=true.d, y=true.b, label="Truth", color="white")
-p <- p+annotate("text", x=parameters$d[which.min(parameters$negloglikelihood)], y=parameters$b[which.min(parameters$negloglikelihood)], label="MLE", color="white")
-print(p)
+
+p1 <- SimAndPlot(seed=seeds[1], netdiv.vector, ef.vector, maxtime)
+p2 <- SimAndPlot(seed=seeds[2], netdiv.vector, ef.vector, maxtime)
+p3 <- SimAndPlot(seed=seeds[3], netdiv.vector, ef.vector, maxtime)
+p4 <- SimAndPlot(seed=seeds[4], netdiv.vector, ef.vector, maxtime)
+
+grid.arrange(p1, p2, p3, p4, nrow=2)
 
 # parameters$ef <- parameters$d/parameters$b
 # parameters$netdiv <- parameters$b - parameters$d
@@ -65,7 +121,29 @@ print(p)
 print(q)
 ```
 
-As shown by the above plot (which mimics a similar one by Nee et al. 1994), there is a well-defined peak, albeit substantial uncertainty: not surprising, given the size of this tree (`r ape::Ntip(phy.pruned)` taxa), but it has long been known that extinction is hard to estimate (Nee__), but not impossible (___us__). The identifiability issues of models that allow speciation and/or extinction rates to gradually change have also long been known, but sadly ignored. Kubo and Iwasa (1995) showed that a gradual speciation rate change model with constant extinction rate could produce the same lineage through time curve as a constant speciation rate model with gradual extinction rate change, but, rather than just presenting this troubling special case, as their work was categorized by Louca and Pennell (2020), they explicitly state that "There are infinitely many cases intermediate between these two that also generate the same ln(N_t) pattern, in which both the branching rate and the extinction rate change with time." 
+As shown by the Fig. 1 (which mimics a similar one by Nee et al. 1994), there is a well-defined peak, albeit substantial uncertainty in extinction fraction: not surprising, given the size of these trees. The identifiability issues of models that allow speciation and/or extinction rates to gradually change have also long been known, but sadly ignored. Kubo and Iwasa (1995) showed that a gradual speciation rate change model with constant extinction rate could produce the same lineage through time curve as a constant speciation rate model with gradual extinction rate change, but, rather than just presenting this troubling special case, as their work was categorized by Louca and Pennell (2020), they explicitly state that "There are infinitely many cases intermediate between these two that also generate the same ln(N_t) pattern, in which both the branching rate and the extinction rate change with time." 
+
+Louca and Pennell (2020) expand on the mathematical treatment of Kubo and Iwasa (1995). Louca and Pennell (2020) show that two models are "congruent if and only if they have the same r_p and the same lambda_p at some time point in the present or past (for example the same product rho*lambda_o)." Their pulled diversification rate is:
+
+
+
+Their pulled diversification rate is (supplement equation 10):
+
+r_p := lambda - mu + (d lambda / d T) / lambda
+
+that is, the pulled diversification rate at a given time is equal to the normal estimate of diversification rate at that time plus the slope of how lambda changes with time divided by the value of lambda at that time. Lambda is the speciation rate at some time, which can change in their general model; in some equations this is represented as a single variable (i.e., supplement equation 10) but in other times a function of time (supplement equation 12). To make the derivation easier to follow we adopt the latter notation: lambda(u) is the speciation rate at time u in the past; the present is time 0. Rewriting the above equation using this notation:
+
+r_p(u) := lambda(u) - mu(u) + (d lambda(u) / d T) / lambda(u)
+
+Take the simplest case, as in Nee et al. (1995), of a set of models where (d lambda(u) / d T) is zero for all u (that is, where the speciation rate does not change with time), and assume mu(u) is also constant. In that case, r_p(u) := lambda(u) - mu(u) + 0 / lambda(u) = lambda(u) - mu(u). Two such models are congruent if and only if r_p(u)_modelA == r_p(u)_modelB and if lambda_p(u)_modelA == lambda_p(u)_modelB. The first requirement can be satisfied by any two models with the same net diversification rate; for example, take a Yule model (where mu(u)_modelA = 0 for all u) and a non-Yule model that may have the same net diversification rate (say, mu(u)_modelB = K > 0 for all u, so lambda(u)_modelA = lambda(u)_modelB - K). However, at the tip, rho * lambda(u)_modelA != rho * lambda(u)_modelB, so these models are not congruent: they will have different likelihoods on the same tree. They may be practically indistinguishable as the parameters of the two models grow similar (i.e., as K approaches zero) and for small datasets, but mathematically, they are different models. 
+
+This is consistent with what we know from Nee et al. (1994), Stadler (___) and others, including Figure 1: given knowledge of sampling fraction, and the branch lengths of a tree, one can estimate speciation and extinction rate. 
+
+However, that is not all this requirement shows. If a speciation rate through time has a slope of zero but sudden jumps, i.e., a sudden burst of speciation from 65 to 55 MYA, then the pulled diversification rate equals the unpulled diversification rate in that time interval. However, here there can be some congruent, but distinct models. For example, if model_A and model_B have the same flat speciation and extinction rates through all intervals but this one, and in that interval model_A is Yule and model_B is not Yule, then they could have the same net diversification rate in that interval, still have the same pulled speciation rate at the present, and thus be congruent. Referring back to classic LTT plots may help. Assume for all time intervals but that lambda(u)_modelA = lambda(u)_modelB = 0.4 and mu(u)_modelA = mu(u)_modelB = 0. In that time interval, modelA's rates don't change, but modelB has both its lambda and mu increase by 0.2. The slope of the lineage through time plot in that interval is still 0.4 (0.4 - 0 for modelA, 0.6 - 0.2 for modelB); the slope of the tangent to that plot is still 0.4 for them both at the present. So both models are congruent, fitting the same LTT plot. 
+
+Where do SSE models fall into this? 
+
+
 
 So, for the past quarter century, we should have known that attempting to estimate gradually changing speciation and/or extinction rates over trees leads to identifiability issues. And yet the field has merrily moved on with such methods (_____). How is this? One may be that this paper was largely overlooked: it has only 55 citations, and much citation seems to be regarding this paper as an early demonstration of the difficulty of estimating extinction rates on trees of extant taxa, which is indeed a main point. This paper is less pessimistic than Louca and Pennell (2020) or Pagel (2020), for example, showing that a discrete increase in speciation rate can be detected, perhaps another reason for ignoring its cautions. Another is that scientists have been willing to fix parameters to make models based on lineage through time data tractable, collapsing the model identifiability issue. Many early methods assumed extinction rate was zero (___), despite spectactular counterexamples (__Irish elk__). Later methods allowed extinction rate to be higher than zero, but constant over time (____), or, less commonly, fixed speciation rate as constant but allowed extinction to vary (___). This has led to to a focus on net diversification or speciation since they are easier to estimate and more typically allowed to vary, even though there is ample evidence that extinction rate can vary dramatically and importantly. 
 
@@ -112,3 +190,8 @@ If we have a perfect mapping of which parts are from which tree, we could separa
 
 This is almost BiSSE (Maddison et al. 2007), but it requires a character model, as well.
 
+## Other stuff
+
+Brownian motion is at the heart of many comparative methods: independent contrasts, ancestral state reconstruction, and more rely on this model. Evolutionary trends are long a topic of great interest in comparative methods: horses getting bigger with fewer toes, evolutionary arms races between predators and prey, and more. It is trivial to add a parameter to Brownian motion models to allow for the mean to evolve along a trend; the likelihood for such models given actual data is finite, and the simple no trend model is even nested within the trend model, so comparisons between a trend and no trend model is very easy. One could do a lot of great biology if you could compare these models on trees of modern taxa, but it's impossible: the likelihood of any trend model on a tree with equal root to top lengths for all taxa is exactly identical. So much as we might want to use this, these models are not identifiable for these kinds of trees.
+
+However, it's a long way from saying these models aren't identifiable to saying any model using Brownian motion is impossible to use on trees of modern taxa. We can compare Brownian motion models with more complex models that are identifiable, such as Ornstein-Uhlenbeck models, Brownian models with more than one rate, models where the rate changes over time, and much more. So yes, Brownian motion with a trend models are unidentifiable on chronograms of modern taxa, but we do not say that any model that attempts to estimate rates of evolution on such trees are impossible. Some models in this space give the same likelihoods and cannot be distinguished, but many others can -- this calls for care and analysis, not panic.
