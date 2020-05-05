@@ -190,6 +190,64 @@ If we have a perfect mapping of which parts are from which tree, we could separa
 
 This is almost BiSSE (Maddison et al. 2007), but it requires a character model, as well.
 
+BiSSE cases:
+
+Two clades, one with zero, one with 1
+One tree with all tips zero, but some transitions to state 1 internally
+
+
+```{r treesim_discreteshift}
+# library(diversitree)
+# set.seed(2007)
+# pars <- c(lambda0=0.4, lambda1=0.2, mu0=0.2, mu1=0, q01=0.1, q10=0.2)
+# phy <- NULL
+# while(is.null(phy)) {
+#   phy <- tree.bisse(pars=pars, max.t=20, x0=0)
+# }
+library(TreeSim)
+ntax=300
+nsim=50
+lambdaA <- rep(.3,3)
+muA <- rep(.1,3)
+offset <- .6
+treeheight <- 20
+lambdaB <- lambdaA
+lambdaB[2] <- lambdaB[2] + offset
+lambdaC <- lambdaA
+lambdaC[2] <- lambdaC[2] + offset
+lambdaD <- lambdaA
+muB <- muA
+muB[2] <- muB[2] + offset
+muC <- muA
+muD <- muA
+muD[2] <- muA + .19
+#muB[2] <- muB[2] + offset
+frac=rep(1, length(lambdaA))
+times <- c(0,.1,.2)*treeheight
+complete <- FALSE
+K=0
+A <- sim.rateshift.taxa(n=ntax, numbsim=nsim, lambda=lambdaA, mu=muA, frac=frac, times=times, complete=complete, K=K)
+B <- sim.rateshift.taxa(n=ntax, numbsim=nsim, lambda=lambdaB, mu=muB, frac=frac, times=times, complete=complete, K=K)
+C <- sim.rateshift.taxa(n=ntax, numbsim=nsim, lambda=lambdaC, mu=muC, frac=frac, times=times, complete=complete, K=K)
+D <- sim.rateshift.taxa(n=ntax, numbsim=nsim, lambda=lambdaD, mu=muD, frac=frac, times=times, complete=complete, K=K)
+plot(x=c(-6,0), y=c(10,ntax), type="n", log="y", bty="n", xlab="time", ylab="N")
+for (i in sequence(nsim)) {
+  ltt.lines(A[[i]], col="gray")
+  ltt.lines(B[[i]], col=rgb(0,0,1,.1))
+  ltt.lines(C[[i]], col=rgb(1,0,1,.1))
+  ltt.lines(D[[i]], col=rgb(1,1,0,.1))
+
+
+}
+abline(v=-times       )
+print(data.frame(lambdaA=lambdaA, lambdaB=lambdaB, muA=muA, muB=muB, divA=lambdaA-muA, divB=lambdaB-muB))
+# 
+# phy <- sim.rateshift.taxa(100,numbsim,lambda=c(3,0.001),mu=c(0,0),frac=c(1,1), times=c(1,.5), complete=FALSE)[[1]]
+# ltt.plot(phy, log="y")
+
+
+```
+
 ## Other stuff
 
 Brownian motion is at the heart of many comparative methods: independent contrasts, ancestral state reconstruction, and more rely on this model. Evolutionary trends are long a topic of great interest in comparative methods: horses getting bigger with fewer toes, evolutionary arms races between predators and prey, and more. It is trivial to add a parameter to Brownian motion models to allow for the mean to evolve along a trend; the likelihood for such models given actual data is finite, and the simple no trend model is even nested within the trend model, so comparisons between a trend and no trend model is very easy. One could do a lot of great biology if you could compare these models on trees of modern taxa, but it's impossible: the likelihood of any trend model on a tree with equal root to top lengths for all taxa is exactly identical. So much as we might want to use this, these models are not identifiable for these kinds of trees.
