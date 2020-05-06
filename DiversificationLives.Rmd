@@ -248,6 +248,96 @@ print(data.frame(lambdaA=lambdaA, lambdaB=lambdaB, muA=muA, muB=muB, divA=lambda
 
 ```
 
+
+```{r treesim_discreteshift2}
+# library(diversitree)
+# set.seed(2007)
+# pars <- c(lambda0=0.4, lambda1=0.2, mu0=0.2, mu1=0, q01=0.1, q10=0.2)
+# phy <- NULL
+# while(is.null(phy)) {
+#   phy <- tree.bisse(pars=pars, max.t=20, x0=0)
+# }
+library(TreeSim)
+library(viridis)
+ntax=400
+nsim=100
+min.plot.time <- -6
+lambdaA <- rep(.5,3)
+muA <- rep(.2,3)
+offset <- .2
+treeheight <- 20
+lambdaB <- lambdaA
+lambdaB[2] <- lambdaB[2] + offset
+lambdaC <- lambdaA
+lambdaC[2] <- lambdaC[2] + offset
+lambdaD <- lambdaA
+lambdaE <- lambdaA
+
+muB <- muA
+muB[2] <- muB[2] + offset
+muC <- muA
+muD <- muA
+muD[2] <- muD[2] + offset
+muE <- muA
+muE[2] <- muE[2] - offset
+#muB[2] <- muB[2] + offset
+frac=rep(1, length(lambdaA))
+times <- c(0,.1,.25)*treeheight
+complete <- FALSE
+K=0
+A <- sim.rateshift.taxa(n=ntax, numbsim=nsim, lambda=lambdaA, mu=muA, frac=frac, times=times, complete=complete, K=K)
+B <- sim.rateshift.taxa(n=ntax, numbsim=nsim, lambda=lambdaB, mu=muB, frac=frac, times=times, complete=complete, K=K)
+C <- sim.rateshift.taxa(n=ntax, numbsim=nsim, lambda=lambdaC, mu=muC, frac=frac, times=times, complete=complete, K=K)
+D <- sim.rateshift.taxa(n=ntax, numbsim=nsim, lambda=lambdaD, mu=muD, frac=frac, times=times, complete=complete, K=K)
+E <- sim.rateshift.taxa(n=ntax, numbsim=nsim, lambda=lambdaE, mu=muE, frac=frac, times=times, complete=complete, K=K)
+
+plot(x=c(-.4+min.plot.time,0), y=c(10,ntax), type="n", log="y", bty="n", xlab="time", ylab="N")
+A.ltt <- lapply(A, ltt.plot.coords)
+B.ltt <- lapply(B, ltt.plot.coords)
+C.ltt <- lapply(C, ltt.plot.coords)
+D.ltt <- lapply(D, ltt.plot.coords)
+E.ltt <- lapply(E, ltt.plot.coords)
+
+interpolate.points <- function(x, timepoint) {
+  matches <- which(x[,'time']<=timepoint)
+  return(unname(x[max(matches), 'N']))
+}
+
+interpolate.all <- function(timepoint, list.ltt, fn=median) {
+  values <- simplify2array(lapply(list.ltt, interpolate.points, timepoint=timepoint))
+  return(fn(values))
+}
+
+plot.intervals <- seq(from=min.plot.time, to=0, length.out=1001)
+
+lines(x=plot.intervals, y=sapply(plot.intervals, interpolate.all, list.ltt=A.ltt), col="black")
+lines(x=plot.intervals, y=sapply(plot.intervals, interpolate.all, list.ltt=B.ltt), col=viridis(7)[2])
+lines(x=plot.intervals, y=sapply(plot.intervals, interpolate.all, list.ltt=C.ltt), col=viridis(7)[3])
+lines(x=plot.intervals, y=sapply(plot.intervals, interpolate.all, list.ltt=D.ltt), col=viridis(7)[4])
+lines(x=plot.intervals, y=sapply(plot.intervals, interpolate.all, list.ltt=E.ltt), col=viridis(7)[5])
+text(x=min.plot.time,y=interpolate.all(min.plot.time, A.ltt), labels="baseline",pos=2, cex=0.3)
+text(x=min.plot.time,y=interpolate.all(min.plot.time, B.ltt), labels="b+,d+",pos=2, cex=0.3)
+text(x=min.plot.time,y=interpolate.all(min.plot.time, C.ltt), labels="b+",pos=2, cex=0.3)
+text(x=min.plot.time,y=interpolate.all(min.plot.time, D.ltt), labels="d+",pos=2, cex=0.3)
+text(x=min.plot.time,y=interpolate.all(min.plot.time, E.ltt), labels="d-",pos=2, cex=0.3)
+# for (i in sequence(nsim)) {
+  # ltt.lines(A[[i]], col=viridis(5)[1])
+  # ltt.lines(B[[i]], col=viridis(5)[2])
+  # ltt.lines(C[[i]], col=viridis(5)[3])
+  # ltt.lines(D[[i]], col=viridis(5)[4])
+  # ltt.lines(E[[i]], col=viridis(5)[5])
+
+
+# }
+abline(v=-times       )
+print(data.frame(lambdaA=lambdaA, lambdaB=lambdaB, lambdaC=lambdaC, lambdaD=lambdaD, lambdaE=lambdaE, muA=muA, muB=muB, muC=muC, muD=muD, muE=muE))
+# 
+# phy <- sim.rateshift.taxa(100,numbsim,lambda=c(3,0.001),mu=c(0,0),frac=c(1,1), times=c(1,.5), complete=FALSE)[[1]]
+# ltt.plot(phy, log="y")
+
+
+```
+
 ## Other stuff
 
 Brownian motion is at the heart of many comparative methods: independent contrasts, ancestral state reconstruction, and more rely on this model. Evolutionary trends are long a topic of great interest in comparative methods: horses getting bigger with fewer toes, evolutionary arms races between predators and prey, and more. It is trivial to add a parameter to Brownian motion models to allow for the mean to evolve along a trend; the likelihood for such models given actual data is finite, and the simple no trend model is even nested within the trend model, so comparisons between a trend and no trend model is very easy. One could do a lot of great biology if you could compare these models on trees of modern taxa, but it's impossible: the likelihood of any trend model on a tree with equal root to top lengths for all taxa is exactly identical. So much as we might want to use this, these models are not identifiable for these kinds of trees.
