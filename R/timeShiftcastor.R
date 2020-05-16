@@ -95,7 +95,6 @@ fit_param_yule = fit_hbd_model_parametric(	tree,
                                 condition     = "crown",
                                 Ntrials       = 10,    # perform 10 fitting trials
                                 Nthreads      = parallel::detectCores(),     # use 2 CPUs
-                                max_model_runtime = 1, # limit model evaluation to 1 second
                                 fit_control       = list(rel.tol=1e-6)
                             )
 
@@ -156,7 +155,6 @@ fit_param_yule_7 = fit_hbd_model_parametric(	tree,
                                            condition     = "crown",
                                            Ntrials       = 10,    # perform 10 fitting trials
                                            Nthreads      = parallel::detectCores(),     # use 2 CPUs
-                                           max_model_runtime = 1, # limit model evaluation to 1 second
                                            fit_control       = list(rel.tol=1e-6)
 )
 save(list=ls(), file="runall.rda")
