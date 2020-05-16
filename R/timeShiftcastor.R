@@ -158,7 +158,7 @@ fit_param_yule_7 = fit_hbd_model_parametric(	tree,
                                            fit_control       = list(rel.tol=1e-6)
 )
 save(list=ls(), file="runall.rda")
-# plot(range(age_grid_param), range(c(lambda_function(age_grid_param, fit_param_yule_7$param_fitted), mu_function(age_grid_param, fit_param_yule_7$param_fitted))), type="n", bty="n", ylab="rate")
-# lines(age_grid_param, lambda_function(age_grid_param, fit_param_yule_7$param_fitted))
-# lines(age_grid_param, mu_function(age_grid_param, fit_param_yule_7$param_fitted), lty="dotted")
+plot(range(age_grid_param), range(c(lambda_function(age_grid_param, fit_param_yule_7$param_fitted), mu_function(age_grid_param, fit_param_yule_7$param_fitted))), type="n", bty="n", ylab="rate")
+lines(age_grid_param, lambda_function(age_grid_param, fit_param_yule_7$param_fitted))
+lines(age_grid_param, mu_function(age_grid_param, fit_param_yule_7$param_fitted), lty="dotted")
 # 

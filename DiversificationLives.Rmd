@@ -347,6 +347,8 @@ Check: is this only a problem if there are shifts in rate within a single ltt pl
 
 Louca and Pennell extended Fig 3a: they somehow smooth the LTT plot
 
+Lambert and Stadler (2013) show that models with trait-affected diversification can't be described as a coalescent point process, aka LTT.
+
 I do castor first, jeremy does discrete shift
 
 I do castor on smith and brown seed plant like their extended 5h, also look at turnover and ef -- are they the same
