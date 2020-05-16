@@ -11,8 +11,8 @@ library(ape)
 # ######################################################################################################################################
 # ######################################################################################################################################
 # 
-# tree <- read.tree("../data/whales_Steemanetal2009.tre")
-# root_age <- castor::get_tree_span(tree)$max_distance
+tree <- read.tree("../data/whales_Steemanetal2009.tre")
+root_age <- castor::get_tree_span(tree)$max_distance
 # 
 # 
 # ### set up done, now do grid
