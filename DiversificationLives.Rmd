@@ -338,6 +338,22 @@ print(data.frame(lambdaA=lambdaA, lambdaB=lambdaB, lambdaC=lambdaC, lambdaD=lamb
 
 ```
 
+| Method | References | Louca and Pennell issue | Other issue|
+| ------ | -- | --| -- | -- |
+
+Steaman tree. Fit with mu = 0.9 lambda and mu=0, use castor, use also discrete slicing
+
+Check: is this only a problem if there are shifts in rate within a single ltt plateau (going from N to N+1 species), where it's not identifiable
+
+Louca and Pennell extended Fig 3a: they somehow smooth the LTT plot
+
+I do castor first, jeremy does discrete shift
+
+I do castor on smith and brown seed plant like their extended 5h, also look at turnover and ef -- are they the same
+
+It could be models are unidentifiable if there's not a tip with the regime : can't estimate speciation and extinction if there's not a tip with both parameters? But the sims above suggest this isn't the case
+
+
 ## Other stuff
 
 Brownian motion is at the heart of many comparative methods: independent contrasts, ancestral state reconstruction, and more rely on this model. Evolutionary trends are long a topic of great interest in comparative methods: horses getting bigger with fewer toes, evolutionary arms races between predators and prey, and more. It is trivial to add a parameter to Brownian motion models to allow for the mean to evolve along a trend; the likelihood for such models given actual data is finite, and the simple no trend model is even nested within the trend model, so comparisons between a trend and no trend model is very easy. One could do a lot of great biology if you could compare these models on trees of modern taxa, but it's impossible: the likelihood of any trend model on a tree with equal root to top lengths for all taxa is exactly identical. So much as we might want to use this, these models are not identifiable for these kinds of trees.
