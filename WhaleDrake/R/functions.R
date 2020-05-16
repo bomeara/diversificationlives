@@ -34,8 +34,8 @@ param_lambda7p_mu7p <- function(desired_interval = 0.1, tree, condition="crown",
     names(param_values) <- c(paste0("p", sequence(7)), paste0("q", sequence(7)))
     param_guess <- rep(0, 14)
     param_guess[c(3, 3+7)] <- 0.1 #the age independent rate
-
-    fit_param = fit_hbd_model_parametric(	tree,
+    fit_param = NA
+    try(fit_param = fit_hbd_model_parametric(	tree,
                                                param_values  = param_values,
                                                param_guess   = param_guess,
                                                param_min     = rep(0, 14),
@@ -49,7 +49,7 @@ param_lambda7p_mu7p <- function(desired_interval = 0.1, tree, condition="crown",
                                                Ntrials       = 10,    # perform 10 fitting trials
                                                Nthreads      = ncores,
                                                fit_control       = list(rel.tol=1e-6)
-    )
+    ))
     return(list(fit_param=fit_param, lambda_function=lambda_function, mu_function=mu_function, age_grid_param=age_grid_param))
 }
 
@@ -85,8 +85,8 @@ param_lambda7p_mu_multiplier_lambda <- function(desired_interval = 0.1, tree, co
     names(param_values) <- c(paste0("p", sequence(7)), "qmultiplier")
     param_guess <- rep(0, 8)
     param_guess[c(3)] <- 0.1 #the age independent rate
-
-    fit_param = fit_hbd_model_parametric(	tree,
+    fit_param = NA
+    try(fit_param = fit_hbd_model_parametric(	tree,
                                                param_values  = param_values,
                                                param_guess   = param_guess,
                                                param_min     = rep(0, length(param_values)),
@@ -100,6 +100,6 @@ param_lambda7p_mu_multiplier_lambda <- function(desired_interval = 0.1, tree, co
                                                Ntrials       = 10,    # perform 10 fitting trials
                                                Nthreads      = ncores,
                                                fit_control       = list(rel.tol=1e-6)
-    )
+    ))
     return(list(fit_param=fit_param, lambda_function=lambda_function, mu_function=mu_function, age_grid_param=age_grid_param))
 }
