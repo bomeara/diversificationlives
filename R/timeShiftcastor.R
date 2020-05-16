@@ -2,104 +2,104 @@
 library(castor)
 library(ape)
 
-
-
-
-######################################################################################################################################
-######################################################################################################################################
-### Running analyses and Plotting code
-######################################################################################################################################
-######################################################################################################################################
-
-tree <- read.tree("../data/whales_Steemanetal2009.tre")
-root_age <- castor::get_tree_span(tree)$max_distance
-
-
-### set up done, now do grid
-
-desired_interval=1
-age_grid  = seq(from=0,to=root_age+desired_interval,by=desired_interval)
-fit_yule_splines0 = fit_hbd_model_on_grid(tree, 
-                            age_grid    = age_grid,
-                            max_mu      = 1,
-                            fixed_rho0   = 1,
-                            fixed_mu = 0,
-                            condition="crown",
-                            Ntrials=10,
-                            Nthreads=parallel::detectCores(),
-                            splines_degree = 0)
-save(list=ls(), file="yule0.rda")
-
-fit_yule_splines1 = fit_hbd_model_on_grid(tree, 
-                                          age_grid    = age_grid,
-                                          max_mu      = 1,
-                                          fixed_rho0   = 1,
-                                          fixed_mu = 0,
-                                          condition="crown",
-                                          Ntrials=10,
-                                          Nthreads=parallel::detectCores(),
-                                          splines_degree = 1)
-save(list=ls(), file="yule1.rda")
-
-fit_bd_splines0 = fit_hbd_model_on_grid(tree, 
-                                          age_grid    = age_grid,
-                                          max_mu      = 1,
-                                          fixed_rho0   = 1,
-                                          condition="crown",
-                                          Ntrials=10,
-                                          Nthreads=parallel::detectCores(),
-                                          splines_degree = 0)
-save(list=ls(), file="bd0.rda")
-
-fit_bd_splines1 = fit_hbd_model_on_grid(tree, 
-                                        age_grid    = age_grid,
-                                        max_mu      = 1,
-                                        fixed_rho0   = 1,
-                                        condition="crown",
-                                        Ntrials=10,
-                                        Nthreads=parallel::detectCores(),
-                                        splines_degree = 1)
-save(list=ls(), file="bd1.rda")
-
-
-#plot(x=-1*fit$age_grid, y=fit$fitted_lambda, type="l")
-
-fits_grid <- list(fit_yule_splines0=fit_yule_splines0, fit_yule_splines1=fit_yule_splines1, fit_bd_splines0=fit_bd_splines0, fit_bd_splines1=fit_bd_splines1)
+# 
+# 
+# 
+# ######################################################################################################################################
+# ######################################################################################################################################
+# ### Running analyses and Plotting code
+# ######################################################################################################################################
+# ######################################################################################################################################
+# 
+# tree <- read.tree("../data/whales_Steemanetal2009.tre")
+# root_age <- castor::get_tree_span(tree)$max_distance
+# 
+# 
+# ### set up done, now do grid
+# 
+# desired_interval=1
+# age_grid  = seq(from=0,to=root_age+desired_interval,by=desired_interval)
+# fit_yule_splines0 = fit_hbd_model_on_grid(tree, 
+#                             age_grid    = age_grid,
+#                             max_mu      = 1,
+#                             fixed_rho0   = 1,
+#                             fixed_mu = 0,
+#                             condition="crown",
+#                             Ntrials=10,
+#                             Nthreads=parallel::detectCores(),
+#                             splines_degree = 0)
+# save(list=ls(), file="yule0.rda")
+# 
+# fit_yule_splines1 = fit_hbd_model_on_grid(tree, 
+#                                           age_grid    = age_grid,
+#                                           max_mu      = 1,
+#                                           fixed_rho0   = 1,
+#                                           fixed_mu = 0,
+#                                           condition="crown",
+#                                           Ntrials=10,
+#                                           Nthreads=parallel::detectCores(),
+#                                           splines_degree = 1)
+# save(list=ls(), file="yule1.rda")
+# 
+# fit_bd_splines0 = fit_hbd_model_on_grid(tree, 
+#                                           age_grid    = age_grid,
+#                                           max_mu      = 1,
+#                                           fixed_rho0   = 1,
+#                                           condition="crown",
+#                                           Ntrials=10,
+#                                           Nthreads=parallel::detectCores(),
+#                                           splines_degree = 0)
+# save(list=ls(), file="bd0.rda")
+# 
+# fit_bd_splines1 = fit_hbd_model_on_grid(tree, 
+#                                         age_grid    = age_grid,
+#                                         max_mu      = 1,
+#                                         fixed_rho0   = 1,
+#                                         condition="crown",
+#                                         Ntrials=10,
+#                                         Nthreads=parallel::detectCores(),
+#                                         splines_degree = 1)
+# save(list=ls(), file="bd1.rda")
+# 
+# 
+# #plot(x=-1*fit$age_grid, y=fit$fitted_lambda, type="l")
+# 
+# fits_grid <- list(fit_yule_splines0=fit_yule_splines0, fit_yule_splines1=fit_yule_splines1, fit_bd_splines0=fit_bd_splines0, fit_bd_splines1=fit_bd_splines1)
 
 ### Now for parametric
-
-rho = 1
-desired_interval = 0.1
-age_grid_param = seq(from=0,to=root_age+desired_interval,by=desired_interval)
-
-lambda_function = function(ages,params){
-    return(params['lambda0']*exp(-params['alpha']*ages));
-}
-mu_function = function(ages,params){
-    return(params['mu0']*exp(-params['beta']*ages));
-}
-rho_function = function(params){
-    return(rho) # rho does not depend on any of the parameters
-}
-
-fit_param_yule = fit_hbd_model_parametric(	tree, 
-                                param_values  = c(lambda0=NA, mu0=0, alpha=NA, beta=NA),
-                                param_guess   = c(0.1,0,0,0),
-                                param_min     = c(0,0,-1,-1),
-                                param_max     = c(2,2,1,1),
-                                param_scale   = 1, # all params are in the order of 1
-                                lambda        = lambda_function,
-                                mu            = mu_function,
-                                rho0          = rho_function,
-                                age_grid      = age_grid_param,
-                                condition     = "crown",
-                                Ntrials       = 10,    # perform 10 fitting trials
-                                Nthreads      = parallel::detectCores(),     # use 2 CPUs
-                                fit_control       = list(rel.tol=1e-6)
-                            )
-
-
-save(list=ls(), file="runparam.rda")
+# 
+# rho = 1
+# desired_interval = 0.1
+# age_grid_param = seq(from=0,to=root_age+desired_interval,by=desired_interval)
+# 
+# lambda_function = function(ages,params){
+#     return(params['lambda0']*exp(-params['alpha']*ages));
+# }
+# mu_function = function(ages,params){
+#     return(params['mu0']*exp(-params['beta']*ages));
+# }
+# rho_function = function(params){
+#     return(rho) # rho does not depend on any of the parameters
+# }
+# 
+# fit_param_yule = fit_hbd_model_parametric(	tree, 
+#                                 param_values  = c(lambda0=NA, mu0=0, alpha=NA, beta=NA),
+#                                 param_guess   = c(0.1,0,0,0),
+#                                 param_min     = c(0,0,-1,-1),
+#                                 param_max     = c(2,2,1,1),
+#                                 param_scale   = 1, # all params are in the order of 1
+#                                 lambda        = lambda_function,
+#                                 mu            = mu_function,
+#                                 rho0          = rho_function,
+#                                 age_grid      = age_grid_param,
+#                                 condition     = "crown",
+#                                 Ntrials       = 10,    # perform 10 fitting trials
+#                                 Nthreads      = parallel::detectCores(),     # use 2 CPUs
+#                                 fit_control       = list(rel.tol=1e-6)
+#                             )
+# 
+# 
+# save(list=ls(), file="runparam.rda")
 
 
 # plot(range(age_grid_param), range(c(lambda_function(age_grid_param, fit_param_yule$param_fitted), mu_function(age_grid_param, fit_param_yule$param_fitted))), type="n", bty="n", ylab="rate")
