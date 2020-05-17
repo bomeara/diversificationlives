@@ -179,7 +179,8 @@ param_lambda_discreteshift_ef_fixed <- function(desired_interval = 0.1, tree, co
     }
 
     mu_function = function(ages,params){
-        results <- ef*lambda_function(ages, params)
+        results <- lambda_function(ages, params)
+        results <- ef*results
         return(results)
     }
 
@@ -188,7 +189,7 @@ param_lambda_discreteshift_ef_fixed <- function(desired_interval = 0.1, tree, co
         return(rho) # rho does not depend on any of the parameters
     }
     param_values <- c(lambda_params)
-    param_guess <- c(rep(0.1, length(lambda_params)))
+    param_guess <- c(rep(0.1, length(param_values)))
     names(param_guess) <- names(param_values)
     fit_param = NA
     try({
