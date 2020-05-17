@@ -1,7 +1,7 @@
 
 # Fits a model where lambda and mu each have 7 parameters, like the seed plant model in Louca & Pennell 2020.
-# Note that drake will not work with multiple cores called inside functions https://github.com/ropensci/drake/issues/675#issuecomment-458222414
-param_lambda7p_mu7p <- function(desired_interval = 0.1, tree, condition="crown", ncores=1) {
+# Doing https://books.ropensci.org/drake/hpc.html#advanced-options to allow parallel within
+param_lambda7p_mu7p <- function(desired_interval = 0.1, tree, condition="crown", ncores=parallel::detectCores()) {
     root_age = castor::get_tree_span(tree)$max_distance
     rho = 1
     age_grid_param = seq(from=0,to=root_age+desired_interval,by=desired_interval)
@@ -58,7 +58,9 @@ param_lambda7p_mu7p <- function(desired_interval = 0.1, tree, condition="crown",
 
 
 # Fits a model where mu is a constant multiple of lambda's value
-param_lambda7p_mu_multiplier_lambda <- function(desired_interval = 0.1, tree, condition="crown", ncores=1) {
+# Doing https://books.ropensci.org/drake/hpc.html#advanced-options to allow parallel within
+
+param_lambda7p_mu_multiplier_lambda <- function(desired_interval = 0.1, tree, condition="crown", ncores=parallel::detectCores()) {
     root_age = castor::get_tree_span(tree)$max_distance
     rho = 1
     age_grid_param = seq(from=0,to=root_age+desired_interval,by=desired_interval)
