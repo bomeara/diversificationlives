@@ -126,15 +126,13 @@ param_lambda_discreteshift_mu_discreteshift <- function(desired_interval = 0.1, 
     names(mu_params) <- paste0("mu", sequence(length(slice_ages))-1)
 
     lambda_function = function(ages,params){
-        results <- stats::approx(x=slice_ages, y=params[grepl("lambda", names(params))], xout=ages, method=interpolation_method)$y
-        results[!is.finite(results)] <- 0
+        results <- stats::approx(x=slice_ages, y=params[grepl("lambda", names(params))], xout=ages, method=interpolation_method, rule=2)$y
 
        return(results)
     }
 
     mu_function = function(ages,params){
-        results <- stats::approx(x=slice_ages, y=params[grepl("mu", names(params))], xout=ages, method=interpolation_method)$y
-        results[!is.finite(results)] <- 0
+        results <- stats::approx(x=slice_ages, y=params[grepl("mu", names(params))], xout=ages, method=interpolation_method, rule=2)$y
 
        return(results)
     }
@@ -178,8 +176,7 @@ param_lambda_discreteshift_ef_fixed <- function(desired_interval = 0.1, tree, co
 
 
     lambda_function = function(ages,params){
-        results <- stats::approx(x=slice_ages, y=params[grepl("lambda", names(params))], xout=ages, method=interpolation_method)$y
-        results[!is.finite(results)] <- 0
+        results <- stats::approx(x=slice_ages, y=params[grepl("lambda", names(params))], xout=ages, method=interpolation_method, rule=2)$y
        return(results)
     }
 
