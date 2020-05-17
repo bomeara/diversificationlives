@@ -114,7 +114,7 @@ param_lambda7p_mu_multiplier_lambda <- function(desired_interval = 0.1, tree, co
 # desired_interval: how finely to divide the slices for calculating smoothly changing (or not) lambda and mu
 # slice_ages: when to divide regimes
 # interpolation_method: same as method in ?approx. Constant or linear
-param_lambda_discreteshift_mu_discreteshift <- function(desired_interval = 0.1, tree, condition="crown", ncores=parallel::detectCores(), slice_ages = seq(from=0, to=floor(castor::get_tree_span(tree)$max_distance), by=1), interpolation_method="constant") {
+param_lambda_discreteshift_mu_discreteshift <- function(desired_interval = 0.1, tree, condition="crown", ncores=parallel::detectCores(), slice_ages = seq(from=0, to=ceiling(castor::get_tree_span(tree)$max_distance), by=1), interpolation_method="constant") {
     root_age = castor::get_tree_span(tree)$max_distance
     rho = 1
     age_grid_param = seq(from=0,to=root_age+desired_interval,by=desired_interval)
@@ -141,6 +141,8 @@ param_lambda_discreteshift_mu_discreteshift <- function(desired_interval = 0.1, 
     }
     param_values <- c(lambda_params, mu_params)
     param_guess <- c(rep(0.1, length(lambda_params)), rep(0.01, length(mu_params)))
+    names(param_guess) <- names(param_values)
+
     fit_param = NA
     try({
         fit_param <- fit_hbd_model_parametric(	tree,
@@ -162,7 +164,7 @@ param_lambda_discreteshift_mu_discreteshift <- function(desired_interval = 0.1, 
     return(list(fit_param=fit_param, lambda_function=lambda_function, mu_function=mu_function, age_grid_param=age_grid_param))
 }
 
-param_lambda_discreteshift_ef_fixed <- function(desired_interval = 0.1, tree, condition="crown", ncores=parallel::detectCores(), slice_ages = seq(from=0, to=floor(castor::get_tree_span(tree)$max_distance), by=1), interpolation_method="constant", ef=0.0) {
+param_lambda_discreteshift_ef_fixed <- function(desired_interval = 0.1, tree, condition="crown", ncores=parallel::detectCores(), slice_ages = seq(from=0, to=ceiling(castor::get_tree_span(tree)$max_distance), by=1), interpolation_method="constant", ef=0.0) {
     root_age = castor::get_tree_span(tree)$max_distance
     rho = 1
     age_grid_param = seq(from=0,to=root_age+desired_interval,by=desired_interval)
@@ -187,6 +189,7 @@ param_lambda_discreteshift_ef_fixed <- function(desired_interval = 0.1, tree, co
     }
     param_values <- c(lambda_params)
     param_guess <- c(rep(0.1, length(lambda_params)))
+    names(param_guess) <- names(param_values)
     fit_param = NA
     try({
         fit_param <- fit_hbd_model_parametric(	tree,
