@@ -1149,3 +1149,731 @@ $success
 $loglikelihood
 [1] -274.3892
 
+     ef coarse  neglogl deltaneglogl      AIC   deltaAIC
+1   0.0      2 277.6657   40.8027313 561.3315   5.013364
+2   0.1      2 277.7871   40.9240963 561.5742   5.256093
+3   0.2      2 277.9039   41.0408393 561.8077   5.489580
+4   0.3      2 278.0010   41.1380257 562.0021   5.683952
+5   0.4      2 278.0534   41.1903502 562.1067   5.788601
+6   0.5      2 278.0184   41.1554300 562.0369   5.718761
+7   0.6      2 277.8264   40.9633902 561.6528   5.334681
+8   0.7      2 277.3667   40.5037354 560.7335   4.415372
+9   0.8      2 276.4900   39.6269482 558.9799   2.661797
+10  0.9      2 275.1591   38.2960495 556.3181   0.000000
+11  0.0      3 277.6657   40.8027146 563.3315   7.013330
+12  0.1      3 277.7752   40.9121579 563.5503   7.232217
+13  0.2      3 277.8558   40.9927912 563.7116   7.393483
+14  0.3      3 277.8905   41.0274747 563.7810   7.462850
+15  0.4      3 277.8544   40.9914037 563.7088   7.390708
+16  0.5      3 277.7122   40.8491700 563.4244   7.106241
+17  0.6      3 277.4148   40.5518067 562.8296   6.511514
+18  0.7      3 276.8999   40.0368828 561.7998   5.481666
+19  0.8      3 276.1072   39.2442183 560.2145   3.896337
+20  0.9      3 275.0669   38.2038614 558.1338   1.815624
+21  0.0      4 276.4877   39.6246961 562.9754   6.657293
+22  0.1      4 276.4683   39.6052877 562.9366   6.618476
+23  0.2      4 276.4102   39.5471932 562.8204   6.502287
+24  0.3      4 276.3030   39.4400091 562.6060   6.287919
+25  0.4      4 276.1346   39.2715769 562.2692   5.951055
+26  0.5      4 275.8915   39.0285303 561.7831   5.464962
+27  0.6      4 275.5609   38.6979279 561.1219   4.803757
+28  0.7      4 275.1341   38.2711294 560.2683   3.950160
+29  0.8      4 274.6149   37.7518360 559.2297   2.911573
+30  0.9      4 274.0307   37.1676710 558.0614   1.743243
+31  0.0      5 275.7181   38.8550370 563.4361   7.117975
+32  0.1      5 275.6105   38.7475085 563.2210   6.902918
+33  0.2      5 275.4742   38.6111509 562.9483   6.630203
+34  0.3      5 275.3054   38.4423452 562.6107   6.292591
+35  0.4      5 275.1009   38.2378956 562.2018   5.883692
+36  0.5      5 274.8588   37.9957982 561.7176   5.399497
+37  0.6      5 274.5797   37.7166982 561.1594   4.841297
+38  0.7      5 274.2698   37.4067866 560.5396   4.221474
+39  0.8      5 273.9472   37.0841918 559.8944   3.576285
+40  0.9      5 273.6605   36.7974873 559.3210   3.002876
+41  0.0      6 274.2909   37.4278740 562.5818   6.263649
+42  0.1      6 274.1946   37.3316224 562.3893   6.071146
+43  0.2      6 274.0867   37.2237251 562.1735   5.855351
+44  0.3      6 273.9675   37.1045044 561.9350   5.616910
+45  0.4      6 273.8381   36.9750410 561.6761   5.357983
+46  0.5      6 273.7006   36.8375630 561.4012   5.083027
+47  0.6      6 273.5590   36.6959756 561.1180   4.799852
+48  0.7      6 273.4195   36.5564662 560.8390   4.520833
+49  0.8      6 273.2906   36.4276319 560.5813   4.263165
+50  0.9      6 273.1800   36.3169740 560.3600   4.041849
+51  0.0      7 272.4161   35.5530446 560.8321   4.513990
+52  0.1      7 272.3784   35.5153963 560.7568   4.438694
+53  0.2      7 272.3418   35.4787471 560.6835   4.365395
+54  0.3      7 272.3074   35.4443936 560.6148   4.296688
+55  0.4      7 272.2770   35.4139589 560.5539   4.235819
+56  0.5      7 272.2524   35.3893549 560.5047   4.186611
+57  0.6      7 272.2356   35.3725519 560.4711   4.153005
+58  0.7      7 272.2278   35.3647860 560.4556   4.137473
+59  0.8      7 272.2268   35.3638314 560.4537   4.135564
+60  0.9      7 272.2142   35.3512157 560.4285   4.110332
+61  0.0      8 272.1272   35.2641672 562.2544   5.936235
+62  0.1      8 272.1337   35.2706557 562.2673   5.949212
+63  0.2      8 272.1456   35.2825724 562.2912   5.973046
+64  0.3      8 272.1642   35.3012239 562.3285   6.010349
+65  0.4      8 272.1911   35.3281302 562.3823   6.064161
+66  0.5      8 272.2280   35.3649838 562.4560   6.137868
+67  0.6      8 272.2765   35.4134650 562.5530   6.234831
+68  0.7      8 272.3376   35.4745625 562.6752   6.357026
+69  0.8      8 272.4087   35.5456998 562.8174   6.499300
+70  0.9      8 272.4660   35.6029415 562.9319   6.613784
+71  0.0      9 271.6572   34.7942147 563.3145   6.996330
+72  0.1      9 271.6549   34.7919196 563.3099   6.991740
+73  0.2      9 271.6544   34.7913974 563.3088   6.990696
+74  0.3      9 271.6559   34.7928464 563.3117   6.993594
+75  0.4      9 271.6594   34.7963752 563.3188   7.000651
+76  0.5      9 271.6649   34.8019015 563.3298   7.011704
+77  0.6      9 271.6720   34.8089548 563.3439   7.025810
+78  0.7      9 271.6793   34.8162372 563.3585   7.040375
+79  0.8      9 271.6833   34.8203204 563.3667   7.048542
+80  0.9      9 271.6712   34.8082002 563.3424   7.024301
+81  0.0     10 272.2826   35.4196229 566.5653  10.247147
+82  0.1     10 272.2927   35.4297091 566.5854  10.267319
+83  0.2     10 272.3045   35.4414446 566.6089  10.290790
+84  0.3     10 272.3179   35.4548983 566.6358  10.317697
+85  0.4     10 272.3331   35.4700471 566.6661  10.347995
+86  0.5     10 272.3497   35.4866819 566.6994  10.381265
+87  0.6     10 272.3672   35.5041908 566.7344  10.416282
+88  0.7     10 272.3840   35.5209528 566.7679  10.449807
+89  0.8     10 272.3952   35.5321658 566.7904  10.472232
+90  0.9     10 272.3816   35.5186066 566.7632  10.445114
+91  0.0     15 268.8932   32.0301769 569.7864  13.468255
+92  0.1     15 268.8759   32.0128967 569.7518  13.433694
+93  0.2     15 268.8586   31.9955512 569.7171  13.399003
+94  0.3     15 268.8414   31.9783718 569.6828  13.364644
+95  0.4     15 268.8243   31.9612817 569.6486  13.330464
+96  0.5     15 268.8080   31.9449923 569.6160  13.297885
+97  0.6     15 268.7932   31.9301970 569.5864  13.268295
+98  0.7     15 268.7806   31.9175426 569.5611  13.242986
+99  0.8     15 268.7703   31.9072599 569.5405  13.222421
+100 0.9     15 268.7597   31.8966505 569.5193  13.201202
+101 0.0     20 268.3256   31.4625891 578.6512  22.333079
+102 0.1     20 268.3010   31.4379714 578.6020  22.283844
+103 0.2     20 268.2748   31.4117862 578.5496  22.231473
+104 0.3     20 268.2455   31.3824552 578.4909  22.172811
+105 0.4     20 268.2098   31.3467500 578.4195  22.101401
+106 0.5     20 268.1675   31.3044744 578.3350  22.016850
+107 0.6     20 268.1135   31.2505288 578.2271  21.908959
+108 0.7     20 268.0454   31.1824087 578.0908  21.772718
+109 0.8     20 267.9514   31.0884346 577.9029  21.584770
+110 0.9     20 267.8084   30.9454172 577.6169  21.298735
+111 0.0     35 261.0593   24.1962370 594.1185  37.800375
+112 0.1     35 261.0394   24.1763439 594.0787  37.760589
+113 0.2     35 261.0552   24.1922220 594.1105  37.792345
+114 0.3     35 261.0585   24.1954942 594.1170  37.798889
+115 0.4     35 261.0792   24.2161978 594.1584  37.840296
+116 0.5     35 261.1062   24.2431973 594.2124  37.894296
+117 0.6     35 261.1002   24.2371603 594.2003  37.882221
+118 0.7     35 261.1468   24.2838288 594.2937  37.975558
+119 0.8     35 261.2153   24.3523226 594.4307  38.112546
+120 0.9     35 261.2419   24.3788897 594.4838  38.165680
+121 0.0     50 252.2778   15.4148185 606.5557  50.237538
+122 0.1     50 252.1913   15.3283186 606.3827  50.064538
+123 0.2     50 252.2566   15.3936337 606.5133  50.195168
+124 0.3     50 252.1628   15.2997537 606.3255  50.007408
+125 0.4     50 252.2851   15.4220598 606.5701  50.252021
+126 0.5     50 252.2864   15.4234152 606.5729  50.254731
+127 0.6     50 252.1686   15.3055672 606.3372  50.019035
+128 0.7     50 252.1809   15.3178705 606.3618  50.043642
+129 0.8     50 252.1538   15.2907802 606.3076  49.989461
+130 0.9     50 252.0234   15.1603790 606.0468  49.728659
+131 0.0    100 237.3205    0.4575309 676.6411 120.322963
+132 0.1    100 237.6349    0.7719304 677.2699 120.951762
+133 0.2    100 237.3873    0.5242770 676.7746 120.456455
+134 0.3    100 238.1841    1.3210653 678.3682 122.050031
+135 0.4    100 237.0299    0.1668507 676.0597 119.741602
+136 0.5    100 236.8630    0.0000000 675.7260 119.407901
+137 0.6    100 238.5122    1.6491489 679.0243 122.706199
+138 0.7    100 237.2712    0.4081846 676.5424 120.224270
+139 0.8    100 238.0024    1.1393904 678.0048 121.686682
+140 0.9    100 239.3549    2.4918379 680.7097 124.391577
+> 
+> 
+> 
+> 
+> 
+> 
+> ###################################
+> # Analyze simulated trees
+> 
+> 
+> if(INCLUDE_SIM_MODEL_ANALYSIS){
++ 	NM = length(SIM_MODELS);
++ 	for(m in 1:NM){
++ 		model = SIM_MODELS[[m]];
++ 		cat2(sprintf("Examining simulation model '%s' (#%d)..\n",model$name,m));
++ 		model_output_dir=sprintf("%s/%s",output_dir,model$name);
++ 		dir.create(model_output_dir, showWarnings = FALSE, recursive=TRUE);
++ 
++ 		# seed random number generator
++ 		if(is.null(model$random_seed)){
++ 			# no seed specified for this tree, so pick one randomly based on the global seed
++ 			set.seed(global_random_seed)
++ 			model$random_seed = sample.int(n=1000000,size=1)
++ 		}
++ 		set.seed(model$random_seed)
++ 		cat2(sprintf("  Note: Seeding random generator at %d\n",model$random_seed));
++ 
++ 		# simulate random realization of the model (generate tree)
++ 		cat2(sprintf("  Simulating random tree..\n"));
++ 		time_unit	= "Myr"
++ 		rho0 		= model$rho0
++ 		time_grid 	= seq(from=0,to=model$max_time,length.out=1000)
++ 		parameters 	= list(birth_rate_factor=model$base_lambda, death_rate_factor=model$base_mu, rarefaction=rho0)
++ 		tree_sim	= generate_random_tree(parameters, max_time=model$max_time, max_tips=model$max_tips, coalescent=TRUE, added_rates_times=time_grid, added_birth_rates_pc=model$added_lambda(time_grid), added_death_rates_pc=model$added_mu(time_grid), include_birth_times=TRUE, include_death_times=TRUE)
++ 		if(!tree_sim$success) stop(sprintf("ERROR: Tree generation failed: %s",tree_sim$error))
++ 		tree		= tree_sim$tree
++ 		Ntips 		= length(tree$tip.label)
++ 		root_age 	= castor::get_tree_span(tree)$max_distance
++ 		cat2(sprintf("  Note: Tree has %d tips at final time=%g\n",Ntips,tree_sim$final_time))
++ 		castor::write_tree(tree, file=sprintf("%s/tree.tre",model_output_dir))
++ 
++ 		# define lambda & mu as functions of age
++ 		age_grid = seq(from=0,to=root_age*1.1,length.out=1000)
++ 		age2lambda = function(age){
++ 			return(model$base_lambda+model$added_lambda(tree_sim$final_time-age))
++ 		}
++ 		age2mu = function(age){
++ 			return(model$base_mu+model$added_mu(tree_sim$final_time-age))
++ 		}
++ 		lambda0 = age2lambda(0)
++ 
++ 		cat2(sprintf("  Calculating empirical LTT..\n"))
++ 		empirical_LTT 		= castor::count_lineages_through_time(tree,Ntimes=1000);
++ 		empirical_LTT$ages 	= root_age - empirical_LTT$times
++ 		empirical_N			= castor:::get_diversities_from_birth_and_death_events_CPP(empirical_LTT$times, birth_times=tree_sim$birth_times-tree_sim$root_time, death_times=tree_sim$death_times-tree_sim$root_time, start_diversity=1, Nsplits=2)$diversities
++ 
++ 		cat2(sprintf("  Simulating deterministic HBD model..\n"))
++ 		simulation = simulate_deterministic_hbd(LTT0			= Ntips,
++ 												oldest_age		= root_age,
++ 												rho0			= rho0,
++ 												age_grid		= age_grid,
++ 												lambda			= age2lambda(age_grid),
++ 												mu				= age2mu(age_grid),
++ 												splines_degree	= 1,
++ 												relative_dt		= INTEGRATION_RELATIVE_DT);
++ 		if(!simulation$success){
++ 			stop(sprintf("ERROR: HBD simulation failed: %s\n",simulation$error))
++ 		}
++ 
++ 		cat2(sprintf("  Plotting tree properties..\n"))
++ 		plot_age_curves(	file_basepath 		= sprintf("%s/tree_LTTs",model_output_dir),
++ 							data_type 			= "tree diversity curves",
++ 							case_tag 			= sprintf("%s - random tree",model$name),
++ 							curves = list(	list(simulation$ages, simulation$LTT),
++ 											list(empirical_LTT$ages, empirical_LTT$lineages),
++ 											list(empirical_LTT$ages, empirical_N)),
++ 							curve_names 		= c("dLTT", "tree LTT", "N"),
++ 							curve_colors 		= c(PLOT_COLOR_LTT, PLOT_COLOR_LTT, PLOT_COLOR_TOTAL_DIVERSITY),
++ 							curve_line_types	= c(PLOT_LINE_TYPE_DETERMINISTIC_TRUE, PLOT_LINE_TYPE_EMPIRICAL, PLOT_LINE_TYPE_EMPIRICAL),
++ 							curve_widths 		= c(1,1,2),
++ 							plot_curves 		= NULL,
++ 							max_age 			= root_age,
++ 							Nages				= PLOT_DOWNSAMPLING_RESOLUTION,
++ 							age_label 			= "age",
++ 							value_label 		= "diversities",
++ 							plot_log_values 	= TRUE,
++ 							legend_pos 			= "outside",
++ 							plot_title 			= "Diversities of generated tree",
++ 							data_file_comments 	= sprintf("# Diversities of randomly generated tree (%s, Ntips=%d)",model$name,Ntips),
++ 							verbose 			= FALSE,
++ 							verbose_prefix 		= "    ")
++ 
++ 		plot_age_curves(	file_basepath 		= sprintf("%s/tree_diversification_rates",model_output_dir),
++ 							data_type 			= "tree diversification rates",
++ 							case_tag 			= sprintf("%s - random tree",model$name),
++ 							curves = list(	list(simulation$ages, simulation$diversification_rate),
++ 											list(simulation$ages, simulation$PDR)),
++ 							curve_names 		= c("r", "PDR"),
++ 							curve_colors 		= c(PLOT_COLOR_DIVERSIFICATION_RATE, PLOT_COLOR_PDR),
++ 							curve_line_types	= c(PLOT_LINE_TYPE_DETERMINISTIC_TRUE, PLOT_LINE_TYPE_DETERMINISTIC_TRUE),
++ 							curve_widths 		= c(1,2),
++ 							plot_curves 		= NULL,
++ 							max_age 			= root_age,
++ 							Nages				= PLOT_DOWNSAMPLING_RESOLUTION,
++ 							age_label 			= "age",
++ 							value_label 		= "rate",
++ 							plot_log_values 	= FALSE,
++ 							legend_pos 			= "outside",
++ 							plot_title 			= "Diversification rates underlying tree",
++ 							data_file_comments 	= sprintf("# Diversification rates used to generate tree (%s, Ntips=%d)",model$name,Ntips),
++ 							verbose 			= FALSE,
++ 							verbose_prefix 		= "    ")
++ 
++ 		plot_age_curves(	file_basepath 		= sprintf("%s/tree_lambdas_mus",model_output_dir),
++ 							data_type 			= "tree speciation and extinction rates",
++ 							case_tag 			= sprintf("%s - random tree",model$name),
++ 							curves = list(	list(age_grid, age2lambda(age_grid)),
++ 											list(age_grid, age2mu(age_grid))),
++ 							curve_names 		= c("lambda", "mu"),
++ 							curve_colors 		= c(PLOT_COLOR_LAMBDA, PLOT_COLOR_MU),
++ 							curve_line_types	= c(PLOT_LINE_TYPE_DETERMINISTIC_TRUE, PLOT_LINE_TYPE_DETERMINISTIC_TRUE),
++ 							curve_widths 		= c(1,2),
++ 							plot_curves 		= NULL,
++ 							max_age 			= root_age,
++ 							Nages				= PLOT_DOWNSAMPLING_RESOLUTION,
++ 							age_label 			= "age",
++ 							value_label 		= "rate",
++ 							plot_log_values 	= FALSE,
++ 							legend_pos 			= "outside",
++ 							plot_title 			= "Speciation/extinction rates underlying tree",
++ 							data_file_comments 	= sprintf("# Speciation/extinction rates used to generate tree (%s, Ntips=%d)",model$name,Ntips),
++ 							verbose 			= FALSE,
++ 							verbose_prefix 		= "    ")
++ 
++ 
++ 
++ 		# create an alternative but congruent model, with a modified extinction rate
++ 		if(model$include_model_comparison && (!is.null(model$congruent_added_mus)) && (length(model$congruent_added_mus)>0)){
++ 			for(ccounter in 1:length(model$congruent_added_mus)){
++ 				cat2(sprintf("  Simulating congruent model #%d to %s..\n",ccounter,model$name))
++ 				added_mu2 = model$congruent_added_mus[[ccounter]]
++ 				modified_age2mu = function(age){
++ 					return(pmax(0,model$base_mu + added_mu2(tree_sim$final_time-age)))
++ 				}
++ 				simulation2 = simulate_deterministic_hbd(	LTT0			= Ntips,
++ 															oldest_age		= root_age,
++ 															rho0			= rho0,
++ 															age_grid		= simulation$ages,
++ 															mu				= modified_age2mu(simulation$ages),
++ 															PDR				= simulation$PDR,
++ 															lambda0			= lambda0,
++ 															splines_degree	= 1,
++ 															relative_dt		= INTEGRATION_RELATIVE_DT);
++ 				if(!simulation2$success){
++ 					cat2(sprintf("    ERROR: Modified HBD simulation failed: %s\n",simulation2$error))
++ 					next;
++ 				}
++ 				cat2(sprintf("  Plotting comparisons between congruent models..\n"))
++ 				plot_age_curves(	file_basepath 		= sprintf("%s/congruent_model_%d_LTT_N",model_output_dir,ccounter),
++ 									data_type 			= "LTTs",
++ 									case_tag 			= sprintf("%s and congruent model #%d",model$name,ccounter),
++ 									curves = list(	list(simulation$ages, simulation$LTT),
++ 													list(simulation2$ages, simulation2$LTT),
++ 													list(simulation$ages, simulation$total_diversity),
++ 													list(simulation2$ages, simulation2$total_diversity)),
++ 									curve_names 		= c("LTT 0", sprintf("LTT %d",ccounter), "N 0",  sprintf("N %d",ccounter)),
++ 									curve_colors 		= c(PLOT_COLOR_LTT, PLOT_COLOR_LTT, PLOT_COLOR_TOTAL_DIVERSITY, PLOT_COLOR_TOTAL_DIVERSITY),
++ 									curve_line_types	= c(1, 2, 1, 2),
++ 									curve_widths 		= c(1, 1, 2, 2),
++ 									plot_curves 		= NULL,
++ 									max_age 			= root_age,
++ 									Nages				= PLOT_DOWNSAMPLING_RESOLUTION,
++ 									age_label 			= "age",
++ 									value_label 		= "lineages",
++ 									plot_log_values 	= TRUE,
++ 									legend_pos 			= "outside",
++ 									plot_title 			= sprintf("LTT and N predicted by models 0 & %d",ccounter),
++ 									data_file_comments 	= sprintf("# Deterministic LTT and total diversity predicted by two congruent models (%s and modified #%d)",model$name,ccounter),
++ 									verbose 			= FALSE,
++ 									verbose_prefix 		= "    ")
++ 
++ 				plot_age_curves(	file_basepath 		= sprintf("%s/congruent_model_%d_PSR",model_output_dir,ccounter),
++ 									data_type 			= "PSRs",
++ 									case_tag 			= sprintf("%s and congruent model #%d",model$name,ccounter),
++ 									curves = list(	list(simulation$ages, simulation$PSR),
++ 													list(simulation2$ages, simulation2$PSR)),
++ 									curve_names 		= c("PSR 0", sprintf("PSR %d",ccounter)),
++ 									curve_colors 		= c(PLOT_COLOR_PSR, PLOT_COLOR_PSR),
++ 									curve_line_types	= c(1, 2),
++ 									curve_widths 		= c(1, 2),
++ 									plot_curves 		= NULL,
++ 									max_age 			= root_age,
++ 									Nages				= PLOT_DOWNSAMPLING_RESOLUTION,
++ 									age_label 			= "age",
++ 									value_label 		= "rate",
++ 									plot_log_values 	= TRUE,
++ 									legend_pos 			= "outside",
++ 									plot_title 			= sprintf("Pulled speciation rates in models 0 & %d",ccounter),
++ 									data_file_comments 	= sprintf("# Pulled speciation rates (PSR) in two congruent models (%s and modified #%d)",model$name,ccounter),
++ 									verbose 			= FALSE,
++ 									verbose_prefix 		= "    ")
++ 
++ 				plot_age_curves(	file_basepath 		= sprintf("%s/congruent_model_%d_diversification_rates",model_output_dir,ccounter),
++ 									data_type 			= "rates",
++ 									case_tag 			= sprintf("%s and congruent model #%d",model$name,ccounter),
++ 									curves = list(	list(simulation$ages, simulation$diversification_rate),
++ 													list(simulation2$ages, simulation2$diversification_rate),
++ 													list(simulation$ages, simulation$PDR),
++ 													list(simulation2$ages, simulation2$PDR)),
++ 									curve_names 		= c("r 0", sprintf("r %d",ccounter), "PDR 0", sprintf("PDR %d",ccounter)),
++ 									curve_colors 		= c(PLOT_COLOR_DIVERSIFICATION_RATE, PLOT_COLOR_DIVERSIFICATION_RATE, PLOT_COLOR_PDR, PLOT_COLOR_PDR),
++ 									curve_line_types	= c(1, 2, 1, 2),
++ 									curve_widths 		= c(1, 1, 2, 2),
++ 									plot_curves 		= NULL,
++ 									max_age 			= root_age,
++ 									Nages				= PLOT_DOWNSAMPLING_RESOLUTION,
++ 									age_label 			= "age",
++ 									value_label 		= "rate",
++ 									plot_log_values 	= FALSE,
++ 									legend_pos 			= "outside",
++ 									plot_title 			= sprintf("diversification rates in models 0 & %d",ccounter),
++ 									data_file_comments 	= sprintf("# Diversification rates in two congruent models (%s and modified #%d)",model$name,ccounter),
++ 									verbose 			= FALSE,
++ 									verbose_prefix 		= "    ")
++ 
++ 				plot_age_curves(	file_basepath 		= sprintf("%s/congruent_model_%d_lambdas_mus",model_output_dir,ccounter),
++ 									data_type 			= "rates",
++ 									case_tag 			= sprintf("%s and congruent model #%d",model$name,ccounter),
++ 									curves = list(	list(simulation$ages, simulation$lambda),
++ 													list(simulation2$ages, simulation2$lambda),
++ 													list(simulation$ages, simulation$mu),
++ 													list(simulation2$ages, simulation2$mu)),
++ 									curve_names 		= c("lambda 0", sprintf("lambda %d",ccounter), "mu 0", sprintf("mu %d",ccounter)),
++ 									curve_colors 		= c(PLOT_COLOR_LAMBDA, PLOT_COLOR_LAMBDA, PLOT_COLOR_MU, PLOT_COLOR_MU),
++ 									curve_line_types	= c(1, 2, 1, 2),
++ 									curve_widths 		= c(1, 1, 2, 2),
++ 									plot_curves 		= NULL,
++ 									max_age 			= root_age,
++ 									Nages				= PLOT_DOWNSAMPLING_RESOLUTION,
++ 									age_label 			= "age",
++ 									value_label 		= "rate",
++ 									plot_log_values 	= FALSE,
++ 									legend_pos 			= "outside",
++ 									plot_title 			= sprintf("rates in models 0 & %d",ccounter),
++ 									data_file_comments 	= sprintf("# Speciation/extinction rates in two congruent models (%s and modified #%d)",model$name,ccounter),
++ 									verbose 			= FALSE,
++ 									verbose_prefix 		= "    ");
++ 			}
++ 		}
++ 
++ 		# fit PDR to tree
++ 		if(model$include_PDR_grid_fitting){
++ 			cat2(sprintf("  Fitting PDR to simulated timetree '%s'..\n",model$name))
++ 			if(Ntips < model$fitting_min_lineages){
++ 				cat2(sprintf("    WARNING: Tree size (%d) is below the threshold for HBD fitting (%d). Skipping\n",Ntips,model$fitting_min_lineages))
++ 			}else{
++ 				oldest_age = root_age - empirical_LTT$times[which(empirical_LTT$lineages>=model$fitting_min_lineages)[1]]
++ 				cat2(sprintf("    Note: Max considered age = %g, root_age = %g\n", oldest_age, root_age));
++ 				for(gs in 1:length(model$Nfitting_ages)){
++ 					Nfitting_ages = model$Nfitting_ages[gs]
++ 					cat2(sprintf("    Fitting with age-grid size %d..\n",Nfitting_ages));
++ 					age_grid = seq(from=0,to=oldest_age,length.out=Nfitting_ages)
++ 					fit = fit_hbd_pdr_on_grid(	tree,
++ 												oldest_age			= oldest_age,
++ 												age_grid			= age_grid,
++ 												guess_rholambda0	= rho0*lambda0,
++ 												guess_PDR			= approx(x=simulation$ages, y=simulation$PDR, xout=age_grid)$y,
++ 												relative_dt			= INTEGRATION_RELATIVE_DT,
++ 												Ntrials				= DEFAULT_FITTING_NTRIALS,
++ 												Nthreads			= NUMBER_OF_PARALLEL_THREADS,
++ 												max_model_runtime	= max(1,Ntips/FITTING_TIPS_PER_RUNTIME_SECOND),
++ 												splines_degree		= 1,
++ 												fit_control			= list(eval.max=FITTING_NEVALUATIONS, iter.max=FITTING_NITERATIONS, rel.tol=FITTING_REL_TOLERANCE));
++ 					if(!fit$success){
++ 						cat2(sprintf("    ERROR: Fitting failed: %s\n",fit$error));
++ 					}else{
++ 						save_object_to_file(fit, sprintf("%s/fitted_HBD_PDR/grid_size_%d/fit_results.txt",model_output_dir,Nfitting_ages))
++ 						cat2(sprintf("    Simulating fitted congruence class '%s'..\n",model$name));
++ 						fsimulation = simulate_deterministic_hbd(	LTT0			= Ntips,
++ 																	oldest_age		= oldest_age,
++ 																	rho0			= rho0,
++ 																	age_grid		= fit$age_grid,
++ 																	mu				= 0, # pick an arbitrary member of the fitted equivalence class
++ 																	PDR				= fit$fitted_PDR,
++ 																	lambda0			= fit$fitted_rholambda0/rho0,
++ 																	splines_degree	= 1,
++ 																	relative_dt		= INTEGRATION_RELATIVE_DT);
++ 						if(!fsimulation$success) stop(sprintf("ERROR: Simulation failed: %s\n",fsimulation$error));
++ 
++ 						cat2(sprintf("    Plotting fitted congruence class '%s'..\n",model$name));
++ 						plot_age_curves(file_basepath 		= sprintf("%s/fitted_HBD_PDR/grid_size_%d/fitted_class_LTTs",model_output_dir,Nfitting_ages),
++ 										data_type 			= "LTTs",
++ 										case_tag 			= sprintf("%s - fitted class, grid size %d",model$name,Nfitting_ages),
++ 										curves = list(	list(fsimulation$ages, fsimulation$LTT),
++ 														list(simulation$ages, simulation$LTT),
++ 														list(empirical_LTT$ages, empirical_LTT$lineages)),
++ 										curve_names 		= c("fitted deterministic LTT", "true deterministic LTT", "empirical LTT"),
++ 										curve_colors 		= c(PLOT_COLOR_LTT, PLOT_COLOR_LTT, PLOT_COLOR_LTT),
++ 										curve_line_types	= c(PLOT_LINE_TYPE_DETERMINISTIC_FITTED, PLOT_LINE_TYPE_DETERMINISTIC_TRUE, PLOT_LINE_TYPE_EMPIRICAL),
++ 										curve_widths 		= c(1,2,3),
++ 										max_age 			= root_age,
++ 										Nages				= PLOT_DOWNSAMPLING_RESOLUTION,
++ 										age_label 			= "age",
++ 										value_label 		= "lineages",
++ 										plot_log_values 	= TRUE,
++ 										legend_pos 			= "outside",
++ 										plot_title 			= sprintf("LTT (fitted class vs tree)\ngrid size %d",Nfitting_ages),
++ 										data_file_comments 	= sprintf("# LTTs in tree and fitted HBD-class (%s), fitting age-grid size %d",model$name,Nfitting_ages),
++ 										verbose 			= FALSE,
++ 										verbose_prefix 		= "      ");
++ 						plot_age_curves(file_basepath 		= sprintf("%s/fitted_HBD_PDR/grid_size_%d/fitted_class_PDRs",model_output_dir,Nfitting_ages),
++ 										data_type 			= "PDRs",
++ 										case_tag 			= sprintf("%s - fitted class, grid size %d",model$name,Nfitting_ages),
++ 										curves = list(	list(fsimulation$ages, fsimulation$PDR),
++ 														list(simulation$ages, simulation$PDR)),
++ 										curve_names 		= c("fitted PDR", "true PDR"),
++ 										curve_colors 		= c(PLOT_COLOR_PDR, PLOT_COLOR_PDR),
++ 										curve_line_types	= c(PLOT_LINE_TYPE_DETERMINISTIC_FITTED, PLOT_LINE_TYPE_DETERMINISTIC_TRUE),
++ 										curve_widths 		= 2,
++ 										max_age 			= root_age,
++ 										Nages				= PLOT_DOWNSAMPLING_RESOLUTION,
++ 										age_label 			= "age",
++ 										value_label 		= "rate",
++ 										plot_log_values 	= FALSE,
++ 										legend_pos 			= "outside",
++ 										plot_title 			= sprintf("PDRs (fitted class vs true)\ngrid size %d",Nfitting_ages),
++ 										data_file_comments 	= sprintf("# PDR fitted to tree, model class '%s', fitting age-grid size %d",model$name,Nfitting_ages),
++ 										verbose 			= FALSE,
++ 										verbose_prefix 		= "      ");
++ 					}
++ 				}
++ 			}
++ 		}
++ 
++ 
++ 
++ 		# fit PSR to tree
++ 		if(model$include_PSR_grid_fitting){
++ 			cat2(sprintf("  Fitting PSR to simulated timetree '%s'..\n",model$name))
++ 			if(Ntips < model$fitting_min_lineages){
++ 				cat2(sprintf("    WARNING: Tree size (%d) is below the threshold for HBD fitting (%d). Skipping\n",Ntips,model$fitting_min_lineages))
++ 			}else{
++ 				oldest_age = root_age - empirical_LTT$times[which(empirical_LTT$lineages>=model$fitting_min_lineages)[1]]
++ 				cat2(sprintf("    Note: Max considered age = %g, root_age = %g\n", oldest_age, root_age));
++ 				for(gs in 1:length(model$Nfitting_ages)){
++ 					Nfitting_ages = model$Nfitting_ages[gs]
++ 					cat2(sprintf("    Fitting with age-grid size %d..\n",Nfitting_ages));
++ 					age_grid = seq(from=0,to=oldest_age,length.out=Nfitting_ages)
++ 					fit = fit_hbd_psr_on_grid(	tree,
++ 												oldest_age			= oldest_age,
++ 												age_grid			= age_grid,
++ 												guess_PSR			= approx(x=simulation$ages, y=simulation$PDR, xout=age_grid)$y,
++ 												relative_dt			= INTEGRATION_RELATIVE_DT,
++ 												Ntrials				= DEFAULT_FITTING_NTRIALS,
++ 												Nthreads			= NUMBER_OF_PARALLEL_THREADS,
++ 												max_model_runtime	= max(1,Ntips/FITTING_TIPS_PER_RUNTIME_SECOND),
++ 												splines_degree		= 1,
++ 												fit_control			= list(eval.max=FITTING_NEVALUATIONS, iter.max=FITTING_NITERATIONS, rel.tol=FITTING_REL_TOLERANCE));
++ 					if(!fit$success){
++ 						cat2(sprintf("    ERROR: Fitting failed: %s\n",fit$error));
++ 					}else{
++ 						cat2(sprintf("    --> Loglikelihood %.10g, converged %s\n",fit$loglikelihood,fit$converged));
++ 						save_object_to_file(fit, sprintf("%s/fitted_HBD_PSR/grid_size_%d/fit_results.txt",model_output_dir,Nfitting_ages))
++ 						cat2(sprintf("    Plotting dLTT of fitted congruence class '%s'..\n",model$name));
++ 						refined_age_grid = seq(from=0,to=oldest_age,length.out=PLOT_DOWNSAMPLING_RESOLUTION)
++ 						fitted_LTT = Ntips * exp(-castor:::get_antiderivative_of_splines_function(Xgrid=fit$age_grid, Xstart=0, Ygrid=fit$fitted_PSR, splines_degree=1, Xtarget=refined_age_grid));
++ 						plot_age_curves(file_basepath 		= sprintf("%s/fitted_HBD_PSR/grid_size_%d/fitted_class_LTTs",model_output_dir,Nfitting_ages),
++ 										data_type 			= "LTTs",
++ 										case_tag 			= sprintf("%s - fitted class, grid size %d",model$name,Nfitting_ages),
++ 										curves = list(	list(refined_age_grid, fitted_LTT),
++ 														list(simulation$ages, simulation$LTT),
++ 														list(empirical_LTT$ages, empirical_LTT$lineages)),
++ 										curve_names 		= c("fitted deterministic LTT", "true deterministic LTT", "empirical LTT"),
++ 										curve_colors 		= c(PLOT_COLOR_LTT, PLOT_COLOR_LTT, PLOT_COLOR_LTT),
++ 										curve_line_types	= c(PLOT_LINE_TYPE_DETERMINISTIC_FITTED, PLOT_LINE_TYPE_DETERMINISTIC_TRUE, PLOT_LINE_TYPE_EMPIRICAL),
++ 										curve_widths 		= c(1,2,3),
++ 										max_age 			= root_age,
++ 										Nages				= PLOT_DOWNSAMPLING_RESOLUTION,
++ 										age_label 			= "age",
++ 										value_label 		= "lineages",
++ 										plot_log_values 	= TRUE,
++ 										legend_pos 			= "outside",
++ 										plot_title 			= sprintf("LTT (fitted class vs tree)\ngrid size %d",Nfitting_ages),
++ 										data_file_comments 	= sprintf("# LTTs in tree and fitted HBD congruence class (%s), fitting age-grid size %d",model$name,Nfitting_ages),
++ 										verbose 			= FALSE,
++ 										verbose_prefix 		= "      ");
++ 
++ 						cat2(sprintf("    Plotting PSR of fitted congruence class '%s'..\n",model$name));
++ 						plot_age_curves(file_basepath 		= sprintf("%s/fitted_HBD_PSR/grid_size_%d/fitted_class_PSR",model_output_dir,Nfitting_ages),
++ 										data_type 			= "PSRs",
++ 										case_tag 			= sprintf("%s - fitted class, grid size %d",model$name,Nfitting_ages),
++ 										curves = list(	list(fit$age_grid, fit$fitted_PSR),
++ 														list(simulation$ages, simulation$PSR)),
++ 										curve_names 		= c("fitted PSR", "true PSR"),
++ 										curve_colors 		= c(PLOT_COLOR_PSR, PLOT_COLOR_PSR),
++ 										curve_line_types	= c(PLOT_LINE_TYPE_DETERMINISTIC_FITTED, PLOT_LINE_TYPE_DETERMINISTIC_TRUE),
++ 										curve_widths 		= 2,
++ 										max_age 			= root_age,
++ 										age_label 			= "age",
++ 										value_label 		= "rate",
++ 										plot_log_values 	= FALSE,
++ 										legend_pos 			= "outside",
++ 										plot_title 			= sprintf("PSR (fitted class vs tree)\ngrid size %d",Nfitting_ages),
++ 										data_file_comments 	= sprintf("# PSR in tree and fitted HBD congruence class (%s), fitting age-grid size %d",model$name,Nfitting_ages),
++ 										verbose 			= FALSE,
++ 										verbose_prefix 		= "      ");
++ 					}
++ 				}
++ 			}
++ 		}
++ 
++ 
++ 		# fit HBD-model to tree
++ 		if(model$include_grid_model_fitting){
++ 			cat2(sprintf("  Fitting HBD-model to simulated timetree '%s'..\n",model$name))
++ 			if(Ntips < model$fitting_min_lineages){
++ 				cat2(sprintf("    WARNING: Tree size (%d) is below the threshold for HBD fitting (%d). Skipping\n",Ntips,model$fitting_min_lineages))
++ 			}else{
++ 				oldest_age = root_age - empirical_LTT$times[which(empirical_LTT$lineages>=model$fitting_min_lineages)[1]]
++ 				cat2(sprintf("    Note: Max considered age = %g, root_age = %g\n", oldest_age, root_age));
++ 				for(gs in 1:length(model$Nfitting_ages)){
++ 					Nfitting_ages = model$Nfitting_ages[gs]
++ 					cat2(sprintf("    Fitting model with age-grid size %d..\n",Nfitting_ages));
++ 					fit = fit_hbd_model_on_grid(tree,
++ 												oldest_age			= oldest_age,
++ 												age_grid			= seq(from=0,to=oldest_age,length.out=Nfitting_ages),
++ 												fixed_rho0			= rho0,
++ 												splines_degree		= 1,
++ 												relative_dt			= INTEGRATION_RELATIVE_DT,
++ 												Ntrials				= DEFAULT_FITTING_NTRIALS,
++ 												Nthreads			= NUMBER_OF_PARALLEL_THREADS,
++ 												max_model_runtime	= max(1,Ntips/FITTING_TIPS_PER_RUNTIME_SECOND),
++ 												fit_control			= list(eval.max=FITTING_NEVALUATIONS, iter.max=FITTING_NITERATIONS, rel.tol=FITTING_REL_TOLERANCE))
++ 					if(!fit$success){
++ 						cat2(sprintf("    ERROR: Fitting failed: %s\n",fit$error));
++ 					}else{
++ 						save_object_to_file(fit, sprintf("%s/fitted_HBD_model/grid_size_%d/fit_results.txt",model_output_dir,Nfitting_ages))
++ 						cat2(sprintf("    Simulating fitted model '%s'..\n",model$name));
++ 						fsimulation = simulate_deterministic_hbd(	LTT0			= Ntips,
++ 																	oldest_age		= oldest_age,
++ 																	rho0			= rho0,
++ 																	age_grid		= fit$age_grid,
++ 																	lambda			= fit$fitted_lambda,
++ 																	mu				= fit$fitted_mu,
++ 																	splines_degree	= 1,
++ 																	relative_dt		= INTEGRATION_RELATIVE_DT);
++ 						if(!fsimulation$success){
++ 							cat2(sprintf("ERROR: Simulation failed: %s\n",fsimulation$error))
++ 						}else{
++ 							cat2(sprintf("    Plotting fitted model '%s'..\n",model$name));
++ 							plot_age_curves(file_basepath 		= sprintf("%s/fitted_HBD_model/grid_size_%d/fitted_dLTT",model_output_dir,Nfitting_ages),
++ 											data_type 			= "LTTs",
++ 											case_tag 			= sprintf("%s, fitted dLTT",model$name),
++ 											curves 				= list(	list(empirical_LTT$ages, empirical_LTT$lineages),
++ 																		list(simulation$ages, simulation$LTT),
++ 																		list(fsimulation$ages, fsimulation$LTT)),
++ 											curve_names 		= c("tree LTT","true dLTT","fitted dLTT"),
++ 											curve_colors 		= c(PLOT_COLOR_LTT,PLOT_COLOR_LTT,PLOT_COLOR_FIT_DLTT),
++ 											curve_line_types	= c(1,2,2),
++ 											curve_widths 		= c(1,1,2),
++ 											max_age 			= oldest_age,
++ 											age_label 			= sprintf("age (%s)",time_unit),
++ 											value_label 		= sprintf("lineages"),
++ 											plot_log_values 	= TRUE,
++ 											legend_pos 			= "outside",
++ 											plot_title 			= sprintf("LTT of tree and fitted dLTT\n%s",model$name),
++ 											data_file_comments 	= sprintf("LTT of simulated tree '%s', and fitted dLTT",model$name),
++ 											verbose 			= FALSE,
++ 											verbose_prefix 		= "    ")
++ 							plot_age_curves(file_basepath 		= sprintf("%s/fitted_HBD_model/grid_size_%d/fitted_lambda_mu",model_output_dir,Nfitting_ages),
++ 											data_type 			= "lambdas & mus",
++ 											case_tag 			= sprintf("%s, fitted lambda & mu",model$name),
++ 											curves 				= list(	list(simulation$ages, simulation$lambda),
++ 																		list(simulation$ages, simulation$mu),
++ 																		list(fsimulation$ages, fsimulation$lambda),
++ 																		list(fsimulation$ages, fsimulation$mu)),
++ 											curve_names 		= c("lambda (true)","mu (true)","lambda (fit)","mu (fit)"),
++ 											curve_colors 		= c(PLOT_COLOR_LAMBDA,PLOT_COLOR_MU,PLOT_COLOR_LAMBDA,PLOT_COLOR_MU),
++ 											curve_line_types	= c(1,1,2,2),
++ 											curve_widths 		= c(1,1,2,2),
++ 											max_age 			= oldest_age,
++ 											age_label 			= sprintf("age (%s)",time_unit),
++ 											value_label 		= sprintf("rate (1/%s)",time_unit),
++ 											plot_log_values 	= FALSE,
++ 											legend_pos 			= "outside",
++ 											plot_title 			= sprintf("True and fitted lambda & mu\n%s",model$name),
++ 											data_file_comments 	= sprintf("True and fitted lambda & mu, '%s'",model$name),
++ 											verbose 			= FALSE,
++ 											verbose_prefix 		= "    ")
++ 						}
++ 					}
++ 				}
++ 			}
++ 		}
++ 
++ 		# fit HBD-lambda to tree (assume mu is known)
++ 		if(model$include_grid_lambda_fitting){
++ 			cat2(sprintf("  Fitting HBD-lambda to simulated timetree '%s' (assuming known mu)..\n",model$name))
++ 			if(Ntips < model$fitting_min_lineages){
++ 				cat2(sprintf("    WARNING: Tree size (%d) is below the threshold for HBD fitting (%d). Skipping\n",Ntips,model$fitting_min_lineages))
++ 			}else{
++ 				oldest_age = root_age - empirical_LTT$times[which(empirical_LTT$lineages>=model$fitting_min_lineages)[1]]
++ 				cat2(sprintf("    Note: Max considered age = %g, root_age = %g\n", oldest_age, root_age));
++ 				for(gs in 1:length(model$Nfitting_ages)){
++ 					Nfitting_ages = model$Nfitting_ages[gs]
++ 					cat2(sprintf("    Fitting lambda with age-grid size %d..\n",Nfitting_ages));
++ 					age_grid = seq(from=0,to=oldest_age,length.out=Nfitting_ages)
++ 					fit = fit_hbd_model_on_grid(tree,
++ 												oldest_age			= oldest_age,
++ 												age_grid			= age_grid,
++ 												fixed_rho0			= rho0,
++ 												fixed_mu			= age2mu(age_grid),
++ 												splines_degree		= 1,
++ 												relative_dt			= INTEGRATION_RELATIVE_DT,
++ 												Ntrials				= DEFAULT_FITTING_NTRIALS,
++ 												Nthreads			= NUMBER_OF_PARALLEL_THREADS,
++ 												max_model_runtime	= max(1,Ntips/FITTING_TIPS_PER_RUNTIME_SECOND),
++ 												fit_control			= list(eval.max=FITTING_NEVALUATIONS, iter.max=FITTING_NITERATIONS, rel.tol=FITTING_REL_TOLERANCE))
++ 					if(!fit$success){
++ 						cat2(sprintf("    ERROR: Fitting failed: %s\n",fit$error));
++ 					}else{
++ 						save_object_to_file(fit, sprintf("%s/fitted_HBD_lambda/grid_size_%d/fit_results.txt",model_output_dir,Nfitting_ages))
++ 						cat2(sprintf("    Simulating fitted model '%s'..\n",model$name));
++ 						fsimulation = simulate_deterministic_hbd(	LTT0			= Ntips,
++ 																	oldest_age		= oldest_age,
++ 																	rho0			= rho0,
++ 																	age_grid		= fit$age_grid,
++ 																	lambda			= fit$fitted_lambda,
++ 																	mu				= fit$fitted_mu,
++ 																	splines_degree	= 1,
++ 																	relative_dt		= INTEGRATION_RELATIVE_DT);
++ 						if(!fsimulation$success){
++ 							cat2(sprintf("ERROR: Simulation failed: %s\n",fsimulation$error))
++ 						}else{
++ 							cat2(sprintf("    Plotting fitted model '%s'..\n",model$name));
++ 							plot_age_curves(file_basepath 		= sprintf("%s/fitted_HBD_lambda/grid_size_%d/fitted_dLTT",model_output_dir,Nfitting_ages),
++ 											data_type 			= "LTTs",
++ 											case_tag 			= sprintf("%s, fitted dLTT",model$name),
++ 											curves 				= list(	list(empirical_LTT$ages, empirical_LTT$lineages),
++ 																		list(simulation$ages, simulation$LTT),
++ 																		list(fsimulation$ages, fsimulation$LTT)),
++ 											curve_names 		= c("tree LTT","true dLTT","fitted dLTT"),
++ 											curve_colors 		= c(PLOT_COLOR_LTT,PLOT_COLOR_LTT,PLOT_COLOR_FIT_DLTT),
++ 											curve_line_types	= c(1,2,2),
++ 											curve_widths 		= c(1,1,2),
++ 											max_age 			= oldest_age,
++ 											age_label 			= sprintf("age (%s)",time_unit),
++ 											value_label 		= sprintf("lineages"),
++ 											plot_log_values 	= TRUE,
++ 											legend_pos 			= "outside",
++ 											plot_title 			= sprintf("LTT of tree and fitted dLTT\n%s",model$name),
++ 											data_file_comments 	= sprintf("LTT of simulated tree '%s', and fitted dLTT",model$name),
++ 											verbose 			= FALSE,
++ 											verbose_prefix 		= "    ")
++ 
++ 							plot_age_curves(file_basepath 		= sprintf("%s/fitted_HBD_lambda/grid_size_%d/fitted_lambda_mu",model_output_dir,Nfitting_ages),
++ 											data_type 			= "lambdas",
++ 											case_tag 			= sprintf("%s, fitted lambda",model$name),
++ 											curves 				= list(	list(simulation$ages, simulation$lambda),
++ 																		list(fsimulation$ages, fsimulation$lambda)),
++ 											curve_names 		= c("lambda (true)","lambda (fit)"),
++ 											curve_colors 		= c(PLOT_COLOR_LAMBDA,PLOT_COLOR_LAMBDA),
++ 											curve_line_types	= c(1,2),
++ 											curve_widths 		= c(1,2),
++ 											max_age 			= oldest_age,
++ 											age_label 			= sprintf("age (%s)",time_unit),
++ 											value_label 		= sprintf("rate (1/%s)",time_unit),
++ 											plot_log_values 	= FALSE,
++ 											legend_pos 			= "outside",
++ 											plot_title 			= sprintf("True and fitted lambda, when mu is known\n%s",model$name),
++ 											data_file_comments 	= sprintf("True and fitted lambda, when mu is known, '%s'",model$name),
++ 											verbose 			= FALSE,
++ 											verbose_prefix 		= "    ")
++ 						}
++ 					}
++ 				}
++ 			}
++ 		}
++ 	}
++ }
+> save(list=ls(), file=sprintf("%s/%s",output_dir,"everything.rda"))
+> cat2(sprintf("Done. All outputs were written to '%s'\n",output_dir));
+Done. All outputs were written to 'output/run_001'
+> 
+> proc.time()
+    user   system  elapsed 
+2199.701   16.738  938.387 
