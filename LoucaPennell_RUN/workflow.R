@@ -1032,11 +1032,13 @@ full_age_grid <- c(precomputed_rates[,1], castor::get_tree_span(tree)$max_distan
 
 full_lambda <- c(precomputed_rates[,2], precomputed_rates[nrow(precomputed_rates),2])
 
-steeman_fixed_ef <- function(ef, full_lambda, tree, full_age_grid, rho0=87/89) {
+steeman_fixed_ef <- function(ef, nrates=68, full_lambda, tree, full_age_grid, rho0=87/89) {
+	nrates_age_grid <- approx(x=full_age_grid, y=full_age_grid, n=nrates, rule=2)$y
+	nrates_lambda <- approx(x=full_age_grid, y=full_lambda, xout=nrates_age_grid, rule=2)$y
 	results <- list(
-		nloptr(log(full_lambda), eval_f=negloglikelihood_hbd_for_nloptr, ef=ef, tree=tree, age_grid=full_age_grid, rho0=rho0, oldest_age=castor::get_tree_span(tree)$max_distance, badval=1e6, opts=list(print_level=0, algorithm="NLOPT_LN_NEWUOA", maxeval=1000)),
-		nloptr(log((1+ef)*full_lambda), eval_f=negloglikelihood_hbd_for_nloptr, ef=ef, tree=tree, age_grid=full_age_grid, rho0=rho0, oldest_age=castor::get_tree_span(tree)$max_distance, badval=1e6, opts=list(print_level=0, algorithm="NLOPT_LN_NEWUOA", maxeval=1000)),
-		nloptr(log(2*full_lambda), eval_f=negloglikelihood_hbd_for_nloptr, ef=ef, tree=tree, age_grid=full_age_grid, rho0=rho0, oldest_age=castor::get_tree_span(tree)$max_distance, badval=1e6, opts=list(print_level=0, algorithm="NLOPT_LN_NEWUOA", maxeval=1000))
+		nloptr(log(nrates_lambda), eval_f=negloglikelihood_hbd_for_nloptr, ef=ef, tree=tree, age_grid=nrates_age_grid, rho0=rho0, oldest_age=castor::get_tree_span(tree)$max_distance, badval=1e6, opts=list(print_level=0, algorithm="NLOPT_LN_NEWUOA", maxeval=1000)),
+		nloptr(log((1+ef)*nrates_lambda), eval_f=negloglikelihood_hbd_for_nloptr, ef=ef, tree=tree, age_grid=nrates_age_grid, rho0=rho0, oldest_age=castor::get_tree_span(tree)$max_distance, badval=1e6, opts=list(print_level=0, algorithm="NLOPT_LN_NEWUOA", maxeval=1000)),
+		nloptr(log(2*nrates_lambda), eval_f=negloglikelihood_hbd_for_nloptr, ef=ef, tree=tree, age_grid=nrates_age_grid, rho0=rho0, oldest_age=castor::get_tree_span(tree)$max_distance, badval=1e6, opts=list(print_level=0, algorithm="NLOPT_LN_NEWUOA", maxeval=1000))
 	)
 	best <- results[[which.min(lapply(results, "[[", 'objective'))[1]]]
 	best$lambda <- exp(best$x0)
@@ -1044,39 +1046,54 @@ steeman_fixed_ef <- function(ef, full_lambda, tree, full_age_grid, rho0=87/89) {
 	best$netdiv <- best$lambda-best$mu
 	best$turnover <- best$lambda+best$mu
 	best$ef <- ef
-	best$full_age_grid <- full_age_grid
-	best$coarseness <- length(full_age_grid)
+	best$nrates_age_grid <- nrates_age_grid
+	best$nrates <- length(nrates_age_grid)
 	return(best)
 }
 
 ef_tries <-seq(from=0, to=0.9, length.out=10)
+nrates_tries <- c(2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 20, 35, 50, 100)
+#nrates_tries <- c(2, 3, 4)
 
 
-fine_age_grid <- approx(x=full_age_grid, y=full_age_grid, n=100, rule=2)$y
-fine_lambda <- approx(x=full_age_grid, y=full_lambda, xout=fine_age_grid, rule=2)$y
+# fine_age_grid <- approx(x=full_age_grid, y=full_age_grid, n=100, rule=2)$y
+# fine_lambda <- approx(x=full_age_grid, y=full_lambda, xout=fine_age_grid, rule=2)$y
+#
+# coarse_age_grid <- approx(x=full_age_grid, y=full_age_grid, n=20, rule=2)$y
+# coarse_lambda <- approx(x=full_age_grid, y=full_lambda, xout=coarse_age_grid, rule=2)$y
+#
+# coarse_age_grid <- approx(x=full_age_grid, y=full_age_grid, n=20, rule=2)$y
+# coarse_lambda <- approx(x=full_age_grid, y=full_lambda, xout=coarse_age_grid, rule=2)$y
 
-coarse_age_grid <- approx(x=full_age_grid, y=full_age_grid, n=20, rule=2)$y
-coarse_lambda <- approx(x=full_age_grid, y=full_lambda, xout=coarse_age_grid, rule=2)$y
 
-all_steeman_medium <- parallel::mclapply(ef_tries, steeman_fixed_ef, full_lambda=full_lambda, tree=tree, full_age_grid=full_age_grid, mc.cores=parallel::detectCores())
+# all_steeman_medium <- parallel::mclapply(ef_tries, steeman_fixed_ef, full_lambda=full_lambda, tree=tree, full_age_grid=full_age_grid, mc.cores=parallel::detectCores())
+#
+# all_steeman_fine <- parallel::mclapply(ef_tries, steeman_fixed_ef, full_lambda=fine_lambda, tree=tree, full_age_grid=fine_age_grid, mc.cores=parallel::detectCores())
+#
+# all_steeman_coarse <- parallel::mclapply(ef_tries, steeman_fixed_ef, full_lambda=coarse_lambda, tree=tree, full_age_grid=coarse_age_grid, mc.cores=parallel::detectCores())
 
-all_steeman_fine <- parallel::mclapply(ef_tries, steeman_fixed_ef, full_lambda=fine_lambda, tree=tree, full_age_grid=fine_age_grid, mc.cores=parallel::detectCores())
+# all_steeman <- c(all_steeman_coarse, all_steeman_medium, all_steeman_fine)
 
-all_steeman_coarse <- parallel::mclapply(ef_tries, steeman_fixed_ef, full_lambda=coarse_lambda, tree=tree, full_age_grid=coarse_age_grid, mc.cores=parallel::detectCores())
+all_steeman <- list()
+for (i in sequence(length(nrates_tries))) {
+	all_steeman_local <- parallel::mclapply(ef_tries, steeman_fixed_ef, nrates=nrates_tries[i], full_lambda=coarse_lambda, tree=tree, full_age_grid=coarse_age_grid, mc.cores=parallel::detectCores())
+	all_steeman <- c(all_steeman, all_steeman_local)
+}
 
-all_steeman <- c(all_steeman_coarse, all_steeman_medium, all_steeman_fine)
-
-summary_steeman <- data.frame(ef=unlist(lapply(all_steeman, "[[", "ef")), coarse=unlist(lapply(all_steeman, "[[", "coarseness")), neglogl=unlist(lapply(all_steeman, "[[", "objective")))
+summary_steeman <- data.frame(ef=unlist(lapply(all_steeman, "[[", "ef")), coarse=unlist(lapply(all_steeman, "[[", "nrates")), neglogl=unlist(lapply(all_steeman, "[[", "objective")))
 summary_steeman$deltaneglogl = summary_steeman$neglogl - min(summary_steeman$neglogl)
-
+summary_steeman$AIC <- 2*summary_steeman$neglogl + 2 * (1+summary_steeman$coarse)
+summary_steeman$deltaAIC <- summary_steeman$AIC-min(summary_steeman$AIC)
 
 all.div <- unlist(lapply(all_steeman, "[[", "netdiv"))
 pdf(file=sprintf("%s/%s",output_dir,"fitting.pdf"))
-plot(x=rev(range(full_age_grid)), y=range(all.div), xlab='age (MYR)', ylab="net diversification rate (1/MY)", bty="n", type="n")
+plot(x=range(full_age_grid), y=range(all.div), xlab='age (MYR)', ylab="net diversification rate (1/MY)", bty="n", type="n")
 for (i in seq_along(all_steeman)) {
-	lines(all_steeman[[i]]$full_age_grid, all_steeman[[i]]$netdiv)
+	lines(all_steeman[[i]]$nrates_age_grid, all_steeman[[i]]$netdiv, col=rgb(0,0,0,.3))
 }
 dev.off()
+print(summary_steeman)
+write.csv(summary_steeman, file=sprintf("%s/%s",output_dir,"steemansummary.csv"))
 #s90 <- steeman_fixed_ef(ef=.9, full_lambda=full_lambda, tree=tree, full_age_grid=full_age_grid)
 #steeman_ef0.9 <- nloptr(log(full_lambda), eval_f=negloglikelihood_hbd_for_nloptr, ef=0.9, tree=tree, age_grid=full_age_grid, rho0=87/89, oldest_age=castor::get_tree_span(tree)$max_distance, badval=1e6, opts=list(print_level=1, algorithm="NLOPT_LN_NEWUOA", maxeval=1000))
 

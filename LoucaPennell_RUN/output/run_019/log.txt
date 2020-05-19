@@ -1,9 +1,0 @@
-Examining external tree 'Cetacea_Steeman2009'..
-  Loading tree from file..
-    --> Loaded tree has 87 tips and 86 nodes, root_age=35.8578 Myr, sampling fraction=0.977528
-  Calculating the tree's LTT..
-  Note: Loaded previously fitted speciation rates from file
-  Simulating model with previously fitted rates..
-  Plotting tree LTT and dLTT based on loaded rates..
-  Simulating congruent model, by assuming that mu/lambda=0.9..
-  Plotting rates of previously fitted and congruent model..
