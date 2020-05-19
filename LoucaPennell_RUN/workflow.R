@@ -608,109 +608,113 @@ if(INCLUDE_SEED_PLANT_TREE){
 	# fit a HBD model with exponentially varying lambda and mu
 	# Figure 2 in Louca and Pennell (2020)
 
-	cat(sprintf("  Fitting exp-HBD model to tree '%s'..\n",tree_name))
-	fit_dir = sprintf("%s/fitting_exp_HBD_model",tree_output_dir)
-	dir.create(fit_dir, showWarnings = FALSE, recursive=TRUE);
-	age_grid 	 = seq(from=0,to=oldest_fit_age,length.out=1000)
-	lambda 		 = function(age,params){ pmax(0,params['alpha'] * exp(params['beta']*(age/root_age))); }
-	mu 			 = function(age,params){ pmax(0,params['gamma'] * exp(params['delta']*(age/root_age))); }
-	start_lambda = max(empirical_LTT$relative_slopes/rho0)
-	save(list=ls(), file=sprintf("%s/%s",output_dir,"seedstart.rda"))
-	fit = fit_hbd_model_parametric(	tree,
-									age_grid			= age_grid,
-									param_values		= c(alpha=NA, beta=NA, gamma=NA, delta=NA),
-									param_guess			= c(start_lambda,0,0.5*start_lambda,0),
-									param_min			= c(0,-5,0,-5),
-									param_max			= c(100*start_lambda,5,100*start_lambda,5),
-									param_scale			= 1,
-									oldest_age			= oldest_fit_age,
-									lambda				= lambda,
-									mu					= mu,
-									rho0				= function(params) rho0,
-									relative_dt			= INTEGRATION_RELATIVE_DT,
-									Ntrials				= DEFAULT_FITTING_NTRIALS,
-									max_start_attempts	= 10,
-									Nthreads			= NUMBER_OF_PARALLEL_THREADS,
-									max_model_runtime	= max(1,Ntips/FITTING_TIPS_PER_RUNTIME_SECOND),
-									fit_control			= list(eval.max=FITTING_NEVALUATIONS, iter.max=FITTING_NITERATIONS, rel.tol=FITTING_REL_TOLERANCE))
-	if(!fit$success){
-		cat2(sprintf("    ERROR: Fitting failed: %s\n",fit$error));
-		stop()
-	}
-	save_object_to_file(fit, sprintf("%s/exp_BD_fit_results.txt",fit_dir));
-	cat2(sprintf("  Simulating fitted model..\n"));
-	fsimulation = simulate_deterministic_hbd(	LTT0			= Ntips,
-												oldest_age		= oldest_plot_age,
-												rho0			= rho0,
-												age_grid		= age_grid,
-												lambda			= lambda(age_grid,fit$param_fitted),
-												mu				= mu(age_grid,fit$param_fitted),
-												splines_degree	= 1,
-												relative_dt		= INTEGRATION_RELATIVE_DT);
-	if(!fsimulation$success){
-		cat2(sprintf("    WARNING: Simulation failed: %s\n",fsimulation$error))
-	}else{
-		cat2(sprintf("  Plotting LTT of tree '%s' and fitted dLTT..\n",tree_name));
-		plot_age_curves(file_basepath 		= sprintf("%s/fitted_HBD_model_LTT",fit_dir),
-						data_type 			= "LTTs",
-						case_tag 			= sprintf("%s, fitted dLTT",tree_name),
-						curves 				= list(	list(empirical_LTT$ages, empirical_LTT$lineages),
-													list(fsimulation$ages, fsimulation$LTT)),
-						curve_names 		= c("tree LTT","fitted dLTT"),
-						curve_colors 		= c(PLOT_COLOR_LTT,PLOT_COLOR_FIT_DLTT),
-						curve_line_types	= c(1,2),
-						curve_widths 		= c(PLOT_LW_LTT,PLOT_LW_FIT_DLTT),
-						max_age 			= oldest_plot_age,
-						age_label 			= sprintf("age (%s)",time_unit),
-						value_label 		= sprintf("lineages"),
-						plot_log_values 	= TRUE,
-						legend_pos 			= "outside",
-						plot_title 			= sprintf("LTT of tree and fitted dLTT\n%s",tree_name),
-						data_file_comments 	= sprintf("LTT of external tree '%s', and fitted dLTT",tree_name),
-						verbose 			= FALSE,
-						verbose_prefix 		= "    ");
+# BCO this section always fails. Commenting out for now, after leaving a note in the log
 
-	}
+	cat(sprintf("  Skipping fitting exp-HBD model to tree '%s'..\n",tree_name))
 
-	# Construct a congruent model with modified exponent for mu
-	cat2(sprintf("  Simulating congruent model, with alternative delta..\n"));
-	params = fit$param_fitted
-	params['delta'] = - fit$param_fitted['delta'] # simply negate the fitted delta
-	csimulation = simulate_deterministic_hbd(	LTT0			= Ntips,
-												oldest_age		= oldest_plot_age,
-												rho0			= rho0,
-												age_grid		= fsimulation$ages,
-												PDR				= fsimulation$PDR,
-												lambda0 		= lambda(0,fit$param_fitted),
-												mu				= mu(fsimulation$ages,params),
-												splines_degree	= 1,
-												relative_dt		= INTEGRATION_RELATIVE_DT);
-	if(!csimulation$success){
-		cat2(sprintf("      WARNING: Simulation of congruent model failed: %s\n",csimulation$error))
-	}else{
-		cat2(sprintf("  Plotting rates of fitted and congruent models..\n"));
-		plot_age_curves(file_basepath 		= sprintf("%s/fitted_and_congruent_lambda_mu",fit_dir),
-						data_type 			= "lambdas & mus",
-						case_tag 			= sprintf("%s, fit & congruent",tree_name),
-						curves 				= list(	list(fsimulation$ages, fsimulation$lambda),
-													list(fsimulation$ages, fsimulation$mu),
-													list(csimulation$ages, csimulation$lambda),
-													list(csimulation$ages, csimulation$mu)),
-						curve_names 		= c("lambda (fit)","mu (fit)","lambda (congruent)","mu (congruent)"),
-						curve_colors 		= c(PLOT_COLOR_LAMBDA,PLOT_COLOR_MU,PLOT_COLOR_LAMBDA,PLOT_COLOR_MU),
-						curve_line_types	= c(1,1,2,2),
-						curve_widths 		= c(1,1,2,2),
-						max_age 			= oldest_plot_age,
-						age_label 			= sprintf("age (%s)",time_unit),
-						value_label 		= sprintf("rate (1/%s)",time_unit),
-						plot_log_values 	= FALSE,
-						legend_pos 			= "outside",
-						plot_title 			= sprintf("Fitted exp-HBD model & congruent model\n%s",tree_name),
-						data_file_comments 	= sprintf("Speciation and extinction rates for fitted and congruent model, tree '%s'",tree_name),
-						verbose 			= FALSE,
-						verbose_prefix 		= "    ");
-	}
-
+	# cat(sprintf("  Fitting exp-HBD model to tree '%s'..\n",tree_name))
+	# fit_dir = sprintf("%s/fitting_exp_HBD_model",tree_output_dir)
+	# dir.create(fit_dir, showWarnings = FALSE, recursive=TRUE);
+	# age_grid 	 = seq(from=0,to=oldest_fit_age,length.out=1000)
+	# lambda 		 = function(age,params){ pmax(0,params['alpha'] * exp(params['beta']*(age/root_age))); }
+	# mu 			 = function(age,params){ pmax(0,params['gamma'] * exp(params['delta']*(age/root_age))); }
+	# start_lambda = max(empirical_LTT$relative_slopes/rho0)
+	# save(list=ls(), file=sprintf("%s/%s",output_dir,"seedstart.rda"))
+	# fit = fit_hbd_model_parametric(	tree,
+	# 								age_grid			= age_grid,
+	# 								param_values		= c(alpha=NA, beta=NA, gamma=NA, delta=NA),
+	# 								param_guess			= c(start_lambda,0,0.5*start_lambda,0),
+	# 								param_min			= c(0,-5,0,-5),
+	# 								param_max			= c(100*start_lambda,5,100*start_lambda,5),
+	# 								param_scale			= 1,
+	# 								oldest_age			= oldest_fit_age,
+	# 								lambda				= lambda,
+	# 								mu					= mu,
+	# 								rho0				= function(params) rho0,
+	# 								relative_dt			= INTEGRATION_RELATIVE_DT,
+	# 								Ntrials				= DEFAULT_FITTING_NTRIALS,
+	# 								max_start_attempts	= 10,
+	# 								Nthreads			= NUMBER_OF_PARALLEL_THREADS,
+	# 								max_model_runtime	= max(1,Ntips/FITTING_TIPS_PER_RUNTIME_SECOND),
+	# 								fit_control			= list(eval.max=FITTING_NEVALUATIONS, iter.max=FITTING_NITERATIONS, rel.tol=FITTING_REL_TOLERANCE))
+	# if(!fit$success){
+	# 	cat2(sprintf("    ERROR: Fitting failed: %s\n",fit$error));
+	# 	stop()
+	# }
+	# save_object_to_file(fit, sprintf("%s/exp_BD_fit_results.txt",fit_dir));
+	# cat2(sprintf("  Simulating fitted model..\n"));
+	# fsimulation = simulate_deterministic_hbd(	LTT0			= Ntips,
+	# 											oldest_age		= oldest_plot_age,
+	# 											rho0			= rho0,
+	# 											age_grid		= age_grid,
+	# 											lambda			= lambda(age_grid,fit$param_fitted),
+	# 											mu				= mu(age_grid,fit$param_fitted),
+	# 											splines_degree	= 1,
+	# 											relative_dt		= INTEGRATION_RELATIVE_DT);
+	# if(!fsimulation$success){
+	# 	cat2(sprintf("    WARNING: Simulation failed: %s\n",fsimulation$error))
+	# }else{
+	# 	cat2(sprintf("  Plotting LTT of tree '%s' and fitted dLTT..\n",tree_name));
+	# 	plot_age_curves(file_basepath 		= sprintf("%s/fitted_HBD_model_LTT",fit_dir),
+	# 					data_type 			= "LTTs",
+	# 					case_tag 			= sprintf("%s, fitted dLTT",tree_name),
+	# 					curves 				= list(	list(empirical_LTT$ages, empirical_LTT$lineages),
+	# 												list(fsimulation$ages, fsimulation$LTT)),
+	# 					curve_names 		= c("tree LTT","fitted dLTT"),
+	# 					curve_colors 		= c(PLOT_COLOR_LTT,PLOT_COLOR_FIT_DLTT),
+	# 					curve_line_types	= c(1,2),
+	# 					curve_widths 		= c(PLOT_LW_LTT,PLOT_LW_FIT_DLTT),
+	# 					max_age 			= oldest_plot_age,
+	# 					age_label 			= sprintf("age (%s)",time_unit),
+	# 					value_label 		= sprintf("lineages"),
+	# 					plot_log_values 	= TRUE,
+	# 					legend_pos 			= "outside",
+	# 					plot_title 			= sprintf("LTT of tree and fitted dLTT\n%s",tree_name),
+	# 					data_file_comments 	= sprintf("LTT of external tree '%s', and fitted dLTT",tree_name),
+	# 					verbose 			= FALSE,
+	# 					verbose_prefix 		= "    ");
+	#
+	# }
+	#
+	# # Construct a congruent model with modified exponent for mu
+	# cat2(sprintf("  Simulating congruent model, with alternative delta..\n"));
+	# params = fit$param_fitted
+	# params['delta'] = - fit$param_fitted['delta'] # simply negate the fitted delta
+	# csimulation = simulate_deterministic_hbd(	LTT0			= Ntips,
+	# 											oldest_age		= oldest_plot_age,
+	# 											rho0			= rho0,
+	# 											age_grid		= fsimulation$ages,
+	# 											PDR				= fsimulation$PDR,
+	# 											lambda0 		= lambda(0,fit$param_fitted),
+	# 											mu				= mu(fsimulation$ages,params),
+	# 											splines_degree	= 1,
+	# 											relative_dt		= INTEGRATION_RELATIVE_DT);
+	# if(!csimulation$success){
+	# 	cat2(sprintf("      WARNING: Simulation of congruent model failed: %s\n",csimulation$error))
+	# }else{
+	# 	cat2(sprintf("  Plotting rates of fitted and congruent models..\n"));
+	# 	plot_age_curves(file_basepath 		= sprintf("%s/fitted_and_congruent_lambda_mu",fit_dir),
+	# 					data_type 			= "lambdas & mus",
+	# 					case_tag 			= sprintf("%s, fit & congruent",tree_name),
+	# 					curves 				= list(	list(fsimulation$ages, fsimulation$lambda),
+	# 												list(fsimulation$ages, fsimulation$mu),
+	# 												list(csimulation$ages, csimulation$lambda),
+	# 												list(csimulation$ages, csimulation$mu)),
+	# 					curve_names 		= c("lambda (fit)","mu (fit)","lambda (congruent)","mu (congruent)"),
+	# 					curve_colors 		= c(PLOT_COLOR_LAMBDA,PLOT_COLOR_MU,PLOT_COLOR_LAMBDA,PLOT_COLOR_MU),
+	# 					curve_line_types	= c(1,1,2,2),
+	# 					curve_widths 		= c(1,1,2,2),
+	# 					max_age 			= oldest_plot_age,
+	# 					age_label 			= sprintf("age (%s)",time_unit),
+	# 					value_label 		= sprintf("rate (1/%s)",time_unit),
+	# 					plot_log_values 	= FALSE,
+	# 					legend_pos 			= "outside",
+	# 					plot_title 			= sprintf("Fitted exp-HBD model & congruent model\n%s",tree_name),
+	# 					data_file_comments 	= sprintf("Speciation and extinction rates for fitted and congruent model, tree '%s'",tree_name),
+	# 					verbose 			= FALSE,
+	# 					verbose_prefix 		= "    ");
+	# }
+	#
 
 	#########################
 	# Fit a parametric and a grid-model to the tree
