@@ -59,7 +59,9 @@ DEFAULT_FITTING_NTRIALS			= 4 * 4 # this can be increased, but fitting will take
 FITTING_NITERATIONS 			= 500
 FITTING_NEVALUATIONS 			= 500
 FITTING_REL_TOLERANCE 			= 1e-8
-FITTING_TIPS_PER_RUNTIME_SECOND	= 5e4 		# number of tips for which to allocate one second max runtime per likelihood evaluation. Reducing this number will increase computation time.
+#BCO #FITTING_TIPS_PER_RUNTIME_SECOND	= 5e4 		# number of tips for which to allocate one second max runtime per likelihood evaluation. Reducing this number will increase computation time.
+FITTING_TIPS_PER_RUNTIME_SECOND	= 5e2 #BCO		# number of tips for which to allocate one second max runtime per likelihood evaluation. Reducing this number will increase computation time.
+
 FITTING_GRID_SPLINES_DEGREE		= 1 		# splines degree to assume when fitting HBD model params (lambda, mu or PDR) on a temporal grid
 
 
@@ -94,7 +96,7 @@ PLOT_DOWNSAMPLING_RESOLUTION = 1000
 # only perform a subset of analyses
 INCLUDE_ALROY2008_FOSSIL_DATA=FALSE
 INCLUDE_SEED_PLANT_TREE=TRUE
-INCLUDE_CETACEA_TREE=TRUE
+INCLUDE_CETACEA_TREE=FALSE
 INCLUDE_SIM_MODEL_ANALYSIS=FALSE
 
 
@@ -613,6 +615,7 @@ if(INCLUDE_SEED_PLANT_TREE){
 	lambda 		 = function(age,params){ pmax(0,params['alpha'] * exp(params['beta']*(age/root_age))); }
 	mu 			 = function(age,params){ pmax(0,params['gamma'] * exp(params['delta']*(age/root_age))); }
 	start_lambda = max(empirical_LTT$relative_slopes/rho0)
+	save(list=ls(), file=sprintf("%s/%s",output_dir,"seedstart.rda"))
 	fit = fit_hbd_model_parametric(	tree,
 									age_grid			= age_grid,
 									param_values		= c(alpha=NA, beta=NA, gamma=NA, delta=NA),
@@ -740,7 +743,9 @@ if(INCLUDE_SEED_PLANT_TREE){
 									max_start_attempts	= 10,
 									Nthreads			= NUMBER_OF_PARALLEL_THREADS,
 									max_model_runtime	= max(1,Ntips/FITTING_TIPS_PER_RUNTIME_SECOND),
-									fit_control			= list(eval.max=FITTING_NEVALUATIONS, iter.max=FITTING_NITERATIONS, rel.tol=FITTING_REL_TOLERANCE))
+									#fit_control			= list(eval.max=FITTING_NEVALUATIONS, iter.max=FITTING_NITERATIONS, rel.tol=FITTING_REL_TOLERANCE)) #BCO
+									fit_control			= list(eval.max=FITTING_NEVALUATIONS, iter.max=FITTING_NITERATIONS, rel.tol=FITTING_REL_TOLERANCE, trace=1)) #BCO
+
 	save_object_to_file(pfit, sprintf("%s/parametric_fit_results.txt",tree_output_dir))
 	if(!pfit$success){
 		cat2(sprintf("    ERROR: Fitting parametric model failed: %s\n",pfit$error))
