@@ -743,10 +743,14 @@ if(INCLUDE_SEED_PLANT_TREE){
 									rho0				= function(params) rho0,
 									condition			= "stem",
 									relative_dt			= INTEGRATION_RELATIVE_DT,
-									Ntrials				= DEFAULT_FITTING_NTRIALS,
+							#		Ntrials				= DEFAULT_FITTING_NTRIALS, #BCO
+									Ntrials				= 1, #BCO for debugging
 									max_start_attempts	= 10,
-									Nthreads			= NUMBER_OF_PARALLEL_THREADS,
-									max_model_runtime	= max(1,Ntips/FITTING_TIPS_PER_RUNTIME_SECOND),
+								#	Nthreads			= NUMBER_OF_PARALLEL_THREADS, #BCO
+									Nthreads			= 1, #BCO for debugging
+								#	max_model_runtime	= max(1,Ntips/FITTING_TIPS_PER_RUNTIME_SECOND), #BCO
+									max_model_runtime	= 10, #BCO for debugging
+
 									#fit_control			= list(eval.max=FITTING_NEVALUATIONS, iter.max=FITTING_NITERATIONS, rel.tol=FITTING_REL_TOLERANCE)) #BCO
 									fit_control			= list(eval.max=FITTING_NEVALUATIONS, iter.max=FITTING_NITERATIONS, rel.tol=FITTING_REL_TOLERANCE, trace=1)) #BCO
 
