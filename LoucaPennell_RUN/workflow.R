@@ -95,8 +95,8 @@ PLOT_DOWNSAMPLING_RESOLUTION = 1000
 
 # only perform a subset of analyses
 INCLUDE_ALROY2008_FOSSIL_DATA=FALSE
-INCLUDE_SEED_PLANT_TREE=TRUE
-INCLUDE_CETACEA_TREE=FALSE
+INCLUDE_SEED_PLANT_TREE=FALSE
+INCLUDE_CETACEA_TREE=TRUE
 INCLUDE_SIM_MODEL_ANALYSIS=FALSE
 
 
@@ -944,7 +944,7 @@ if(INCLUDE_CETACEA_TREE){
 					verbose_prefix 		= "    ");
 
 	# construct congruent model
-	mu_over_lambda = 0.9
+	mu_over_lambda = 0.5 #BCO changed from 0.9 to test
 	cat2(sprintf("  Simulating congruent model, by assuming that mu/lambda=%g..\n",mu_over_lambda))
 	csimulation = simulate_deterministic_hbd(	LTT0			= Ntips,
 												oldest_age		= tail(psimulation$ages,1),
@@ -1064,8 +1064,8 @@ steeman_fixed_ef <- function(ef, nrates=68, full_lambda, tree, full_age_grid, rh
 	return(best)
 }
 
-ef_tries <-seq(from=0, to=0.9, length.out=10)
-nrates_tries <- c(2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 20, 35, 50, 100)
+ef_tries <-seq(from=0, to=0.9, length.out=45)
+nrates_tries <- c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 20, 50, 100)
 #nrates_tries <- c(2, 3, 4)
 
 
@@ -1075,8 +1075,8 @@ nrates_tries <- c(2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 20, 35, 50, 100)
 # coarse_age_grid <- approx(x=full_age_grid, y=full_age_grid, n=20, rule=2)$y
 # coarse_lambda <- approx(x=full_age_grid, y=full_lambda, xout=coarse_age_grid, rule=2)$y
 #
-# coarse_age_grid <- approx(x=full_age_grid, y=full_age_grid, n=20, rule=2)$y
-# coarse_lambda <- approx(x=full_age_grid, y=full_lambda, xout=coarse_age_grid, rule=2)$y
+ coarse_age_grid <- approx(x=full_age_grid, y=full_age_grid, n=20, rule=2)$y
+ coarse_lambda <- approx(x=full_age_grid, y=full_lambda, xout=coarse_age_grid, rule=2)$y
 
 
 # all_steeman_medium <- parallel::mclapply(ef_tries, steeman_fixed_ef, full_lambda=full_lambda, tree=tree, full_age_grid=full_age_grid, mc.cores=parallel::detectCores())
@@ -1106,6 +1106,8 @@ for (i in seq_along(all_steeman)) {
 }
 dev.off()
 print(summary_steeman)
+print("ages of say model 140 are all_steeman[[140]]$nrates_age_grid, rates are exp(all_steeman[[140]]$x0)")
+save(list=ls(), file=sprintf("%s/%s",output_dir,"steeman.rda"))
 write.csv(summary_steeman, file=sprintf("%s/%s",output_dir,"steemansummary.csv"))
 #s90 <- steeman_fixed_ef(ef=.9, full_lambda=full_lambda, tree=tree, full_age_grid=full_age_grid)
 #steeman_ef0.9 <- nloptr(log(full_lambda), eval_f=negloglikelihood_hbd_for_nloptr, ef=0.9, tree=tree, age_grid=full_age_grid, rho0=87/89, oldest_age=castor::get_tree_span(tree)$max_distance, badval=1e6, opts=list(print_level=1, algorithm="NLOPT_LN_NEWUOA", maxeval=1000))

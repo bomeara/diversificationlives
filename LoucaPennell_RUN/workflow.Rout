@@ -17,8 +17,6 @@ Type 'demo()' for some demos, 'help()' for on-line help, or
 'help.start()' for an HTML browser interface to help.
 Type 'q()' to quit R.
 
-[Previously saved workspace restored]
-
 > #!/usr/local/bin/Rscript
 > #
 > # This R script is provided as a Supplemental code to the paper:
@@ -80,7 +78,9 @@ Type 'q()' to quit R.
 > FITTING_NITERATIONS 			= 500
 > FITTING_NEVALUATIONS 			= 500
 > FITTING_REL_TOLERANCE 			= 1e-8
-> FITTING_TIPS_PER_RUNTIME_SECOND	= 5e4 		# number of tips for which to allocate one second max runtime per likelihood evaluation. Reducing this number will increase computation time.
+> #BCO #FITTING_TIPS_PER_RUNTIME_SECOND	= 5e4 		# number of tips for which to allocate one second max runtime per likelihood evaluation. Reducing this number will increase computation time.
+> FITTING_TIPS_PER_RUNTIME_SECOND	= 5e2 #BCO		# number of tips for which to allocate one second max runtime per likelihood evaluation. Reducing this number will increase computation time.
+> 
 > FITTING_GRID_SPLINES_DEGREE		= 1 		# splines degree to assume when fitting HBD model params (lambda, mu or PDR) on a temporal grid
 > 
 > 
@@ -114,7 +114,7 @@ Type 'q()' to quit R.
 > 
 > # only perform a subset of analyses
 > INCLUDE_ALROY2008_FOSSIL_DATA=FALSE
-> INCLUDE_SEED_PLANT_TREE=TRUE
+> INCLUDE_SEED_PLANT_TREE=FALSE
 > INCLUDE_CETACEA_TREE=TRUE
 > INCLUDE_SIM_MODEL_ANALYSIS=FALSE
 > 
@@ -394,14 +394,14 @@ Loading 2 required packages (castor, msir)..
 > global_random_seed = sample.int(n=1000000,size=1)
 > set.seed(global_random_seed)
 > cat(sprintf("Note: Seeding global random generator at %d\n",global_random_seed));
-Note: Seeding global random generator at 512474
+Note: Seeding global random generator at 422456
 > 
 > 
 > # prepare output dir
 > output_dir = get_non_existent_dir("output", "run_", 3);
 > dir.create(output_dir, showWarnings = FALSE, recursive=TRUE);
 > cat(sprintf("All output will be written to '%s'..\n",output_dir))
-All output will be written to 'output/run_002'..
+All output will be written to 'output/run_006'..
 > 
 > 
 > # prepare log file
@@ -630,108 +630,113 @@ All output will be written to 'output/run_002'..
 + 	# fit a HBD model with exponentially varying lambda and mu
 + 	# Figure 2 in Louca and Pennell (2020)
 + 
-+ 	cat(sprintf("  Fitting exp-HBD model to tree '%s'..\n",tree_name))
-+ 	fit_dir = sprintf("%s/fitting_exp_HBD_model",tree_output_dir)
-+ 	dir.create(fit_dir, showWarnings = FALSE, recursive=TRUE);
-+ 	age_grid 	 = seq(from=0,to=oldest_fit_age,length.out=1000)
-+ 	lambda 		 = function(age,params){ pmax(0,params['alpha'] * exp(params['beta']*(age/root_age))); }
-+ 	mu 			 = function(age,params){ pmax(0,params['gamma'] * exp(params['delta']*(age/root_age))); }
-+ 	start_lambda = max(empirical_LTT$relative_slopes/rho0)
-+ 	fit = fit_hbd_model_parametric(	tree,
-+ 									age_grid			= age_grid,
-+ 									param_values		= c(alpha=NA, beta=NA, gamma=NA, delta=NA),
-+ 									param_guess			= c(start_lambda,0,0.5*start_lambda,0),
-+ 									param_min			= c(0,-5,0,-5),
-+ 									param_max			= c(100*start_lambda,5,100*start_lambda,5),
-+ 									param_scale			= 1,
-+ 									oldest_age			= oldest_fit_age,
-+ 									lambda				= lambda,
-+ 									mu					= mu,
-+ 									rho0				= function(params) rho0,
-+ 									relative_dt			= INTEGRATION_RELATIVE_DT,
-+ 									Ntrials				= DEFAULT_FITTING_NTRIALS,
-+ 									max_start_attempts	= 10,
-+ 									Nthreads			= NUMBER_OF_PARALLEL_THREADS,
-+ 									max_model_runtime	= max(1,Ntips/FITTING_TIPS_PER_RUNTIME_SECOND),
-+ 									fit_control			= list(eval.max=FITTING_NEVALUATIONS, iter.max=FITTING_NITERATIONS, rel.tol=FITTING_REL_TOLERANCE))
-+ 	if(!fit$success){
-+ 		cat2(sprintf("    ERROR: Fitting failed: %s\n",fit$error));
-+ 		stop()
-+ 	}
-+ 	save_object_to_file(fit, sprintf("%s/exp_BD_fit_results.txt",fit_dir));
-+ 	cat2(sprintf("  Simulating fitted model..\n"));
-+ 	fsimulation = simulate_deterministic_hbd(	LTT0			= Ntips,
-+ 												oldest_age		= oldest_plot_age,
-+ 												rho0			= rho0,
-+ 												age_grid		= age_grid,
-+ 												lambda			= lambda(age_grid,fit$param_fitted),
-+ 												mu				= mu(age_grid,fit$param_fitted),
-+ 												splines_degree	= 1,
-+ 												relative_dt		= INTEGRATION_RELATIVE_DT);
-+ 	if(!fsimulation$success){
-+ 		cat2(sprintf("    WARNING: Simulation failed: %s\n",fsimulation$error))
-+ 	}else{
-+ 		cat2(sprintf("  Plotting LTT of tree '%s' and fitted dLTT..\n",tree_name));
-+ 		plot_age_curves(file_basepath 		= sprintf("%s/fitted_HBD_model_LTT",fit_dir),
-+ 						data_type 			= "LTTs",
-+ 						case_tag 			= sprintf("%s, fitted dLTT",tree_name),
-+ 						curves 				= list(	list(empirical_LTT$ages, empirical_LTT$lineages),
-+ 													list(fsimulation$ages, fsimulation$LTT)),
-+ 						curve_names 		= c("tree LTT","fitted dLTT"),
-+ 						curve_colors 		= c(PLOT_COLOR_LTT,PLOT_COLOR_FIT_DLTT),
-+ 						curve_line_types	= c(1,2),
-+ 						curve_widths 		= c(PLOT_LW_LTT,PLOT_LW_FIT_DLTT),
-+ 						max_age 			= oldest_plot_age,
-+ 						age_label 			= sprintf("age (%s)",time_unit),
-+ 						value_label 		= sprintf("lineages"),
-+ 						plot_log_values 	= TRUE,
-+ 						legend_pos 			= "outside",
-+ 						plot_title 			= sprintf("LTT of tree and fitted dLTT\n%s",tree_name),
-+ 						data_file_comments 	= sprintf("LTT of external tree '%s', and fitted dLTT",tree_name),
-+ 						verbose 			= FALSE,
-+ 						verbose_prefix 		= "    ");
++ # BCO this section always fails. Commenting out for now, after leaving a note in the log
 + 
-+ 	}
++ 	cat(sprintf("  Skipping fitting exp-HBD model to tree '%s'..\n",tree_name))
 + 
-+ 	# Construct a congruent model with modified exponent for mu
-+ 	cat2(sprintf("  Simulating congruent model, with alternative delta..\n"));
-+ 	params = fit$param_fitted
-+ 	params['delta'] = - fit$param_fitted['delta'] # simply negate the fitted delta
-+ 	csimulation = simulate_deterministic_hbd(	LTT0			= Ntips,
-+ 												oldest_age		= oldest_plot_age,
-+ 												rho0			= rho0,
-+ 												age_grid		= fsimulation$ages,
-+ 												PDR				= fsimulation$PDR,
-+ 												lambda0 		= lambda(0,fit$param_fitted),
-+ 												mu				= mu(fsimulation$ages,params),
-+ 												splines_degree	= 1,
-+ 												relative_dt		= INTEGRATION_RELATIVE_DT);
-+ 	if(!csimulation$success){
-+ 		cat2(sprintf("      WARNING: Simulation of congruent model failed: %s\n",csimulation$error))
-+ 	}else{
-+ 		cat2(sprintf("  Plotting rates of fitted and congruent models..\n"));
-+ 		plot_age_curves(file_basepath 		= sprintf("%s/fitted_and_congruent_lambda_mu",fit_dir),
-+ 						data_type 			= "lambdas & mus",
-+ 						case_tag 			= sprintf("%s, fit & congruent",tree_name),
-+ 						curves 				= list(	list(fsimulation$ages, fsimulation$lambda),
-+ 													list(fsimulation$ages, fsimulation$mu),
-+ 													list(csimulation$ages, csimulation$lambda),
-+ 													list(csimulation$ages, csimulation$mu)),
-+ 						curve_names 		= c("lambda (fit)","mu (fit)","lambda (congruent)","mu (congruent)"),
-+ 						curve_colors 		= c(PLOT_COLOR_LAMBDA,PLOT_COLOR_MU,PLOT_COLOR_LAMBDA,PLOT_COLOR_MU),
-+ 						curve_line_types	= c(1,1,2,2),
-+ 						curve_widths 		= c(1,1,2,2),
-+ 						max_age 			= oldest_plot_age,
-+ 						age_label 			= sprintf("age (%s)",time_unit),
-+ 						value_label 		= sprintf("rate (1/%s)",time_unit),
-+ 						plot_log_values 	= FALSE,
-+ 						legend_pos 			= "outside",
-+ 						plot_title 			= sprintf("Fitted exp-HBD model & congruent model\n%s",tree_name),
-+ 						data_file_comments 	= sprintf("Speciation and extinction rates for fitted and congruent model, tree '%s'",tree_name),
-+ 						verbose 			= FALSE,
-+ 						verbose_prefix 		= "    ");
-+ 	}
-+ 
++ 	# cat(sprintf("  Fitting exp-HBD model to tree '%s'..\n",tree_name))
++ 	# fit_dir = sprintf("%s/fitting_exp_HBD_model",tree_output_dir)
++ 	# dir.create(fit_dir, showWarnings = FALSE, recursive=TRUE);
++ 	# age_grid 	 = seq(from=0,to=oldest_fit_age,length.out=1000)
++ 	# lambda 		 = function(age,params){ pmax(0,params['alpha'] * exp(params['beta']*(age/root_age))); }
++ 	# mu 			 = function(age,params){ pmax(0,params['gamma'] * exp(params['delta']*(age/root_age))); }
++ 	# start_lambda = max(empirical_LTT$relative_slopes/rho0)
++ 	# save(list=ls(), file=sprintf("%s/%s",output_dir,"seedstart.rda"))
++ 	# fit = fit_hbd_model_parametric(	tree,
++ 	# 								age_grid			= age_grid,
++ 	# 								param_values		= c(alpha=NA, beta=NA, gamma=NA, delta=NA),
++ 	# 								param_guess			= c(start_lambda,0,0.5*start_lambda,0),
++ 	# 								param_min			= c(0,-5,0,-5),
++ 	# 								param_max			= c(100*start_lambda,5,100*start_lambda,5),
++ 	# 								param_scale			= 1,
++ 	# 								oldest_age			= oldest_fit_age,
++ 	# 								lambda				= lambda,
++ 	# 								mu					= mu,
++ 	# 								rho0				= function(params) rho0,
++ 	# 								relative_dt			= INTEGRATION_RELATIVE_DT,
++ 	# 								Ntrials				= DEFAULT_FITTING_NTRIALS,
++ 	# 								max_start_attempts	= 10,
++ 	# 								Nthreads			= NUMBER_OF_PARALLEL_THREADS,
++ 	# 								max_model_runtime	= max(1,Ntips/FITTING_TIPS_PER_RUNTIME_SECOND),
++ 	# 								fit_control			= list(eval.max=FITTING_NEVALUATIONS, iter.max=FITTING_NITERATIONS, rel.tol=FITTING_REL_TOLERANCE))
++ 	# if(!fit$success){
++ 	# 	cat2(sprintf("    ERROR: Fitting failed: %s\n",fit$error));
++ 	# 	stop()
++ 	# }
++ 	# save_object_to_file(fit, sprintf("%s/exp_BD_fit_results.txt",fit_dir));
++ 	# cat2(sprintf("  Simulating fitted model..\n"));
++ 	# fsimulation = simulate_deterministic_hbd(	LTT0			= Ntips,
++ 	# 											oldest_age		= oldest_plot_age,
++ 	# 											rho0			= rho0,
++ 	# 											age_grid		= age_grid,
++ 	# 											lambda			= lambda(age_grid,fit$param_fitted),
++ 	# 											mu				= mu(age_grid,fit$param_fitted),
++ 	# 											splines_degree	= 1,
++ 	# 											relative_dt		= INTEGRATION_RELATIVE_DT);
++ 	# if(!fsimulation$success){
++ 	# 	cat2(sprintf("    WARNING: Simulation failed: %s\n",fsimulation$error))
++ 	# }else{
++ 	# 	cat2(sprintf("  Plotting LTT of tree '%s' and fitted dLTT..\n",tree_name));
++ 	# 	plot_age_curves(file_basepath 		= sprintf("%s/fitted_HBD_model_LTT",fit_dir),
++ 	# 					data_type 			= "LTTs",
++ 	# 					case_tag 			= sprintf("%s, fitted dLTT",tree_name),
++ 	# 					curves 				= list(	list(empirical_LTT$ages, empirical_LTT$lineages),
++ 	# 												list(fsimulation$ages, fsimulation$LTT)),
++ 	# 					curve_names 		= c("tree LTT","fitted dLTT"),
++ 	# 					curve_colors 		= c(PLOT_COLOR_LTT,PLOT_COLOR_FIT_DLTT),
++ 	# 					curve_line_types	= c(1,2),
++ 	# 					curve_widths 		= c(PLOT_LW_LTT,PLOT_LW_FIT_DLTT),
++ 	# 					max_age 			= oldest_plot_age,
++ 	# 					age_label 			= sprintf("age (%s)",time_unit),
++ 	# 					value_label 		= sprintf("lineages"),
++ 	# 					plot_log_values 	= TRUE,
++ 	# 					legend_pos 			= "outside",
++ 	# 					plot_title 			= sprintf("LTT of tree and fitted dLTT\n%s",tree_name),
++ 	# 					data_file_comments 	= sprintf("LTT of external tree '%s', and fitted dLTT",tree_name),
++ 	# 					verbose 			= FALSE,
++ 	# 					verbose_prefix 		= "    ");
++ 	#
++ 	# }
++ 	#
++ 	# # Construct a congruent model with modified exponent for mu
++ 	# cat2(sprintf("  Simulating congruent model, with alternative delta..\n"));
++ 	# params = fit$param_fitted
++ 	# params['delta'] = - fit$param_fitted['delta'] # simply negate the fitted delta
++ 	# csimulation = simulate_deterministic_hbd(	LTT0			= Ntips,
++ 	# 											oldest_age		= oldest_plot_age,
++ 	# 											rho0			= rho0,
++ 	# 											age_grid		= fsimulation$ages,
++ 	# 											PDR				= fsimulation$PDR,
++ 	# 											lambda0 		= lambda(0,fit$param_fitted),
++ 	# 											mu				= mu(fsimulation$ages,params),
++ 	# 											splines_degree	= 1,
++ 	# 											relative_dt		= INTEGRATION_RELATIVE_DT);
++ 	# if(!csimulation$success){
++ 	# 	cat2(sprintf("      WARNING: Simulation of congruent model failed: %s\n",csimulation$error))
++ 	# }else{
++ 	# 	cat2(sprintf("  Plotting rates of fitted and congruent models..\n"));
++ 	# 	plot_age_curves(file_basepath 		= sprintf("%s/fitted_and_congruent_lambda_mu",fit_dir),
++ 	# 					data_type 			= "lambdas & mus",
++ 	# 					case_tag 			= sprintf("%s, fit & congruent",tree_name),
++ 	# 					curves 				= list(	list(fsimulation$ages, fsimulation$lambda),
++ 	# 												list(fsimulation$ages, fsimulation$mu),
++ 	# 												list(csimulation$ages, csimulation$lambda),
++ 	# 												list(csimulation$ages, csimulation$mu)),
++ 	# 					curve_names 		= c("lambda (fit)","mu (fit)","lambda (congruent)","mu (congruent)"),
++ 	# 					curve_colors 		= c(PLOT_COLOR_LAMBDA,PLOT_COLOR_MU,PLOT_COLOR_LAMBDA,PLOT_COLOR_MU),
++ 	# 					curve_line_types	= c(1,1,2,2),
++ 	# 					curve_widths 		= c(1,1,2,2),
++ 	# 					max_age 			= oldest_plot_age,
++ 	# 					age_label 			= sprintf("age (%s)",time_unit),
++ 	# 					value_label 		= sprintf("rate (1/%s)",time_unit),
++ 	# 					plot_log_values 	= FALSE,
++ 	# 					legend_pos 			= "outside",
++ 	# 					plot_title 			= sprintf("Fitted exp-HBD model & congruent model\n%s",tree_name),
++ 	# 					data_file_comments 	= sprintf("Speciation and extinction rates for fitted and congruent model, tree '%s'",tree_name),
++ 	# 					verbose 			= FALSE,
++ 	# 					verbose_prefix 		= "    ");
++ 	# }
++ 	#
 + 
 + 	#########################
 + 	# Fit a parametric and a grid-model to the tree
@@ -760,11 +765,17 @@ All output will be written to 'output/run_002'..
 + 									rho0				= function(params) rho0,
 + 									condition			= "stem",
 + 									relative_dt			= INTEGRATION_RELATIVE_DT,
-+ 									Ntrials				= DEFAULT_FITTING_NTRIALS,
++ 							#		Ntrials				= DEFAULT_FITTING_NTRIALS, #BCO
++ 									Ntrials				= 1, #BCO for debugging
 + 									max_start_attempts	= 10,
-+ 									Nthreads			= NUMBER_OF_PARALLEL_THREADS,
-+ 									max_model_runtime	= max(1,Ntips/FITTING_TIPS_PER_RUNTIME_SECOND),
-+ 									fit_control			= list(eval.max=FITTING_NEVALUATIONS, iter.max=FITTING_NITERATIONS, rel.tol=FITTING_REL_TOLERANCE))
++ 								#	Nthreads			= NUMBER_OF_PARALLEL_THREADS, #BCO
++ 									Nthreads			= 1, #BCO for debugging
++ 								#	max_model_runtime	= max(1,Ntips/FITTING_TIPS_PER_RUNTIME_SECOND), #BCO
++ 									max_model_runtime	= 10, #BCO for debugging
++ 
++ 									#fit_control			= list(eval.max=FITTING_NEVALUATIONS, iter.max=FITTING_NITERATIONS, rel.tol=FITTING_REL_TOLERANCE)) #BCO
++ 									fit_control			= list(eval.max=FITTING_NEVALUATIONS, iter.max=FITTING_NITERATIONS, rel.tol=FITTING_REL_TOLERANCE, trace=1)) #BCO
++ 
 + 	save_object_to_file(pfit, sprintf("%s/parametric_fit_results.txt",tree_output_dir))
 + 	if(!pfit$success){
 + 		cat2(sprintf("    ERROR: Fitting parametric model failed: %s\n",pfit$error))
@@ -882,8 +893,301 @@ All output will be written to 'output/run_002'..
 + 					verbose 			= FALSE,
 + 					verbose_prefix 		= "    ")
 + }
-Examining external tree 'Seed_Plants_Smith2018'..
+> 
+> 
+> 
+> 
+> #########################################
+> # Analysis of Cetacean tree (Extended Data Fig 3 in Louca and Pennell (2020))
+> # Tree taken from Steeman et al. 2009
+> 
+> if(INCLUDE_CETACEA_TREE){
++ 	tree_name			= "Cetacea_Steeman2009"
++ 	tree_path			= "input/Cetacea_Steeman2009/Cetacea_Steeman2009_timetree.tre"
++ 	precomputed_rates	= "input/Cetacea_Steeman2009/Steeman2009lambda.tsv"
++ 	time_unit			= "Myr"
++ 	extant_N			= 89 # # number of extant Cetacea species. [Steeman et al. (2009). Radiation of Extant Cetaceans Driven by Restructuring of the Oceans. Systematic Biology. 58:573-585]
++ 
++ 	cat2(sprintf("Examining external tree '%s'..\n",tree_name));
++ 	tree_output_dir=sprintf("%s/%s",output_dir,tree_name);
++ 	dir.create(tree_output_dir, showWarnings = FALSE, recursive=TRUE);
++ 
++ 	cat2(sprintf("  Loading tree from file..\n"))
++ 	tree		= castor::read_tree(file=tree_path)
++ 	tree 		= castor::extend_tree_to_height(tree)$tree # make sure tree is ultrametric (correct numerical rounding errors)
++ 	Ntips		= length(tree$tip.label)
++ 	root_age	= castor::get_tree_span(tree)$max_distance
++ 	rho0		 = Ntips/extant_N # present-day sampling fraction
++ 	cat2(sprintf("    --> Loaded tree has %d tips and %d nodes, root_age=%g %s, sampling fraction=%g\n",Ntips,tree$Nnode,root_age,time_unit,rho0));
++ 
++ 	cat2(sprintf("  Calculating the tree's LTT..\n"))
++ 	empirical_LTT = castor::count_lineages_through_time(tree,Ntimes=10*log2(Ntips),include_slopes=TRUE);
++ 	empirical_LTT$ages = root_age - empirical_LTT$times
++ 
++ 	# load precomputed speciation (and extinction rates, if available) from file
++ 	precomputed_rates = read.table(file=precomputed_rates, sep="\t", header=FALSE, stringsAsFactors=FALSE, strip.white=TRUE, na.strings=c("NA","NaN"))
++ 	precomputed_rates = precomputed_rates[order(precomputed_rates[,1]),] # sort in ascending age
++ 	precomputed_includes_mu = (ncol(precomputed_rates)>2)
++ 	if(!precomputed_includes_mu) precomputed_rates = cbind(precomputed_rates,rep(0,times=nrow(precomputed_rates)))
++ 	cat2(sprintf("  Note: Loaded previously fitted %s rates from file\n",(if(precomputed_includes_mu) "speciation & extinction" else "speciation")))
++ 	precomputed_rates[,2] = loess_nansafe(precomputed_rates[,1], precomputed_rates[,2], 0.1, 2) # smoothen lambda
++ 	precomputed_rates[,3] = loess_nansafe(precomputed_rates[,1], precomputed_rates[,3], 0.1, 2) # smoothen mu
++ 
++ 	cat2(sprintf("  Simulating model with previously fitted rates..\n"))
++ 	psimulation = simulate_deterministic_hbd(	LTT0			= Ntips,
++ 												oldest_age		= max(precomputed_rates[,1]),
++ 												rho0			= rho0,
++ 												age_grid		= precomputed_rates[,1],
++ 												lambda			= precomputed_rates[,2],
++ 												mu				= precomputed_rates[,3],
++ 												splines_degree	= 1,
++ 												relative_dt		= INTEGRATION_RELATIVE_DT);
++ 	if(!psimulation$success){
++ 		cat2(sprintf("    WARNING: Simulation failed: %s\n",psimulation$error))
++ 		stop()
++ 	}
++ 	cat2(sprintf("  Plotting tree LTT and dLTT based on loaded rates..\n"))
++ 	plot_age_curves(file_basepath 		= sprintf("%s/fitted_HBD_model_LTT",tree_output_dir),
++ 					data_type 			= "LTTs",
++ 					case_tag 			= sprintf("%s, fitted dLTT",tree_name),
++ 					curves 				= list(	list(empirical_LTT$ages, empirical_LTT$lineages),
++ 												list(psimulation$ages, psimulation$LTT)),
++ 					curve_names 		= c("tree LTT","fitted dLTT"),
++ 					curve_colors 		= c(PLOT_COLOR_LTT,PLOT_COLOR_FIT_DLTT),
++ 					curve_line_types	= c(1,2),
++ 					curve_widths 		= c(PLOT_LW_LTT,PLOT_LW_FIT_DLTT),
++ 					age_label 			= sprintf("age (%s)",time_unit),
++ 					value_label 		= sprintf("lineages"),
++ 					plot_log_values 	= TRUE,
++ 					legend_pos 			= "outside",
++ 					plot_title 			= sprintf("LTT of tree and dLTT of previously fitted model\n%s",tree_name),
++ 					data_file_comments 	= sprintf("LTT of external tree '%s', and dLTT of previously fitted model",tree_name),
++ 					verbose 			= FALSE,
++ 					verbose_prefix 		= "    ");
++ 
++ 	# construct congruent model
++ 	mu_over_lambda = 0.9
++ 	cat2(sprintf("  Simulating congruent model, by assuming that mu/lambda=%g..\n",mu_over_lambda))
++ 	csimulation = simulate_deterministic_hbd(	LTT0			= Ntips,
++ 												oldest_age		= tail(psimulation$ages,1),
++ 												rho0			= rho0,
++ 												age_grid		= psimulation$ages,
++ 												PDR				= psimulation$PDR,
++ 												lambda0			= psimulation$lambda[1],
++ 												mu_over_lambda	= mu_over_lambda, # assume mu is close to the extinction rate
++ 												splines_degree	= 1,
++ 												relative_dt		= INTEGRATION_RELATIVE_DT);
++ 	if(!csimulation$success){
++ 		cat2(sprintf("    WARNING: Simulation of congruent model failed: %s\n",csimulation$error))
++ 	}else{
++ 		cat2(sprintf("  Plotting rates of previously fitted and congruent model..\n"));
++ 		plot_age_curves(file_basepath 		= sprintf("%s/fitted_and_congruent_lambda_mu",tree_output_dir),
++ 						data_type 			= "lambdas & mus",
++ 						case_tag 			= sprintf("%s, fit & congruent",tree_name),
++ 						curves 				= list(	list(psimulation$ages, psimulation$lambda),
++ 													list(psimulation$ages, psimulation$mu),
++ 													list(csimulation$ages, csimulation$lambda),
++ 													list(csimulation$ages, csimulation$mu)),
++ 						curve_names 		= c("lambda (fit)","mu (assumed)","lambda (congruent)","mu (congruent)"),
++ 						curve_colors 		= c(PLOT_COLOR_LAMBDA,PLOT_COLOR_MU,PLOT_COLOR_LAMBDA,PLOT_COLOR_MU),
++ 						curve_line_types	= c(1,1,2,2),
++ 						curve_widths 		= c(1,1,2,2),
++ 						age_label 			= sprintf("age (%s)",time_unit),
++ 						value_label 		= sprintf("rate (1/%s)",time_unit),
++ 						miny				= -0.1,
++ 						plot_log_values 	= FALSE,
++ 						legend_pos 			= "outside",
++ 						plot_title 			= sprintf("Previously fitted & congruent model, lambda & mu\n%s",tree_name),
++ 						data_file_comments 	= sprintf("Speciation and extinction rates for previously fitted and congruent model, tree '%s'",tree_name),
++ 						verbose 			= FALSE,
++ 						verbose_prefix 		= "    ")
++ 		plot_age_curves(file_basepath 		= sprintf("%s/fitted_and_congruent_r",tree_output_dir),
++ 						data_type 			= "diversification rates",
++ 						case_tag 			= sprintf("%s, fit & congruent",tree_name),
++ 						curves 				= list(	list(psimulation$ages, psimulation$diversification_rate),
++ 													list(csimulation$ages, csimulation$diversification_rate)),
++ 						curve_names 		= c("r (fit)","r (congruent)"),
++ 						curve_colors 		= c(PLOT_COLOR_DIVERSIFICATION_RATE,PLOT_COLOR_DIVERSIFICATION_RATE),
++ 						curve_line_types	= c(1,2),
++ 						curve_widths 		= c(1,2),
++ 						age_label 			= sprintf("age (%s)",time_unit),
++ 						value_label 		= sprintf("net diversification rate (1/%s)",time_unit),
++ 						plot_log_values 	= FALSE,
++ 						legend_pos 			= "outside",
++ 						plot_title 			= sprintf("Previously fitted & congruent model, net diversification rate\n%s",tree_name),
++ 						data_file_comments 	= sprintf("Net diversification rates for previously fitted and congruent model, tree '%s'",tree_name),
++ 						verbose 			= FALSE,
++ 						verbose_prefix 		= "    ")
++ 	}
++ 	#BCO this section
++   # Need to pad the rates: they only go up to 32MY, tree is 35 MY deep. So add one more interval.
++ 	loglikelihood_hbd_steeman <- loglikelihood_hbd(
++ 		tree=tree,
++ 		oldest_age	= castor::get_tree_span(tree)$max_distance,
++ 		rho0		 = Ntips/extant_N ,
++ 		age_grid = c(precomputed_rates[,1], castor::get_tree_span(tree)$max_distance),
++ 		lambda = c(precomputed_rates[,2], precomputed_rates[nrow(precomputed_rates),2]),
++ 		mu = c(precomputed_rates[,3], precomputed_rates[nrow(precomputed_rates),3])
++ 	)
++ 	loglikelihood_hbd_congruent <- loglikelihood_hbd(
++ 		tree=tree,
++ 		oldest_age	= castor::get_tree_span(tree)$max_distance,
++ 		rho0		 = Ntips/extant_N ,
++ 		age_grid = c(csimulation$ages, castor::get_tree_span(tree)$max_distance),
++ 		lambda = c(csimulation$lambda, csimulation$lambda[length(csimulation$lambda)]),
++ 		mu = c(csimulation$mu, csimulation$mu[length(csimulation$mu)])
++ 	)
++ 	print("loglikelihood_hbd_steeman")
++ 	print(loglikelihood_hbd_steeman)
++ 	print("loglikelihood_hbd_congruent")
++ 	print(loglikelihood_hbd_congruent)
++ 
++ # Now to optimize
++ library(nloptr)
++ # x are log lambda
++ negloglikelihood_hbd_for_nloptr <- function(x, ef=0.9, tree, age_grid, rho0=87/89, oldest_age=castor::get_tree_span(tree)$max_distance, badval=1e6) {
++ 	lambda <- exp(x)
++ 	mu <- lambda*ef
++ 	result <- NA
++ 	try(result <- loglikelihood_hbd(
++ 		tree=tree,
++ 		oldest_age	= oldest_age,
++ 		rho0		 = rho0 ,
++ 		age_grid = age_grid,
++ 		lambda = lambda,
++ 		mu= mu
++ 	))
++ 	if(result$success) {
++ 		return(-result$loglikelihood)
++ 	} else {
++ 		return(badval)
++ 	}
++ }
++ full_age_grid <- c(precomputed_rates[,1], castor::get_tree_span(tree)$max_distance)
++ 
++ full_lambda <- c(precomputed_rates[,2], precomputed_rates[nrow(precomputed_rates),2])
++ 
++ steeman_fixed_ef <- function(ef, nrates=68, full_lambda, tree, full_age_grid, rho0=87/89) {
++ 	nrates_age_grid <- approx(x=full_age_grid, y=full_age_grid, n=nrates, rule=2)$y
++ 	nrates_lambda <- approx(x=full_age_grid, y=full_lambda, xout=nrates_age_grid, rule=2)$y
++ 	results <- list(
++ 		nloptr(log(nrates_lambda), eval_f=negloglikelihood_hbd_for_nloptr, ef=ef, tree=tree, age_grid=nrates_age_grid, rho0=rho0, oldest_age=castor::get_tree_span(tree)$max_distance, badval=1e6, opts=list(print_level=0, algorithm="NLOPT_LN_NEWUOA", maxeval=1000)),
++ 		nloptr(log((1+ef)*nrates_lambda), eval_f=negloglikelihood_hbd_for_nloptr, ef=ef, tree=tree, age_grid=nrates_age_grid, rho0=rho0, oldest_age=castor::get_tree_span(tree)$max_distance, badval=1e6, opts=list(print_level=0, algorithm="NLOPT_LN_NEWUOA", maxeval=1000)),
++ 		nloptr(log(2*nrates_lambda), eval_f=negloglikelihood_hbd_for_nloptr, ef=ef, tree=tree, age_grid=nrates_age_grid, rho0=rho0, oldest_age=castor::get_tree_span(tree)$max_distance, badval=1e6, opts=list(print_level=0, algorithm="NLOPT_LN_NEWUOA", maxeval=1000))
++ 	)
++ 	best <- results[[which.min(lapply(results, "[[", 'objective'))[1]]]
++ 	best$lambda <- exp(best$x0)
++ 	best$mu <- ef*best$lambda
++ 	best$netdiv <- best$lambda-best$mu
++ 	best$turnover <- best$lambda+best$mu
++ 	best$ef <- ef
++ 	best$nrates_age_grid <- nrates_age_grid
++ 	best$nrates <- length(nrates_age_grid)
++ 	return(best)
++ }
++ 
++ ef_tries <-seq(from=0, to=0.9, length.out=10)
++ nrates_tries <- c(2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 20, 35, 50, 100)
++ #nrates_tries <- c(2, 3, 4)
++ 
++ 
++ # fine_age_grid <- approx(x=full_age_grid, y=full_age_grid, n=100, rule=2)$y
++ # fine_lambda <- approx(x=full_age_grid, y=full_lambda, xout=fine_age_grid, rule=2)$y
++ #
++ # coarse_age_grid <- approx(x=full_age_grid, y=full_age_grid, n=20, rule=2)$y
++ # coarse_lambda <- approx(x=full_age_grid, y=full_lambda, xout=coarse_age_grid, rule=2)$y
++ #
++ # coarse_age_grid <- approx(x=full_age_grid, y=full_age_grid, n=20, rule=2)$y
++ # coarse_lambda <- approx(x=full_age_grid, y=full_lambda, xout=coarse_age_grid, rule=2)$y
++ 
++ 
++ # all_steeman_medium <- parallel::mclapply(ef_tries, steeman_fixed_ef, full_lambda=full_lambda, tree=tree, full_age_grid=full_age_grid, mc.cores=parallel::detectCores())
++ #
++ # all_steeman_fine <- parallel::mclapply(ef_tries, steeman_fixed_ef, full_lambda=fine_lambda, tree=tree, full_age_grid=fine_age_grid, mc.cores=parallel::detectCores())
++ #
++ # all_steeman_coarse <- parallel::mclapply(ef_tries, steeman_fixed_ef, full_lambda=coarse_lambda, tree=tree, full_age_grid=coarse_age_grid, mc.cores=parallel::detectCores())
++ 
++ # all_steeman <- c(all_steeman_coarse, all_steeman_medium, all_steeman_fine)
++ 
++ all_steeman <- list()
++ for (i in sequence(length(nrates_tries))) {
++ 	all_steeman_local <- parallel::mclapply(ef_tries, steeman_fixed_ef, nrates=nrates_tries[i], full_lambda=coarse_lambda, tree=tree, full_age_grid=coarse_age_grid, mc.cores=parallel::detectCores())
++ 	all_steeman <- c(all_steeman, all_steeman_local)
++ }
++ 
++ summary_steeman <- data.frame(ef=unlist(lapply(all_steeman, "[[", "ef")), coarse=unlist(lapply(all_steeman, "[[", "nrates")), neglogl=unlist(lapply(all_steeman, "[[", "objective")))
++ summary_steeman$deltaneglogl = summary_steeman$neglogl - min(summary_steeman$neglogl)
++ summary_steeman$AIC <- 2*summary_steeman$neglogl + 2 * (1+summary_steeman$coarse)
++ summary_steeman$deltaAIC <- summary_steeman$AIC-min(summary_steeman$AIC)
++ 
++ all.div <- unlist(lapply(all_steeman, "[[", "netdiv"))
++ pdf(file=sprintf("%s/%s",output_dir,"fitting.pdf"))
++ plot(x=range(full_age_grid), y=range(all.div), xlab='age (MYR)', ylab="net diversification rate (1/MY)", bty="n", type="n")
++ for (i in seq_along(all_steeman)) {
++ 	lines(all_steeman[[i]]$nrates_age_grid, all_steeman[[i]]$netdiv, col=rgb(0,0,0,.3))
++ }
++ dev.off()
++ print(summary_steeman)
++ write.csv(summary_steeman, file=sprintf("%s/%s",output_dir,"steemansummary.csv"))
++ #s90 <- steeman_fixed_ef(ef=.9, full_lambda=full_lambda, tree=tree, full_age_grid=full_age_grid)
++ #steeman_ef0.9 <- nloptr(log(full_lambda), eval_f=negloglikelihood_hbd_for_nloptr, ef=0.9, tree=tree, age_grid=full_age_grid, rho0=87/89, oldest_age=castor::get_tree_span(tree)$max_distance, badval=1e6, opts=list(print_level=1, algorithm="NLOPT_LN_NEWUOA", maxeval=1000))
++ 
++ 
++ #print(steeman_yule)
++ 
++ 	# END BCO SECTION
++ }
+Examining external tree 'Cetacea_Steeman2009'..
   Loading tree from file..
-    --> Loaded tree has 79874 tips and 79813 nodes, root_age=325.05 Myr, sampling fraction=0.189218
+    --> Loaded tree has 87 tips and 86 nodes, root_age=35.8578 Myr, sampling fraction=0.977528
   Calculating the tree's LTT..
-  Fitting exp-HBD model to tree 'Seed_Plants_Smith2018'..
+  Note: Loaded previously fitted speciation rates from file
+  Simulating model with previously fitted rates..
+  Plotting tree LTT and dLTT based on loaded rates..
+  Simulating congruent model, by assuming that mu/lambda=0.9..
+  Plotting rates of previously fitted and congruent model..
+[1] "loglikelihood_hbd_steeman"
+$success
+[1] TRUE
+
+$loglikelihood
+[1] -274.3581
+
+[1] "loglikelihood_hbd_congruent"
+$success
+[1] TRUE
+
+$loglikelihood
+[1] -274.3892
+
+Warning in parallel::mclapply(ef_tries, steeman_fixed_ef, nrates = nrates_tries[i],  :
+  all scheduled cores encountered errors in user code
+Warning in parallel::mclapply(ef_tries, steeman_fixed_ef, nrates = nrates_tries[i],  :
+  all scheduled cores encountered errors in user code
+Warning in parallel::mclapply(ef_tries, steeman_fixed_ef, nrates = nrates_tries[i],  :
+  all scheduled cores encountered errors in user code
+Warning in parallel::mclapply(ef_tries, steeman_fixed_ef, nrates = nrates_tries[i],  :
+  all scheduled cores encountered errors in user code
+Warning in parallel::mclapply(ef_tries, steeman_fixed_ef, nrates = nrates_tries[i],  :
+  all scheduled cores encountered errors in user code
+Warning in parallel::mclapply(ef_tries, steeman_fixed_ef, nrates = nrates_tries[i],  :
+  all scheduled cores encountered errors in user code
+Warning in parallel::mclapply(ef_tries, steeman_fixed_ef, nrates = nrates_tries[i],  :
+  all scheduled cores encountered errors in user code
+Warning in parallel::mclapply(ef_tries, steeman_fixed_ef, nrates = nrates_tries[i],  :
+  all scheduled cores encountered errors in user code
+Warning in parallel::mclapply(ef_tries, steeman_fixed_ef, nrates = nrates_tries[i],  :
+  all scheduled cores encountered errors in user code
+Warning in parallel::mclapply(ef_tries, steeman_fixed_ef, nrates = nrates_tries[i],  :
+  all scheduled cores encountered errors in user code
+Warning in parallel::mclapply(ef_tries, steeman_fixed_ef, nrates = nrates_tries[i],  :
+  all scheduled cores encountered errors in user code
+Warning in parallel::mclapply(ef_tries, steeman_fixed_ef, nrates = nrates_tries[i],  :
+  all scheduled cores encountered errors in user code
+Warning in parallel::mclapply(ef_tries, steeman_fixed_ef, nrates = nrates_tries[i],  :
+  all scheduled cores encountered errors in user code
+Warning in parallel::mclapply(ef_tries, steeman_fixed_ef, nrates = nrates_tries[i],  :
+  all scheduled cores encountered errors in user code
+Error in FUN(X[[i]], ...) : subscript out of bounds
+Calls: data.frame -> unlist -> lapply
+Execution halted
