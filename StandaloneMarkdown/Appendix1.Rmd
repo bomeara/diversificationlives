@@ -1,0 +1,207 @@
+---
+title: "Appendix 1"
+author: "Brian O'Meara & Jeremy Beaulieu"
+date: "6/30/2020"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning=FALSE, cache=TRUE, fig.width=7, fig.height=7)
+set.seed(1859)
+```
+
+## Functionally congruent coin models
+
+Coin flipping models are popular examples to use for statistics. Here we create models that imply very different things about coins, but have indistinguishable likelihoods at the precision commonly used in phylogenetics (hundredths of log likelihood units).
+
+First start with the simple binomial model:
+
+```{r simple, echo=TRUE}
+coin_simple_likelihood <- function(x, nheads, nflips) {
+  return(dbinom(nheads, nflips, x[1])) 
+}
+```
+
+However, we can also have models that give a different probability of heads with every flip changing smoothly according to a function. Maybe we wear down the face of the coin every time we flip it so it is less and less likely to land on the lighter face.
+
+
+```{r linear, echo=TRUE}
+coin_linear_prob <- function(x, fixed.slope=0.1, nheads, nflips) {
+  probabilities <- fixed.slope*sequence(nflips)/nflips + x[1]
+  return(probabilities)
+}
+```
+
+We can make several different models with different `fixed.slope`: one increases the probability of heads with every flip, another decreases, for example. But for each we can fit `x[1]`, the probability of heads before any flips. 
+
+Since the probability of heads can change with every flip, calculating the probability of an observed proportion of heads in a set of flips requires computing the probability of all ways to get there: 2 heads of 3 flips could be HHT, HTH, THH, and each of these has a different probability. 
+
+```{r linear_likelihood, echo=TRUE}
+coin_linear_likelihood <- function(x, nheads, nflips, fixed.slope=0.1, neg=FALSE) {
+  probabilities <- coin_linear_prob (x=x, nheads=nheads, nflips=nflips, fixed.slope=fixed.slope)
+  if(any(probabilities>1 | probabilities<0)) {
+    return(-1e8)
+  }
+  totalheadsprobs <- rep(0, nflips+1) #so it goes from 0 to nflips total heads
+  for (i in seq_along(probabilities)){
+    probhead <- probabilities[i]
+    probtail <- 1-probhead
+    if(i==1) {
+      totalheadsprobs[0+1] <- probtail
+      totalheadsprobs[1+1] <- probhead
+    } else {
+      totalheadsprobs <- totalheadsprobs*probtail + c(0,totalheadsprobs[1:(length(totalheadsprobs)-1)]*probhead)
+    }
+  }
+  return(ifelse(neg, -1, 1)*totalheadsprobs[nheads+1])
+}
+```
+
+Now let's simulate some data:
+
+```{r simdata, echo=TRUE}
+nflips <- 250
+pheads <- 0.3
+nheads <- rbinom(n=1, size=nflips, prob=pheads)
+```
+
+And fit it to three models: one with a constant estimated probability of heads, one with a linear increase in probability of heads with each flip (so by the end the probability of heads is 10% higher than when it started) and one where the probabilty of heads decreases with each flip (so that by the end it is 5% lower than when it started). In both the linear models, we estimate the probability of heads at the y-intercept.
+
+```{r fit, echo=FALSE}
+fixed.slope.increase = 0.1
+fixed.slope.decrease = -0.05
+
+#optimize isn't always great, so we first zoom in on the relevant area of parameter space
+
+#Simple
+x <- seq(from=0, to=1, length.out=10000)
+y <- sapply(x, coin_simple_likelihood, nheads=nheads , nflips=nflips)
+fit.df <- data.frame(parameter=x, probability=y, model="simple")
+simple <- optimize(coin_simple_likelihood, interval=c(x[max(1,which.max(y)-20)], x[min(length(x),which.max(y)+20)]), nheads=nheads, nflips=nflips, maximum=TRUE, tol=1e-10)
+
+# Increasing
+x <- seq(from=-1.5, to=1, length.out=10000)
+y <- sapply(x, coin_linear_likelihood, nheads=nheads , nflips=nflips, fixed.slope=fixed.slope.increase)
+linear_increase <- optimize(coin_linear_likelihood, interval=c(x[max(1,which.max(y)-1000)], x[min(length(x),which.max(y)+1000)]), nheads=nheads, nflips=nflips,fixed.slope=fixed.slope.increase, maximum=TRUE, tol=1e-10)
+fit.df <- rbind(fit.df, data.frame(parameter=x[y>0], probability=y[y>0], model="linear_increase"))
+
+# Decreasing
+
+x <- seq(from=-1.5, to=1, length.out=10000)
+y <- sapply(x, coin_linear_likelihood, nheads=nheads , nflips=nflips, fixed.slope=fixed.slope.decrease)
+linear_decrease <- optimize(coin_linear_likelihood, interval=c(x[max(1,which.max(y)-1000)], x[min(length(x),which.max(y)+1000)]), nheads=nheads, nflips=nflips,fixed.slope=fixed.slope.decrease, maximum=TRUE, tol=1e-10)
+fit.df <- rbind(fit.df, data.frame(parameter=x[y>0], probability=y[y>0], model="linear_decrease"))
+```
+
+```{r results}
+library(knitr)
+result.table <- data.frame(Model=c("Simple", "Linear 10%", "Linear -5%"), LogLikelihood = log(c(simple$objective, linear_increase$objective, linear_decrease$objective)), MLE=c(simple$maximum, linear_increase$maximum, linear_decrease$maximum), stringsAsFactors=FALSE)
+knitr::kable(result.table, digits=3)
+```
+
+And we can plot the results
+
+```{r plots, warning=FALSE, echo=FALSE,message=FALSE}
+library(ggplot2)
+# print(c("simple", simple$objective))
+# print(c("linear_increase", linear_increase$objective))
+# print(c("linear_decrease", linear_decrease$objective))
+
+probability.df <- rbind(
+  data.frame(flip=sequence(nflips), probability=simple$maximum, model="simple"),
+  data.frame(flip=sequence(nflips), probability=.1*sequence(nflips)/nflips + linear_increase$maximum, model="linear_increase"),
+  data.frame(flip=sequence(nflips), probability=-.05*sequence(nflips)/nflips + linear_decrease$maximum, model="linear_decrease")
+)
+
+prob.plot <- ggplot(data=probability.df, aes(x=flip, y=probability, group=model)) + geom_smooth(aes(colour=model)) + ylab("Probability of heads for that flip") + xlab("Flip") + scale_colour_viridis_d(end=0.8)
+print(prob.plot)
+
+fit.plot <- ggplot(data=fit.df, aes(x=parameter, y=probability, group=model)) + geom_line(aes(colour=model)) + ylab("Probability of observed data") + xlab("Probability of heads before flipping") + scale_colour_viridis_d(end=0.8)
+
+print(fit.plot)
+```
+
+## Diversification Signal
+
+An open question in Louca and Pennell (2020) is the status of SSE models, such as BiSSE, MuSSE, HiSSE, and more. To examine this, we computed two trees with equal lineage through time plots. They have the same backbone tree, but then one replaces every tip with a balanced tree of four taxa ((A,B),(C,D)), and one uses a pectinate tree (A,(B,(C,D))).
+
+```{r misseprep}
+library(hisse)
+library(ape)
+phy1 <- ape::compute.brlen(ape::stree(4, type="balanced"))
+phy2 <- ape::compute.brlen(ape::stree(4, type="left"))
+phy1$edge.length[1:3] <- c(1,2,2)/3
+
+power = 5
+backbone <- ape::compute.brlen(ape::stree(2^power, type="balanced"))
+bb1 <- backbone
+bb2 <- backbone
+phy1$tip.label <- paste0("p", phy1$tip.label)
+phy2$tip.label <- paste0("p", phy1$tip.label)
+
+for (i in sequence(2^power)) {
+ bb1 <- ape::bind.tree(bb1, phy1, where=which(bb1$tip.label==paste0("t",i)))
+ bb2 <- ape::bind.tree(bb2, phy2, where=which(bb2$tip.label==paste0("t",i)))
+}
+```
+
+```{r backboneplotdetail, fig.height=2}
+par(mfrow=c(1,2))
+plot(phy1, show.tip.label=FALSE, main="Detail balanced")
+plot(phy2, show.tip.label = FALSE, direction="leftwards", main="Detail pectinate")
+```
+
+```{r backboneplot, fig.height=7}
+par(mfrow=c(1,2))
+plot(bb1, show.tip.label=FALSE, main="Full balanced")
+plot(bb2, show.tip.label=FALSE, direction="leftwards", main="Full pectinate")
+```
+
+And the lineage through time plots are the same for both trees (red and black lines, respectively)
+
+```{r ltt}
+ltt.plot(bb1, col="red", lwd=10)
+ltt.lines(bb2, lwd=4, lty="dotted")
+```
+
+We can fit a few models to these trees
+
+```{r fitbd}
+library(TreePar)
+bd.results <- data.frame(model=c("Yule", "BD", "Exponential", "MiSSE 1", "MiSSE 2"), balanced=NA, pectinate=NA)
+
+bd.results[1,"balanced"] <- ape::yule(bb1)$loglik
+bd.results[1,"pectinate"] <- ape::yule(bb2)$loglik
+
+bd.results[2, "balanced"] <- ape::birthdeath(bb1)$dev
+bd.results[2, "pectinate"] <- ape::birthdeath(bb2)$dev
+
+
+
+
+# From castor documentation
+# beta      = 0.01 # exponential decay rate of lambda over time
+# age_grid  = seq(from=0, to=max(ape::branching.times(bb1)), by=0.01) # choose a sufficiently fine age grid
+# lambda    = 1*exp(beta*age_grid) # define lambda on the age grid
+# mu        = 0.2*lambda # assume similarly shaped but smaller mu
+# 
+# 
+# bd.results[3, "balanced"] <- castor::loglikelihood_hbd( bb1, 
+#                         rho0      = params$rarefaction, 
+#                         age_grid  = age_grid,
+#                         lambda    = lambda,
+#                         mu        = mu)
+
+
+bd.results[4, "balanced"] <- hisse::MiSSE(bb1, turnover=c(1), eps=c(1))$loglik
+bd.results[4, "pectinate"] <- hisse::MiSSE(bb2, turnover=c(1), eps=c(1))$loglik
+
+
+bd.results[5, "balanced"] <- hisse::MiSSE(bb1, turnover=c(1,2), eps=c(1,2))$loglik
+bd.results[5, "pectinate"] <- hisse::MiSSE(bb2, turnover=c(1,2), eps=c(1,2))$loglik
+
+```
+
+```{r missetable}
+knitr::kable(bd.results)
+```

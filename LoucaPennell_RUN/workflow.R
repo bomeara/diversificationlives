@@ -1064,8 +1064,8 @@ steeman_fixed_ef <- function(ef, nrates=68, full_lambda, tree, full_age_grid, rh
 	return(best)
 }
 
-ef_tries <-seq(from=0, to=0.9, length.out=45)
-nrates_tries <- c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 20, 50, 100)
+ef_tries <-seq(from=0, to=0.99, length.out=100)
+nrates_tries <- c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 25, 50)
 #nrates_tries <- c(2, 3, 4)
 
 
