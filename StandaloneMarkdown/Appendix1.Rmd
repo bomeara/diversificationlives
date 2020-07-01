@@ -2,11 +2,13 @@
 title: "Appendix 1"
 author: "Brian O'Meara & Jeremy Beaulieu"
 date: "6/30/2020"
-output: word_document
+output:
+  word_document: default
+  pdf_document: default
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE, warning=FALSE, cache=TRUE, fig.width=7, fig.height=7)
+knitr::opts_chunk$set(echo = FALSE, warning=FALSE, message=FALSE, cache=TRUE, fig.width=7, fig.height=7)
 set.seed(1859)
 ```
 
@@ -145,7 +147,7 @@ for (i in sequence(2^power)) {
 }
 ```
 
-```{r backboneplotdetail, fig.height=2}
+```{r backboneplotdetail, fig.height=3}
 par(mfrow=c(1,2))
 plot(phy1, show.tip.label=FALSE, main="Detail balanced")
 plot(phy2, show.tip.label = FALSE, direction="leftwards", main="Detail pectinate")
@@ -167,41 +169,68 @@ ltt.lines(bb2, lwd=4, lty="dotted")
 We can fit a few models to these trees
 
 ```{r fitbd}
-library(TreePar)
 bd.results <- data.frame(model=c("Yule", "BD", "Exponential", "MiSSE 1", "MiSSE 2"), balanced=NA, pectinate=NA)
 
-bd.results[1,"balanced"] <- ape::yule(bb1)$loglik
-bd.results[1,"pectinate"] <- ape::yule(bb2)$loglik
+bd.results[1,"balanced"] <- -ape::yule(bb1)$loglik
+bd.results[1,"pectinate"] <- -ape::yule(bb2)$loglik
 
-bd.results[2, "balanced"] <- ape::birthdeath(bb1)$dev
-bd.results[2, "pectinate"] <- ape::birthdeath(bb2)$dev
+bd.results[2, "balanced"] <- 0.5*ape::birthdeath(bb1)$dev
+bd.results[2, "pectinate"] <- 0.5*ape::birthdeath(bb2)$dev
 
 
 
 
 # From castor documentation
-# beta      = 0.01 # exponential decay rate of lambda over time
-# age_grid  = seq(from=0, to=max(ape::branching.times(bb1)), by=0.01) # choose a sufficiently fine age grid
-# lambda    = 1*exp(beta*age_grid) # define lambda on the age grid
-# mu        = 0.2*lambda # assume similarly shaped but smaller mu
-# 
-# 
-# bd.results[3, "balanced"] <- castor::loglikelihood_hbd( bb1, 
-#                         rho0      = params$rarefaction, 
-#                         age_grid  = age_grid,
-#                         lambda    = lambda,
-#                         mu        = mu)
+PDR_function = function(ages,params){
+	return(params['A']*exp(-params['B']*ages));
+}
+rholambda0_function = function(params){
+	return(params['rholambda0'])
+}
+
+age_grid = seq(from=0, to=max(branching.times(bb1)), length.out=100)
+
+
+fit_castor <- function(tree) {
+    return(castor::fit_hbd_pdr_parametric( tree,
+                    param_values  = c(A=NA, B=NA, rholambda0=NA),
+                      param_guess   = c(1,0,1),
+                      param_min     = c(-10,-10,0),
+                      param_max     = c(10,10,10),
+                      param_scale   = 1, # all params are in the order of 1
+                      PDR           = PDR_function,
+                      rholambda0    = rholambda0_function,
+                      age_grid      = age_grid,
+                      Ntrials       = 10,    # perform 10 fitting trials
+                      Nthreads      = 2,     # use 2 CPUs
+                      max_model_runtime = 1, # limit model evaluation to 1 second
+                      fit_control       = list(rel.tol=1e-6)))
+  }
+
+bd.results[3, "balanced"] <- fit_castor(bb1)$loglikelihood
+bd.results[3, "pectinate"] <- fit_castor(bb2)$loglikelihood
 
 
 bd.results[4, "balanced"] <- hisse::MiSSE(bb1, turnover=c(1), eps=c(1))$loglik
 bd.results[4, "pectinate"] <- hisse::MiSSE(bb2, turnover=c(1), eps=c(1))$loglik
 
-
-bd.results[5, "balanced"] <- hisse::MiSSE(bb1, turnover=c(1,2), eps=c(1,2))$loglik
-bd.results[5, "pectinate"] <- hisse::MiSSE(bb2, turnover=c(1,2), eps=c(1,2))$loglik
+misse.bb1.2param <- hisse::MiSSE(bb1, turnover=c(1,2), eps=c(1,2))
+bd.results[5, "balanced"] <- misse.bb1.2param$loglik
+misse.bb2.2param <- hisse::MiSSE(bb2, turnover=c(1,2), eps=c(1,2))
+bd.results[5, "pectinate"] <- misse.bb2.2param$loglik
 
 ```
 
 ```{r missetable}
 knitr::kable(bd.results)
+```
+
+```{r ancrecon}
+misse.recon1.2param <- hisse::MarginReconMiSSE(bb1,f=1, pars=misse.bb1.2param$solution)
+misse.recon2.2param <- hisse::MarginReconMiSSE(bb2,f=1, pars=misse.bb2.2param$solution)
+```
+
+```{r plotrecon, message=FALSE}
+plot.misse.states(misse.recon1.2param, show.tip.label=FALSE, legend="none")
+plot.misse.states(misse.recon2.2param, show.tip.label=FALSE, legend="none")
 ```
