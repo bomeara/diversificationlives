@@ -3,5 +3,6 @@
 future::plan(future::multiprocess)
 plan <- drake_plan(
     tree = ape::read.tree("data/GBMB.ultra.tre"),
-    splits7datalinear = SplitAndLikelihood(tree=tree, nregimes=7, type="data", interpolation_method="linear")
+    many_regimes = TryManyRegimes(treeultra, maxregimes=13),
+    save(many_regimes, file=file_out("results.rda"))
 )

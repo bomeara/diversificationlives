@@ -303,5 +303,5 @@ TryManyRegimes <- function(tree, maxregimes=5) {
         print(tail(summarized_results,1))
         full_results[[i]] <-local_result
     }
-    return(summarized_results=summarized_results, full_results=full_results)
+    return(list(summarized_results=summarized_results, full_results=full_results))
 }
