@@ -97,9 +97,11 @@ param_lambda_discreteshift_mu_discreteshift <- function(desired_interval = 0.1, 
     return(list(fit_param=fit_param, lambda_function=lambda_function, mu_function=mu_function, age_grid_param=age_grid_param))
 }
 
+
+
 SplitAndLikelihood <- function(tree, nregimes, minsize=1, type="data", interpolation_method="linear") {
     splits <- EvenSplit(tree=tree, nregimes=nregimes, minsize=minsize, type=type)
-
-    results <- param_lambda_discreteshift_mu_discreteshift(desired_interval = 0.1, tree=tree, condition="crown", ncores=parallel::detectCores(), slice_ages = sort(c(0, abs(splits$time), castor::get_tree_span(tree)$max_distance)), interpolation_method=interpolation_method)
-    return(list(splits=splits, results=results))
+    desired_interval = min(0.1, 0.1*min(diff(splits$time)))
+    results <- param_lambda_discreteshift_mu_discreteshift(desired_interval = desired_interval, tree=tree, condition="crown", ncores=parallel::detectCores(), slice_ages = sort(c(0, abs(splits$time), castor::get_tree_span(tree)$max_distance)), interpolation_method=interpolation_method)
+    return(list(splits=splits, results=results, desired_interval=desired_interval))
 }

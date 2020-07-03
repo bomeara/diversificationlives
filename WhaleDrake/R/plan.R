@@ -30,6 +30,9 @@ plan <- drake_plan(
         fit_param_lambda_discreteshift_ef_0_crown_1my_linear=fit_param_lambda_discreteshift_ef_0_crown_1my_linear,
         fit_param_lambda_discreteshift_ef_0_9_crown_1my_linear=fit_param_lambda_discreteshift_ef_0_9_crown_1my_linear
     ),
+    treeultra = phytools::force.ultrametric(tree, method="extend"),
 
-    all_results_saved = save(all_results, file=file_out("results.rda"))
+    #splits7datalinear = SplitAndLikelihood(tree=treeultra, nregimes=7, type="data", interpolation_method="linear"),
+    many_regimes = TryManyRegimes(treeultra, maxregimes=5),
+    all_results_saved = save(all_results, many_regimes, file=file_out("results.rda"))
 )

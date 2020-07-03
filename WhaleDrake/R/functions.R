@@ -213,3 +213,95 @@ param_lambda_discreteshift_ef_fixed <- function(desired_interval = 0.1, tree, co
     })
     return(list(fit_param=fit_param, lambda_function=lambda_function, mu_function=mu_function, age_grid_param=age_grid_param))
 }
+
+
+#' Split a tree into even sized chunks
+#'
+#' By default, much of Louca and Pennell's work splits a tree into regimes based on equal spacing of ages (i.e., the seed plant work). However, this means regimes close to the root have few data points, while those near the tips can have many. An alternative would be to split so that every regime has the same number of points
+#' @param tree The phylo object. Assumed to be ultrametric
+#' @param nregimes How many regimes to split the tree into
+#' @param minsize Min number of taxa in a regime. If >1, it will decrease nregimes until this is met
+#' @param type Either "data" or "time" the way to slice the tree: equal number of data points per regime or equal span of time for each
+#' @param minage The end (tipmost) time of the most recent regime (default 0)
+#' @param maxage The beginning (rootmost) time of the oldest regime (default root of tree)
+#' @examples
+#' phy <- ape::rcoal(100)
+#' splits <- EvenSplit(phy, nregimes=4)
+#' plot(phy)
+#' abline(v=splits$time+max(ape::branching.times(phy)), col="red")
+#' ltt.plot(phy, log="y")
+#' abline(v=splits$time, col="red")
+EvenSplit <- function(tree, nregimes, minsize=1, type="data", minage=0, maxage=castor::get_tree_span(tree)$max_distance) {
+  if(!is.ultrametric(tree)) {
+    stop("This assumes the tree is ultrametric")
+  }
+  ltt_points <- ape::ltt.plot.coords(tree)
+  qualified <- FALSE
+  while(!qualified) {
+    if(type=="data") {
+        splitrows <- round(sequence(nregimes-1)*(nrow(ltt_points)-1)/nregimes) #split after this row
+        splittimes <- (ltt_points[splitrows,1]+ltt_points[splitrows+1,1])/2
+    } else {
+      splittimes <- sequence(nregimes-1)*min(ltt_points[,1])/(nregimes)
+      splitrows <- c()
+      for (i in seq_along(splittimes)) {
+        splitrows[i] <- which(ltt_points[,1]>splittimes[i])[1]-1
+      }
+    }
+    result <- data.frame(ntax.before=ltt_points[splitrows,2], ntax.after=ltt_points[splitrows+1,2], time=splittimes)
+    if(min(result$ntax.before)<minsize) {
+      nregimes <- nregimes-1
+    } else {
+      qualified <- TRUE
+    }
+  }
+  return(result)
+}
+
+
+
+SplitAndLikelihood <- function(tree, nregimes, minsize=1, type="data", interpolation_method="linear") {
+    splits <- EvenSplit(tree=tree, nregimes=nregimes, minsize=minsize, type=type)
+    desired_interval = min(0.05, 0.2*min(diff(splits$time)))
+    results <- param_lambda_discreteshift_mu_discreteshift(desired_interval = desired_interval, tree=tree, condition="crown", ncores=parallel::detectCores(), slice_ages = unique(sort(c(0, abs(splits$time), castor::get_tree_span(tree)$max_distance))), interpolation_method=interpolation_method)
+    return(list(splits=splits, results=results, desired_interval=desired_interval))
+}
+
+TryManyRegimes <- function(tree, maxregimes=5) {
+    conditions <- expand.grid(nregimes=sequence(maxregimes), interpolation_method=c("linear", "constant"))
+    full_results <- list()
+    summarized_results <- data.frame()
+    for(i in sequence(nrow(conditions))) {
+        #print(conditions[i,])
+        local_result <- SplitAndLikelihood(tree, nregimes=conditions$nregimes[i], interpolation_method=conditions$interpolation_method[i])
+        local_result$nregimes=conditions$nregimes[i]
+        local_result$interpolation_method=conditions$interpolation_method[i]
+        local.df <- data.frame(nregimes=conditions$nregimes[i], interpolation_method=conditions$interpolation_method[i], AIC=local_result$results$fit_param$AIC, loglikelihood=local_result$results$fit_param$loglikelihood
+        ,
+            lambda0=local_result$results$fit_param$param_fitted['lambda0'],
+            lambda1=local_result$results$fit_param$param_fitted['lambda1'],
+            lambda2=local_result$results$fit_param$param_fitted['lambda2'],
+            lambda3=local_result$results$fit_param$param_fitted['lambda3'],
+            lambda4=local_result$results$fit_param$param_fitted['lambda4'],
+            lambda5=local_result$results$fit_param$param_fitted['lambda5'],
+            lambda6=local_result$results$fit_param$param_fitted['lambda6'],
+            lambda7=local_result$results$fit_param$param_fitted['lambda7'],
+            mu0=local_result$results$fit_param$param_fitted['mu0'],
+            mu1=local_result$results$fit_param$param_fitted['mu1'],
+            mu2=local_result$results$fit_param$param_fitted['mu2'],
+            mu3=local_result$results$fit_param$param_fitted['mu3'],
+            mu4=local_result$results$fit_param$param_fitted['mu4'],
+            mu5=local_result$results$fit_param$param_fitted['mu5'],
+            mu6=local_result$results$fit_param$param_fitted['mu6'],
+            mu7=local_result$results$fit_param$param_fitted['mu7']
+        )
+        if(i==1) {
+            summarized_results <- local.df
+        } else {
+            summarized_results <- rbind(summarized_results, local.df)
+        }
+        print(tail(summarized_results,1))
+        full_results[[i]] <-local_result
+    }
+    return(summarized_results=summarized_results, full_results=full_results)
+}
