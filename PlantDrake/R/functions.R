@@ -1,1 +1,1 @@
-source("../../WhaleDrake/R/functions.R")
+source("../WhaleDrake/R/functions.R")

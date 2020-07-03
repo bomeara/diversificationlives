@@ -3,6 +3,6 @@
 future::plan(future::multiprocess)
 plan <- drake_plan(
     tree = ape::read.tree("data/GBMB.ultra.tre"),
-    many_regimes = TryManyRegimes(treeultra, maxregimes=13),
+    many_regimes = TryManyRegimes(tree, maxregimes=13),
     save(many_regimes, file=file_out("results.rda"))
 )
