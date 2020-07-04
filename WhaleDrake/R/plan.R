@@ -33,6 +33,28 @@ plan <- drake_plan(
     treeultra = phytools::force.ultrametric(tree, method="extend"),
 
     #splits7datalinear = SplitAndLikelihood(tree=treeultra, nregimes=7, type="data", interpolation_method="linear"),
-    many_regimes = TryManyRegimes(treeultra, maxregimes=5),
-    all_results_saved = save(all_results, many_regimes, file=file_out("results.rda"))
+
+    #many_regimes = TryManyRegimes(treeultra, maxregimes=5),
+    all_results_saved = save(all_results, file=file_out("results.rda"))
+)
+
+planmany <- drake_plan(
+    tree = phytools::force.ultrametric(ape::read.tree("data/whales_Steemanetal2009.tre"),method="extend"),
+
+    # t3 = SplitAndLikelihood(tree, nregimes=3, interpolation_method="constant"),
+    try_many = target(
+        SplitAndLikelihood(tree, nregimes=nregimes, interpolation_method=interpolation_method),
+        transform = cross(
+            nregimes=c(1,2,3,4,5,6,7),
+            interpolation_method=c("linear")
+        )
+    ),
+    everything = target(
+        list(try_many),
+        transform=combine(try_many)
+    ),
+    result_summary = SummarizeSplitsAndLikelihoods(everything),
+    plot_all = PlotAll(everything, tree, file=file_out("plot.pdf"))
+
+    #many_results_saved = save(try_many, file=file_out("results_many.rda"))
 )

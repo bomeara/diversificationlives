@@ -260,48 +260,83 @@ EvenSplit <- function(tree, nregimes, minsize=1, type="data", minage=0, maxage=c
 
 
 
-SplitAndLikelihood <- function(tree, nregimes, minsize=1, type="data", interpolation_method="linear") {
+SplitAndLikelihood <- function(tree, nregimes, minsize=1, type="data", interpolation_method="linear", verbose=TRUE) {
     splits <- EvenSplit(tree=tree, nregimes=nregimes, minsize=minsize, type=type)
     desired_interval = min(0.05, 0.2*min(diff(splits$time)))
     results <- param_lambda_discreteshift_mu_discreteshift(desired_interval = desired_interval, tree=tree, condition="crown", ncores=parallel::detectCores(), slice_ages = unique(sort(c(0, abs(splits$time), castor::get_tree_span(tree)$max_distance))), interpolation_method=interpolation_method)
-    return(list(splits=splits, results=results, desired_interval=desired_interval))
+    if(verbose) {
+        print(c(nregimes=nregimes, interpolation_method=interpolation_method, AIC=results$fit_param$AIC))
+    }
+    return(list(splits=splits, results=results, desired_interval=desired_interval, nregimes=nregimes, interpolation_method=interpolation_method, type=type, AIC=results$fit_param$AIC, loglikelihood=results$fit_param$loglikelihood))
 }
 
-TryManyRegimes <- function(tree, maxregimes=5) {
-    conditions <- expand.grid(nregimes=sequence(maxregimes), interpolation_method=c("linear", "constant"))
-    full_results <- list()
-    summarized_results <- data.frame()
-    for(i in sequence(nrow(conditions))) {
-        #print(conditions[i,])
-        local_result <- SplitAndLikelihood(tree, nregimes=conditions$nregimes[i], interpolation_method=conditions$interpolation_method[i])
-        local_result$nregimes=conditions$nregimes[i]
-        local_result$interpolation_method=conditions$interpolation_method[i]
-        local.df <- data.frame(nregimes=conditions$nregimes[i], interpolation_method=conditions$interpolation_method[i], AIC=local_result$results$fit_param$AIC, loglikelihood=local_result$results$fit_param$loglikelihood
-        ,
-            lambda0=local_result$results$fit_param$param_fitted['lambda0'],
-            lambda1=local_result$results$fit_param$param_fitted['lambda1'],
-            lambda2=local_result$results$fit_param$param_fitted['lambda2'],
-            lambda3=local_result$results$fit_param$param_fitted['lambda3'],
-            lambda4=local_result$results$fit_param$param_fitted['lambda4'],
-            lambda5=local_result$results$fit_param$param_fitted['lambda5'],
-            lambda6=local_result$results$fit_param$param_fitted['lambda6'],
-            lambda7=local_result$results$fit_param$param_fitted['lambda7'],
-            mu0=local_result$results$fit_param$param_fitted['mu0'],
-            mu1=local_result$results$fit_param$param_fitted['mu1'],
-            mu2=local_result$results$fit_param$param_fitted['mu2'],
-            mu3=local_result$results$fit_param$param_fitted['mu3'],
-            mu4=local_result$results$fit_param$param_fitted['mu4'],
-            mu5=local_result$results$fit_param$param_fitted['mu5'],
-            mu6=local_result$results$fit_param$param_fitted['mu6'],
-            mu7=local_result$results$fit_param$param_fitted['mu7']
-        )
-        if(i==1) {
-            summarized_results <- local.df
-        } else {
-            summarized_results <- rbind(summarized_results, local.df)
-        }
-        print(tail(summarized_results,1))
-        full_results[[i]] <-local_result
+SummarizeSplitsAndLikelihoods <- function(x) {
+    summary.df <- data.frame(nregimes=sapply(x, "[[", "nregimes"), interpolation_method=sapply(x, "[[", "interpolation_method"), AIC=sapply(x, "[[", "AIC"), loglikelihood=sapply(x, "[[", "loglikelihood"), stringsAsFactors=FALSE)
+    summary.df$deltaAIC <- summary.df$AIC-min(summary.df$AIC)
+    return(summary.df)
+}
+# TryManyRegimes <- function(tree, maxregimes=5) {
+#     conditions <- expand.grid(nregimes=sequence(maxregimes), interpolation_method=c("linear", "constant"))
+#     full_results <- list()
+#     summarized_results <- data.frame()
+#     for(i in sequence(nrow(conditions))) {
+#         #print(conditions[i,])
+#         local_result <- SplitAndLikelihood(tree, nregimes=conditions$nregimes[i], interpolation_method=conditions$interpolation_method[i])
+#         local_result$nregimes=conditions$nregimes[i]
+#         local_result$interpolation_method=conditions$interpolation_method[i]
+#         local.df <- data.frame(nregimes=conditions$nregimes[i], interpolation_method=conditions$interpolation_method[i], AIC=local_result$results$fit_param$AIC, loglikelihood=local_result$results$fit_param$loglikelihood
+#         ,
+#             lambda0=local_result$results$fit_param$param_fitted['lambda0'],
+#             lambda1=local_result$results$fit_param$param_fitted['lambda1'],
+#             lambda2=local_result$results$fit_param$param_fitted['lambda2'],
+#             lambda3=local_result$results$fit_param$param_fitted['lambda3'],
+#             lambda4=local_result$results$fit_param$param_fitted['lambda4'],
+#             lambda5=local_result$results$fit_param$param_fitted['lambda5'],
+#             lambda6=local_result$results$fit_param$param_fitted['lambda6'],
+#             lambda7=local_result$results$fit_param$param_fitted['lambda7'],
+#             mu0=local_result$results$fit_param$param_fitted['mu0'],
+#             mu1=local_result$results$fit_param$param_fitted['mu1'],
+#             mu2=local_result$results$fit_param$param_fitted['mu2'],
+#             mu3=local_result$results$fit_param$param_fitted['mu3'],
+#             mu4=local_result$results$fit_param$param_fitted['mu4'],
+#             mu5=local_result$results$fit_param$param_fitted['mu5'],
+#             mu6=local_result$results$fit_param$param_fitted['mu6'],
+#             mu7=local_result$results$fit_param$param_fitted['mu7']
+#         )
+#         if(i==1) {
+#             summarized_results <- local.df
+#         } else {
+#             summarized_results <- rbind(summarized_results, local.df)
+#         }
+#         print(tail(summarized_results,1))
+#         full_results[[i]] <-local_result
+#     }
+#     return(list(summarized_results=summarized_results, full_results=full_results))
+# }
+
+ComputeRates <- function(fitted.model) {
+    ages <- fitted.model$results$age_grid_param
+    lambdas <- fitted.model$results$lambda_function(ages=ages, params=fitted.model$results$fit_param$param_fitted)
+    mus <- fitted.model$results$mu_function(ages=ages, params=fitted.model$results$fit_param$param_fitted)
+    return(data.frame(age=-ages, lambda=lambdas, mu=mus))
+}
+
+PlotRates <- function(fitted.model, tree,...) {
+    rates <- ComputeRates(fitted.model)
+    ape::ltt.plot(tree,...)
+    relrates <- rates
+    relrates$lambda <- ape::Ntip(tree) * relrates$lambda/diff(range(c(rates$lambda, rates$mu, 0)))
+    relrates$mu <- ape::Ntip(tree) * relrates$mu/diff(range(c(rates$lambda, rates$mu, 0)))
+    lines(relrates$age, relrates$lambda, col="blue", lwd=2)
+    lines(relrates$age, relrates$mu, col="red", lwd=2)
+    axis(side=4, at=seq(from=0, to=ape::Ntip(tree), length.out=5), labels=signif(seq(from=min(0, min(c(rates$lambda, rates$mu))), to=max(c(rates$lambda, rates$mu)), length.out=5),2))
+}
+
+PlotAll <- function(x, tree, file="plot.pdf") {
+    summaries <- SummarizeSplitsAndLikelihoods(x)
+    pdf(file=file)
+    for (i in seq_along(x)) {
+        PlotRates(x[[i]], tree, main=paste0("Regimes: ", summaries$nregimes[i], " deltaAICc: ", round(summaries$deltaAIC[i],2)))
     }
-    return(list(summarized_results=summarized_results, full_results=full_results))
+    dev.off()
 }
