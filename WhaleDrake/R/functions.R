@@ -262,7 +262,7 @@ EvenSplit <- function(tree, nregimes, minsize=1, type="data", minage=0, maxage=c
 
 SplitAndLikelihood <- function(tree, nregimes, minsize=1, type="data", interpolation_method="linear", verbose=TRUE) {
     splits <- EvenSplit(tree=tree, nregimes=nregimes, minsize=minsize, type=type)
-    desired_interval = min(0.05, 0.2*min(diff(splits$time)))
+    desired_interval = min(0.05, 0.2*min(abs(diff(splits$time))))
     results <- param_lambda_discreteshift_mu_discreteshift(desired_interval = desired_interval, tree=tree, condition="crown", ncores=parallel::detectCores(), slice_ages = unique(sort(c(0, abs(splits$time), castor::get_tree_span(tree)$max_distance))), interpolation_method=interpolation_method)
     if(verbose) {
         print(c(nregimes=nregimes, interpolation_method=interpolation_method, AIC=results$fit_param$AIC))
