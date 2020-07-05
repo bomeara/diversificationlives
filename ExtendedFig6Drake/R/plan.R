@@ -6,10 +6,11 @@ plan <- drake_plan(
     #many_regimes = TryManyRegimes(tree, maxregimes=13),
     #save(many_regimes, file=file_out("results.rda"))
     try_many = target(
-        SplitAndLikelihood(tree, nregimes=nregimes, interpolation_method=interpolation_method),
+        SplitAndLikelihood(tree, nregimes=nregimes, interpolation_method=interpolation_method, type=type),
         transform = cross(
             nregimes=c(1,2,3,4,5,6,7,8,9,10,11,12,13,14),
-            interpolation_method=c("linear")
+            interpolation_method=c("linear"),
+            type=c("data", "time")
         )
     ),
     everything = target(
