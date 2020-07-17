@@ -275,6 +275,16 @@ SummarizeSplitsAndLikelihoods <- function(x) {
     summary.df$deltaAIC <- summary.df$AIC-min(summary.df$AIC)
     return(summary.df)
 }
+
+AdaptiveSampleBestModels <- function(everything, result_summary, tree, deltaAIC_cutoff=20) {
+    adaptive_results <- list(rep(NA, nrow(result_summary)))
+    for (i in seq_along(everything)) {
+        if(result_summary$deltaAIC<deltaAIC_cutoff) {
+            adaptive_results[[i]] <- AdaptiveSupport(fitted_model=everything[[i]], tree=tree)
+        }
+    }
+    return(adaptive_results)
+}
 # TryManyRegimes <- function(tree, maxregimes=5) {
 #     conditions <- expand.grid(nregimes=sequence(maxregimes), interpolation_method=c("linear", "constant"))
 #     full_results <- list()
@@ -388,9 +398,9 @@ AdaptiveSupport <- function(fitted_model, tree, delta=2, n_per_rep=12, n_per_goo
             }
 
             #print(local_results[,1]-best_loglikelihood)
-            plot(local_results[,1+focal_param], local_results[,1]-best_loglikelihood, pch=21, main=colnames(local_results)[1+focal_param])
-            print(cbind(local_results[,1]-best_loglikelihood, local_results[,1+focal_param]))
-            print(range(local_results[,1+focal_param]))
+            #plot(local_results[,1+focal_param], local_results[,1]-best_loglikelihood, pch=21, main=colnames(local_results)[1+focal_param])
+            #print(cbind(local_results[,1]-best_loglikelihood, local_results[,1+focal_param]))
+            #print(range(local_results[,1+focal_param]))
 
         }
     }

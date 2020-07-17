@@ -20,6 +20,7 @@ plan <- drake_plan(
         transform=combine(try_many)
     ),
     result_summary = SummarizeSplitsAndLikelihoods(everything),
+    adaptive_list = AdaptiveSampleBestModels(everything, result_summary, tree, deltaAIC_cutoff=10),
     plot_all = PlotAll(everything, tree, file=file_out("plot.pdf")),
-    save_all = save(everything, result_summary, file=file_out("everything.rda"))
+    save_all = save(everything, result_summary, adaptive_list, file=file_out("everything.rda"))
 )
