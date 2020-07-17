@@ -279,7 +279,7 @@ SummarizeSplitsAndLikelihoods <- function(x) {
 AdaptiveSampleBestModels <- function(everything, result_summary, tree, deltaAIC_cutoff=20) {
     adaptive_results <- list(rep(NA, nrow(result_summary)))
     for (i in seq_along(everything)) {
-        if(result_summary$deltaAIC<deltaAIC_cutoff) {
+        if(result_summary$deltaAIC[i]<deltaAIC_cutoff) {
             adaptive_results[[i]] <- AdaptiveSupport(fitted_model=everything[[i]], tree=tree)
         }
     }
