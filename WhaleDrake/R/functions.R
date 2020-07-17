@@ -280,7 +280,7 @@ AdaptiveSampleBestModels <- function(everything, result_summary, tree, deltaAIC_
     adaptive_results <- list(rep(NA, nrow(result_summary)))
     for (i in seq_along(everything)) {
         if(result_summary$deltaAIC[i]<deltaAIC_cutoff) {
-            adaptive_results[[i]] <- AdaptiveSupport(fitted_model=everything[[i]], tree=tree)
+            adaptive_results[i] <- AdaptiveSupport(fitted_model=everything[[i]], tree=tree)
         }
     }
     return(adaptive_results)
@@ -444,6 +444,43 @@ AdaptiveSupport <- function(fitted_model, tree, delta=2, n_per_rep=12, n_per_goo
         }
 
     }
+
+    # multivariate
+
+    print("beginning multivariate")
+    good_enough_already <- subset(results, loglikelihood+delta>=best_loglikelihood)
+    print(paste("already have", nrow(good_enough_already), "results in", nrow(results), "trials of parameters"))
+
+    param_min_original <- apply(good_enough_already, 2, min)[-1]
+    param_max_original <- apply(good_enough_already, 2, max)[-1]
+    multiplier <- -2
+    good_sample <- FALSE
+    run_num <- 0
+    run_max <- 10
+    while(!good_sample & run_num < run_max) {
+        print(multiplier)
+        run_num <- run_num+1
+        param_min <- max(0,(1-10^multiplier))*param_min_original
+        param_max <- (1+(10^(.5*multiplier)))*param_max_original
+
+        local_results <- do.call(rbind, parallel::mclapply(rep(list(fitted_model),8*n_per_rep), likelihood_lambda_discreteshift_mu_discreteshift, param_min=param_min, param_max=param_max, tree=tree, randomize=TRUE, mc.cores=parallel::detectCores()))
+        results <- rbind(results, local_results)
+        if(best_loglikelihood > max(unlist(local_results[,'loglikelihood']))+delta) {
+            print("too wide")
+            multiplier <- multiplier-.25
+        } else if(best_loglikelihood < min(unlist(local_results[,'loglikelihood']))+delta) {
+            print("too narrow")
+            multiplier <- multiplier+0.5
+
+        } else {
+            good_sample <- TRUE
+            local_results_good <- do.call(rbind, parallel::mclapply(rep(list(fitted_model),8*n_per_good), likelihood_lambda_discreteshift_mu_discreteshift, param_min=param_min, param_max=param_max, tree=tree, randomize=TRUE, mc.cores=parallel::detectCores()))
+            results <- rbind(results, local_results_good)
+        }
+
+    }
+
+
     return(results)
 }
 
