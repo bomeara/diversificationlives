@@ -2,7 +2,7 @@
 
 future::plan(future::multiprocess)
 plan <- drake_plan(
-    session = utils::sessionInfo()
+    session = utils::sessionInfo(),
     session_save = save(session, file=file_out("sessioninfo.rda")),
     tree = ape::read.tree("data/tree_Extended_Data_Fig_6.tre"),
     #many_regimes = TryManyRegimes(tree, maxregimes=13),
