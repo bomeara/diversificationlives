@@ -50,7 +50,7 @@ param_lambda7p_mu7p <- function(desired_interval = 0.1, tree, condition="crown",
                                                condition     = condition,
                                                Ntrials       = 10,    # perform 10 fitting trials
                                                Nthreads      = ncores,
-                                               fit_control       = list(rel.tol=1e-6)
+                                               fit_control       = list(rel.tol=1e-8)
                                           )
         })
     return(list(fit_param=fit_param, lambda_function=lambda_function, mu_function=mu_function, age_grid_param=age_grid_param))
@@ -105,7 +105,7 @@ param_lambda7p_mu_multiplier_lambda <- function(desired_interval = 0.1, tree, co
                                                condition     = condition,
                                                Ntrials       = 10,    # perform 10 fitting trials
                                                Nthreads      = ncores,
-                                               fit_control       = list(rel.tol=1e-6)
+                                               fit_control       = list(rel.tol=1e-8)
                                            )
     })
     return(list(fit_param=fit_param, lambda_function=lambda_function, mu_function=mu_function, age_grid_param=age_grid_param))
@@ -160,7 +160,7 @@ param_lambda_discreteshift_mu_discreteshift <- function(desired_interval = 0.1, 
                                                condition     = condition,
                                                Ntrials       = 10,    # perform 10 fitting trials
                                                Nthreads      = ncores,
-                                               fit_control       = list(rel.tol=1e-6)
+                                               fit_control       = list(rel.tol=1e-8)
                                            )
     })
     return(list(fit_param=fit_param, lambda_function=lambda_function, mu_function=mu_function, age_grid_param=age_grid_param))
@@ -208,7 +208,7 @@ param_lambda_discreteshift_ef_fixed <- function(desired_interval = 0.1, tree, co
                                                condition     = condition,
                                                Ntrials       = 10,    # perform 10 fitting trials
                                                Nthreads      = ncores,
-                                               fit_control       = list(rel.tol=1e-6)
+                                               fit_control       = list(rel.tol=1e-8)
                                            )
     })
     return(list(fit_param=fit_param, lambda_function=lambda_function, mu_function=mu_function, age_grid_param=age_grid_param))
@@ -339,4 +339,129 @@ PlotAll <- function(x, tree, file="plot.pdf") {
         PlotRates(x[[i]], tree, main=paste0("Regimes: ", summaries$nregimes[i], " deltaAICc: ", round(summaries$deltaAIC[i],2)))
     }
     dev.off()
+}
+
+# delta is desired ∆lnL to sample along
+AdaptiveSupport <- function(fitted_model, tree, delta=2, n_per_rep=12, n_per_good=36) {
+    original_params <- fitted_model$results$fit_param$param_fitted
+    best_loglikelihood <- fitted_model$loglikelihood
+    results <- likelihood_lambda_discreteshift_mu_discreteshift(fitted_model=fitted_model, tree=tree, randomize=FALSE)
+
+    # univariate
+    for(focal_param in seq_along(original_params)) {
+        multiplier <- -2
+        #local_result_aggregate <- data.frame()
+        good_sample <- FALSE
+        run_num <- 0
+        run_max <- 10
+        while(!good_sample & run_num < run_max) {
+            print(multiplier)
+            run_num <- run_num+1
+            min_value <- (1-10^multiplier)*original_params[focal_param]
+            max_value <- (1+(10^(.5*multiplier)))*original_params[focal_param]
+            if(max_value==0) {
+                max_value <- (10^(.5*multiplier))*1e-2
+            }
+            if(multiplier>=0) {
+                min_value <- 0
+            }
+            param_min <- original_params
+            param_min[focal_param] <- min_value
+            param_max <- original_params
+            param_max[focal_param] <- max_value
+
+            # repeated below
+            local_results <- do.call(rbind, parallel::mclapply(rep(list(fitted_model),n_per_rep), likelihood_lambda_discreteshift_mu_discreteshift, param_min=param_min, param_max=param_max, tree=tree, randomize=TRUE, mc.cores=parallel::detectCores()))
+            results <- rbind(results, local_results)
+
+            if(best_loglikelihood > max(unlist(local_results[,'loglikelihood']))+delta) {
+                print("too wide")
+                multiplier <- multiplier-.5
+            } else if(best_loglikelihood < min(unlist(local_results[,'loglikelihood']))+delta) {
+                print("too narrow")
+                multiplier <- multiplier+0.5
+
+            } else {
+                good_sample <- TRUE
+                local_results_good <- do.call(rbind, parallel::mclapply(rep(list(fitted_model),n_per_good), likelihood_lambda_discreteshift_mu_discreteshift, param_min=param_min, param_max=param_max, tree=tree, randomize=TRUE, mc.cores=parallel::detectCores()))
+                results <- rbind(results, local_results_good)
+            }
+
+            #print(local_results[,1]-best_loglikelihood)
+            plot(local_results[,1+focal_param], local_results[,1]-best_loglikelihood, pch=21, main=colnames(local_results)[1+focal_param])
+            print(cbind(local_results[,1]-best_loglikelihood, local_results[,1+focal_param]))
+            print(range(local_results[,1+focal_param]))
+
+        }
+    }
+
+    # bivariate
+    indices <- sort(as.numeric(unique(gsub("mu", "", gsub("lambda", "", names(original_params))))))
+    good_enough_univariate <- subset(results, loglikelihood+delta>=best_loglikelihood)
+    for(focal_pair in seq_along(indices)) {
+        print(paste0("focal_pair ", focal_pair))
+        param_min <- original_params
+        param_max <- original_params
+        multiplier <- -2
+        good_sample <- FALSE
+        run_num <- 0
+        run_max <- 10
+        while(!good_sample & run_num < run_max) {
+            print(multiplier)
+            run_num <- run_num+1
+            param_min[paste0("mu",indices[focal_pair])] <- max(0,(1-10^multiplier))*min(good_enough_univariate[paste0("mu",indices[focal_pair])])
+            param_min[paste0("lambda",indices[focal_pair])] <- max(0,(1-10^multiplier))*min(good_enough_univariate[paste0("lambda",indices[focal_pair])])
+
+
+            param_max[paste0("mu",indices[focal_pair])] <- (1+(10^(.5*multiplier)))*max(good_enough_univariate[paste0("mu",indices[focal_pair])])
+            param_max[paste0("lambda",indices[focal_pair])] <- (1+(10^(.5*multiplier)))*max(good_enough_univariate[paste0("lambda",indices[focal_pair])])
+
+            local_results <- do.call(rbind, parallel::mclapply(rep(list(fitted_model),2*n_per_rep), likelihood_lambda_discreteshift_mu_discreteshift, param_min=param_min, param_max=param_max, tree=tree, randomize=TRUE, mc.cores=parallel::detectCores()))
+            results <- rbind(results, local_results)
+            if(best_loglikelihood > max(unlist(local_results[,'loglikelihood']))+delta) {
+                print("too wide")
+                multiplier <- multiplier-.5
+            } else if(best_loglikelihood < min(unlist(local_results[,'loglikelihood']))+delta) {
+                print("too narrow")
+                multiplier <- multiplier+0.5
+
+            } else {
+                good_sample <- TRUE
+                local_results_good <- do.call(rbind, parallel::mclapply(rep(list(fitted_model),n_per_good), likelihood_lambda_discreteshift_mu_discreteshift, param_min=param_min, param_max=param_max, tree=tree, randomize=TRUE, mc.cores=parallel::detectCores()))
+                results <- rbind(results, local_results_good)
+            }
+
+        }
+
+    }
+    return(results)
+}
+
+
+# desired_interval: how finely to divide the slices for calculating smoothly changing (or not) lambda and mu
+# slice_ages: when to divide regimes
+# interpolation_method: same as method in ?approx. Constant or linear
+likelihood_lambda_discreteshift_mu_discreteshift <- function(fitted_model, tree, param_min=0*fitted_model$results$fit_param$param_fitted, param_max=4*(0.05+fitted_model$results$fit_param$param_fitted), randomize=TRUE) {
+    original_params <- fitted_model$results$fit_param$param_fitted
+    seed_params <- original_params
+    # if any are exactly zero, won't get variation. So allow change
+    new_params <- original_params
+    if(randomize) {
+        new_params <- runif(n=length(original_params), min=param_min, max=param_max)
+        names(new_params) <- names(original_params)
+    }
+    mu_values <- fitted_model$results$mu_function(fitted_model$results$age_grid_param, new_params)
+
+    lambda_values <- fitted_model$results$lambda_function(fitted_model$results$age_grid_param, new_params)
+
+    loglikelihood_result <- castor::loglikelihood_hbd(
+        tree=tree,
+        age_grid = fitted_model$results$age_grid_param,
+        lambda=lambda_values,
+        mu=mu_values,
+        rho0=1,
+        splines_degree=1
+    )
+    result <- c(loglikelihood=loglikelihood_result$loglikelihood, new_params)
+    return(data.frame(t(result)))
 }

@@ -2,6 +2,7 @@
 
 future::plan(future::multiprocess)
 plan <- drake_plan(
+    session = save(sessionInfo(), file=file_out("sessioninfo.rda")),
     tree = ape::read.tree("data/tree_Extended_Data_Fig_6.tre"),
     #many_regimes = TryManyRegimes(tree, maxregimes=13),
     #save(many_regimes, file=file_out("results.rda"))
@@ -10,7 +11,8 @@ plan <- drake_plan(
         transform = cross(
             nregimes=c(1,2,3,4,5,6,7,8,9,10,11,12,13,14),
             interpolation_method=c("linear"),
-            type=c("data", "time")
+            #type=c("data", "time")
+            type=c("time")
         )
     ),
     everything = target(
