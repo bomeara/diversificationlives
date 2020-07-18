@@ -449,10 +449,12 @@ AdaptiveSupport <- function(fitted_model, tree, delta=2, n_per_rep=12, n_per_goo
 
     # multivariate using mcmc
     good_enough_already <- subset(results, loglikelihood+delta>=best_loglikelihood)
-    good_enough_log_param <- log(good_enough_already[,-1])
-    good_enough_log_param[!is.finite(good_enough_log_param)] <- log(1e-8) # tiny values
-    #w = min(apply(good_enough_log_param, 2, max) - apply(good_enough_log_param, 2, min)) #smallest diff
-    w=0.01*(apply(good_enough_log_param, 2, max) - apply(good_enough_log_param, 2, min))
+    good_enough_ranges <- abs(apply(good_enough_already[,-1], 2, max) - apply(good_enough_already[,-1], 2, min))
+    if(any(good_enough_ranges==0)) {
+        good_enough_ranges[which(good_enough_ranges==0)] <- 1e-8
+    }
+    w <- 0.01*log(good_enough_ranges)
+
     # lik <- function(x, fitted_model, tree) {
     #
     #         return(likelihood_lambda_discreteshift_mu_discreteshift_for_mcmc(x,fitted_model=fitted_model, tree=tree))
