@@ -453,7 +453,7 @@ AdaptiveSupport <- function(fitted_model, tree, delta=2, n_per_rep=12, n_per_goo
     if(any(good_enough_ranges==0)) {
         good_enough_ranges[which(good_enough_ranges==0)] <- 1e-8
     }
-    w <- 0.01*log(good_enough_ranges)
+    w <- log(good_enough_ranges)
 
     # lik <- function(x, fitted_model, tree) {
     #
@@ -461,7 +461,7 @@ AdaptiveSupport <- function(fitted_model, tree, delta=2, n_per_rep=12, n_per_goo
     #
     # }
     original_params[original_params==0] <- 1e-8
-    mcmc_results <- mcmc::metrop(obj=likelihood_lambda_discreteshift_mu_discreteshift_for_mcmc, initial=log(original_params), nbatch=200, blen=1, scale=w, fitted_model=fitted_model, tree=tree, debug=TRUE)
+    mcmc_results <- mcmc::metrop(obj=likelihood_lambda_discreteshift_mu_discreteshift_for_mcmc, initial=log(original_params), nbatch=10000, blen=1, scale=w, fitted_model=fitted_model, tree=tree, debug=TRUE)
     likelihoods <- apply(mcmc_results$batch, 1, likelihood_lambda_discreteshift_mu_discreteshift_for_mcmc, fitted_model=fitted_model, tree=tree)
     mcmc_params <- exp(mcmc_results$batch)
     colnames(mcmc_params) <- names(original_params)
