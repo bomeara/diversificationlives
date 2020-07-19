@@ -640,11 +640,12 @@ sample_ridge <- function(obj, initial,  scale, nsteps=1000, restart_if_far=50, r
     print(paste("target_loglikelihood", target_loglikelihood))
     steps_since_negative_diff <- 0
     for (i in sequence(nsteps)) {
-
+        target_loglikelihood <- max(loglikelihoods, na.rm=TRUE)-desired_delta
         new_params <- generating_params
         param_to_tweak <- sample.int(length(initial), 1)
         new_params[param_to_tweak] <- stats::rnorm(1, mean=new_params[param_to_tweak], sd=scale[param_to_tweak])
         loglikelihoods[i+1] <- obj(new_params, ...)
+
         parameters[i+1,] <- new_params
         loglikdiff <- target_loglikelihood-loglikelihoods[i+1]
         # if 0, we're hitting exactly; if <0, the new params are "too good", if >0, the new params are too far away from a good region
