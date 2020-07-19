@@ -655,7 +655,7 @@ sample_ridge <- function(obj, initial,  scale, nsteps=1000, desired_delta=2, ...
         if(loglikdiff>0) {
             scale[param_to_tweak] <- 0.9 * scale[param_to_tweak] # let's not be so bold
         }
-        if(loglikediff>10) {
+        if(loglikdiff>10) {
             scale[param_to_tweak] <- 0.1 * scale[param_to_tweak] # we're very far away from where we want to be
         }
         print(paste("mcmc step", i, "difference from targeted likelihood is", loglikdiff))
