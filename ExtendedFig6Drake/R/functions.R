@@ -324,11 +324,17 @@ AdaptiveSampleBestModels <- function(everything, result_summary, tree, deltaAIC_
 #     return(list(summarized_results=summarized_results, full_results=full_results))
 # }
 
-ComputeRates <- function(fitted.model) {
+ComputeRates <- function(fitted.model, params=NULL) {
     ages <- fitted.model$results$age_grid_param
-    lambdas <- fitted.model$results$lambda_function(ages=ages, params=fitted.model$results$fit_param$param_fitted)
-    mus <- fitted.model$results$mu_function(ages=ages, params=fitted.model$results$fit_param$param_fitted)
-    return(data.frame(age=-ages, lambda=lambdas, mu=mus))
+    if(is.null(params)) {
+        params <- fitted.model$results$fit_param$param_fitted
+    }
+    if(is.null(names(params))) {
+        names(params) <- names(fitted.model$results$fit_param$param_fitted)
+    }
+    lambdas <- fitted.model$results$lambda_function(ages=ages, params=params)
+    mus <- fitted.model$results$mu_function(ages=ages, params=params)
+    return(data.frame(age=-ages, lambda=lambdas, mu=mus, netdiv = lambdas-mus, turnover=lambdas+mus, ef=mus/lambdas))
 }
 
 PlotRates <- function(fitted.model, tree,...) {
@@ -340,6 +346,57 @@ PlotRates <- function(fitted.model, tree,...) {
     lines(relrates$age, relrates$lambda, col="blue", lwd=2)
     lines(relrates$age, relrates$mu, col="red", lwd=2)
     axis(side=4, at=seq(from=0, to=ape::Ntip(tree), length.out=5), labels=signif(seq(from=min(0, min(c(rates$lambda, rates$mu))), to=max(c(rates$lambda, rates$mu)), length.out=5),2))
+}
+
+PlotRateUncertainty <- function(fitted.model, tree, good_adaptive_samples, ...) {
+    lambda <- data.frame(matrix(NA, nrow=length(fitted.model$results$age_grid_param), ncol=nrow(good_adaptive_samples)))
+    mu <- lambda
+    netdiv <- lambda
+    ages <- (-1)*fitted.model$results$age_grid_param
+
+    for (i in sequence(nrow(good_adaptive_samples))) {
+        rates_local <- ComputeRates(fitted.model, good_adaptive_samples[i,-1])
+        lambda[,i] <- rates_local$lambda
+        mu[,i] <- rates_local$mu
+        netdiv[,i] <- rates_local$netdiv
+    }
+    # ltt_data <- ape::ltt.plot.coords(tree)
+    # ltt_data$logN <- log(ltt_data$N)
+    par(mfcol=c(1,3))
+    ylimits <- range(c(min(max(mu), max(lambda),0.5), max(min(mu), min(lambda), -0.5)))
+    for (i in sequence(3)) {
+        rates <- lambda
+        title <- "Speciation rate"
+        if(i==2) {
+            rates <- mu
+            title <- "Extinction rate"
+        }
+        if(i==3) {
+            rates <- netdiv
+            title <- "Net diversification rate"
+            ylimits <- range(c(min(max(netdiv),0.5), max(min(netdiv), -0.5)))
+        }
+        plot(x=ages, y=rates[,1], type="n", bty="n", ylim=ylimits, ylab=title, xlab="Time")
+        polygon(x=c(ages, rev(ages)), y=c(apply(rates,1,min), rev(apply(rates,1,max))), col="gray", border=NA)
+        # for(j in sequence(ncol(rates))) {
+        #     lines(ages, rates[,j], col=rgb(0,0,0,0.1))
+        # }
+        lines(ages, rates[,1], col=c("blue", "red", "purple")[i], lwd=2)
+        axis(side=3, at=c(0, fitted.model$splits$time, min(ages)), labels=c(ape::Ntip(tree), fitted.model$splits$ntax.after, 2))
+        mtext("Number of taxa", side=3, line=3, cex=0.6)
+    }
+}
+
+PlotAllUncertainty <- function(x, tree, adaptive_list, file="uncertainty.pdf", desired_delta=2) {
+    pdf(file=file, width=10, height=5)
+    for(i in seq_along(adaptive_list)) {
+        if(class(adaptive_list[[i]])=="data.frame") {
+            good_enough <- subset(adaptive_list[[i]], loglikelihood>max(loglikelihood)-desired_delta)
+            fitted.model <- x[[i]]
+            PlotRateUncertainty(fitted.model, tree, good_enough)
+        }
+    }
+    dev.off()
 }
 
 PlotAll <- function(x, tree, file="plot.pdf") {
@@ -567,8 +624,9 @@ likelihood_lambda_discreteshift_mu_discreteshift_for_mcmc <- function(log_params
 #this assumes obj gives back the loglikelihood, NOT the negative log likelihood. Bigger is better, the MLE should be the max value for likelihood.
 sample_ridge <- function(obj, initial,  scale, nsteps=1000, desired_delta=2, ...) {
     loglikelihoods <- rep(NA, nsteps+1)
-    parameters <- as.data.frame(initial)
-    parameters <- rbind(parameters, matrix(NA, nrow=nsteps, ncol=length(initial)))
+    parameters <- data.frame(matrix(NA, nrow=nsteps+1, ncol=length(initial)))
+    parameters[1,] <- initial
+    colnames(parameters) <- names(initial)
     loglikelihoods[1] <- obj(parameters, ...)
     generating_params <- initial
     target_loglikelihood <- loglikelihoods[1]-desired_delta
