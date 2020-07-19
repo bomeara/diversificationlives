@@ -514,7 +514,7 @@ AdaptiveSupport <- function(fitted.model, tree, delta=2, n_per_rep=12, n_per_goo
     if(any(good_enough_ranges==0)) {
         good_enough_ranges[which(good_enough_ranges==0)] <- 1e-8
     }
-    w <- log(good_enough_ranges)
+    w <- 0.1*abs(log(good_enough_ranges))
     print("w")
     print(w)
 
@@ -524,7 +524,7 @@ AdaptiveSupport <- function(fitted.model, tree, delta=2, n_per_rep=12, n_per_goo
     #
     # }
     original_params[original_params==0] <- 1e-8
-    save(list=ls(), file="before_mcmc.rda")
+    #save(list=ls(), file="before_mcmc.rda")
     mcmc_results <- sample_ridge(obj=likelihood_lambda_discreteshift_mu_discreteshift_for_mcmc, initial=log(original_params), nsteps=100, scale=w, fitted.model=fitted.model, tree=tree)
     #mcmc_results <- mcmc::metrop(obj=likelihood_lambda_discreteshift_mu_discreteshift_for_mcmc, initial=log(original_params), nbatch=10000, blen=1, scale=w, fitted.model=fitted.model, tree=tree, debug=TRUE)
     #likelihoods <- apply(mcmc_results$batch, 1, likelihood_lambda_discreteshift_mu_discreteshift_for_mcmc, fitted.model=fitted.model, tree=tree)
@@ -609,7 +609,7 @@ likelihood_lambda_discreteshift_mu_discreteshift <- function(fitted.model, tree,
 likelihood_lambda_discreteshift_mu_discreteshift_for_mcmc <- function(log_params, fitted.model, tree) {
     params <- exp(log_params)
     names(params) <- names(fitted.model$results$fit_param$param_fitted)
-    print(params)
+    #print(params)
     mu_values <- fitted.model$results$mu_function(fitted.model$results$age_grid_param, params)
 
     lambda_values <- fitted.model$results$lambda_function(fitted.model$results$age_grid_param, params)
@@ -622,19 +622,19 @@ likelihood_lambda_discreteshift_mu_discreteshift_for_mcmc <- function(log_params
         rho0=1,
         splines_degree=1
     )
-    print(loglikelihood_result$loglikelihood)
+    #print(loglikelihood_result$loglikelihood)
     return(ifelse(is.finite(loglikelihood_result$loglikelihood), loglikelihood_result$loglikelihood, -Inf))
 }
 
 #(obj=likelihood_lambda_discreteshift_mu_discreteshift_for_mcmc, initial=log(original_params), nbatch=10000, blen=1, scale=w, fitted.model=fitted.model, tree=tree, debug=TRUE)
 #this assumes obj gives back the loglikelihood, NOT the negative log likelihood. Bigger is better, the MLE should be the max value for likelihood.
 sample_ridge <- function(obj, initial,  scale, nsteps=1000, desired_delta=2, ...) {
-    save(list=ls(), file="within_sample_ridge.rda")
+    #save(list=ls(), file="within_sample_ridge.rda")
     loglikelihoods <- rep(NA, nsteps+1)
     parameters <- data.frame(matrix(NA, nrow=nsteps+1, ncol=length(initial)))
     parameters[1,] <- initial
     colnames(parameters) <- names(initial)
-    loglikelihoods[1] <- obj(parameters, ...)
+    loglikelihoods[1] <- obj(parameters[1,], ...)
     generating_params <- initial
     target_loglikelihood <- loglikelihoods[1]-desired_delta
     print(paste("target_loglikelihood", target_loglikelihood))
