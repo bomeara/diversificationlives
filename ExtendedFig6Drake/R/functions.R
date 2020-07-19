@@ -525,7 +525,7 @@ AdaptiveSupport <- function(fitted.model, tree, delta=2, n_per_rep=12, n_per_goo
     # }
     original_params[original_params==0] <- 1e-8
     #save(list=ls(), file="before_mcmc.rda")
-    mcmc_results <- sample_ridge(obj=likelihood_lambda_discreteshift_mu_discreteshift_for_mcmc, initial=log(original_params), nsteps=100, scale=w, fitted.model=fitted.model, tree=tree)
+    mcmc_results <- sample_ridge(obj=likelihood_lambda_discreteshift_mu_discreteshift_for_mcmc, initial=log(original_params), nsteps=20, restart_steps=10, scale=w, fitted.model=fitted.model, tree=tree)
     #mcmc_results <- mcmc::metrop(obj=likelihood_lambda_discreteshift_mu_discreteshift_for_mcmc, initial=log(original_params), nbatch=10000, blen=1, scale=w, fitted.model=fitted.model, tree=tree, debug=TRUE)
     #likelihoods <- apply(mcmc_results$batch, 1, likelihood_lambda_discreteshift_mu_discreteshift_for_mcmc, fitted.model=fitted.model, tree=tree)
     mcmc_params <- exp(mcmc_results$parameters)
@@ -628,7 +628,7 @@ likelihood_lambda_discreteshift_mu_discreteshift_for_mcmc <- function(log_params
 
 #(obj=likelihood_lambda_discreteshift_mu_discreteshift_for_mcmc, initial=log(original_params), nbatch=10000, blen=1, scale=w, fitted.model=fitted.model, tree=tree, debug=TRUE)
 #this assumes obj gives back the loglikelihood, NOT the negative log likelihood. Bigger is better, the MLE should be the max value for likelihood.
-sample_ridge <- function(obj, initial,  scale, nsteps=1000, desired_delta=2, ...) {
+sample_ridge <- function(obj, initial,  scale, nsteps=1000, restart_steps=100, desired_delta=2, ...) {
     #save(list=ls(), file="within_sample_ridge.rda")
     loglikelihoods <- rep(NA, nsteps+1)
     parameters <- data.frame(matrix(NA, nrow=nsteps+1, ncol=length(initial)))
@@ -639,6 +639,9 @@ sample_ridge <- function(obj, initial,  scale, nsteps=1000, desired_delta=2, ...
     target_loglikelihood <- loglikelihoods[1]-desired_delta
     print(paste("target_loglikelihood", target_loglikelihood))
     for (i in sequence(nsteps)) {
+        if(i%%restart_steps==0) {
+            generating_params <- initial # restart from initial, but with updated scale
+        }
         new_params <- generating_params
         param_to_tweak <- sample.int(length(initial), 1)
         new_params[param_to_tweak] <- stats::rnorm(1, mean=new_params[param_to_tweak], sd=scale[param_to_tweak])
@@ -655,10 +658,10 @@ sample_ridge <- function(obj, initial,  scale, nsteps=1000, desired_delta=2, ...
         if(loglikdiff>0) {
             scale[param_to_tweak] <- 0.9 * scale[param_to_tweak] # let's not be so bold
         }
-        if(loglikdiff>10) {
+        if(loglikdiff>4) {
             scale[param_to_tweak] <- 0.1 * scale[param_to_tweak] # we're very far away from where we want to be
         }
-        print(paste("mcmc step", i, "difference from targeted likelihood is", loglikdiff))
+        print(paste("mcmc step", i, "parameter", names(parameters)[param_to_tweak], "difference from targeted likelihood is", loglikdiff, "setting scale to ", scale[param_to_tweak]))
     }
-    return(list(loglikelihood=loglikelihood, parameters=parameters))
+    return(list(loglikelihoods=loglikelihoods, parameters=parameters))
 }
