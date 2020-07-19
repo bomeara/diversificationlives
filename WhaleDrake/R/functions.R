@@ -365,7 +365,7 @@ AdaptiveSupport <- function(fitted_model, tree, delta=2, n_per_rep=12, n_per_goo
         run_num <- 0
         run_max <- 10
         while(!good_sample & run_num < run_max) {
-            print(multiplier)
+            print(paste(names(original_params)[focal_param], multiplier))
             run_num <- run_num+1
             min_value <- (1-10^multiplier)*original_params[focal_param]
             max_value <- (1+(10^(.5*multiplier)))*original_params[focal_param]
@@ -461,11 +461,13 @@ AdaptiveSupport <- function(fitted_model, tree, delta=2, n_per_rep=12, n_per_goo
     #
     # }
     original_params[original_params==0] <- 1e-8
-    mcmc_results <- mcmc::metrop(obj=likelihood_lambda_discreteshift_mu_discreteshift_for_mcmc, initial=log(original_params), nbatch=10000, blen=1, scale=w, fitted_model=fitted_model, tree=tree, debug=TRUE)
-    likelihoods <- apply(mcmc_results$batch, 1, likelihood_lambda_discreteshift_mu_discreteshift_for_mcmc, fitted_model=fitted_model, tree=tree)
-    mcmc_params <- exp(mcmc_results$batch)
+
+    mcmc_results <- sample_ridge(obj=likelihood_lambda_discreteshift_mu_discreteshift_for_mcmc, initial=log(original_params), nsteps=100, scale=w, fitted_model=fitted_model, tree=tree)
+    #mcmc_results <- mcmc::metrop(obj=likelihood_lambda_discreteshift_mu_discreteshift_for_mcmc, initial=log(original_params), nbatch=10000, blen=1, scale=w, fitted_model=fitted_model, tree=tree, debug=TRUE)
+    #likelihoods <- apply(mcmc_results$batch, 1, likelihood_lambda_discreteshift_mu_discreteshift_for_mcmc, fitted_model=fitted_model, tree=tree)
+    mcmc_params <- exp(mcmc_results$parameters)
     colnames(mcmc_params) <- names(original_params)
-    mcmc_results_fixed = data.frame(loglikelihood=likelihoods, mcmc_params)
+    mcmc_results_fixed = data.frame(loglikelihood=mcmc_results$loglikelihoods, mcmc_params)
 
     results <- rbind(results, mcmc_results_fixed)
 
@@ -476,7 +478,7 @@ AdaptiveSupport <- function(fitted_model, tree, delta=2, n_per_rep=12, n_per_goo
 
     # print("beginning multivariate")
     # good_enough_already <- subset(results, loglikelihood+delta>=best_loglikelihood)
-    # print(paste("already have", nrow(good_enough_already), "results in", nrow(results), "trials of parameters"))
+     print(paste("already have", nrow(good_enough_already), "results in close enough range in ", nrow(results), "trials of parameters"))
     #
     # param_min_original <- apply(good_enough_already, 2, min)[-1]
     # param_max_original <- apply(good_enough_already, 2, max)[-1]
@@ -559,4 +561,38 @@ likelihood_lambda_discreteshift_mu_discreteshift_for_mcmc <- function(log_params
     )
     print(loglikelihood_result$loglikelihood)
     return(ifelse(is.finite(loglikelihood_result$loglikelihood), loglikelihood_result$loglikelihood, -Inf))
+}
+
+#(obj=likelihood_lambda_discreteshift_mu_discreteshift_for_mcmc, initial=log(original_params), nbatch=10000, blen=1, scale=w, fitted_model=fitted_model, tree=tree, debug=TRUE)
+#this assumes obj gives back the loglikelihood, NOT the negative log likelihood. Bigger is better, the MLE should be the max value for likelihood.
+sample_ridge <- function(obj, initial,  scale, nsteps=1000, desired_delta=2, ...) {
+    loglikelihoods <- rep(NA, nsteps+1)
+    parameters <- as.data.frame(initial)
+    parameters <- rbind(parameters, matrix(NA, nrow=nsteps, ncol=length(initial)))
+    loglikelihoods[1] <- obj(parameters, ...)
+    generating_params <- initial
+    target_loglikelihood <- loglikelihoods[1]-desired_delta
+    for (i in sequence(nsteps)) {
+        new_params <- generating_params
+        param_to_tweak <- sample.int(length(initial), 1)
+        new_params[param_to_tweak] <- stats::rnorm(1, mean=new_params[param_to_tweak], sd=scale[param_to_tweak])
+        loglikelihoods[i+1] <- obj(new_params, ...)
+        parameters[i+1,] <- new_params
+        loglikdiff <- target_loglikelihood-loglikelihoods[i+1]
+        # if 0, we're hitting exactly; if <0, the new params are "too good", if >0, the new params are too far away from a good region
+        if(abs(loglikdiff)<runif(1,0,1)) {
+            generating_params <- new_params # we're within ∆1 lnL of the desired value, so pretty good chance we want to accept this change, esp as we get closer
+        }
+        if(loglikdiff<0) {
+            scale[param_to_tweak] <- 1.1 * scale[param_to_tweak] # get a bit more variance in proposals
+        }
+        if(loglikdiff>0) {
+            scale[param_to_tweak] <- 0.9 * scale[param_to_tweak] # let's not be so bold
+        }
+        if(loglikediff>10) {
+            scale[param_to_tweak] <- 0.1 * scale[param_to_tweak] # we're very far away from where we want to be
+        }
+        print(paste("mcmc step", i, "difference from targeted likelihood is", loglikdiff))
+    }
+    return(list(loglikelihood=loglikelihood, parameters=parameters))
 }

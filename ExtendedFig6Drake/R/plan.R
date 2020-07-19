@@ -3,7 +3,7 @@
 future::plan(future::multiprocess)
 plan <- drake_plan(
     session = utils::sessionInfo(),
-    session_save = save(session, file=file_out("sessioninfo.rda")),
+    file=file_out("sessioninfo.rda")),
     tree = ape::read.tree("data/tree_Extended_Data_Fig_6.tre"),
     #many_regimes = TryManyRegimes(tree, maxregimes=13),
     #save(many_regimes, file=file_out("results.rda"))
@@ -23,5 +23,5 @@ plan <- drake_plan(
     result_summary = SummarizeSplitsAndLikelihoods(everything),
     adaptive_list = AdaptiveSampleBestModels(everything, result_summary, tree, deltaAIC_cutoff=20),
     plot_all = PlotAll(everything, tree, file=file_out("plot.pdf")),
-    save_all = save(everything, result_summary, adaptive_list, file=file_out("everything.rda"))
+    save_all = save(everything, result_summary, adaptive_list,tree, session, file=file_out("everything.rda"))
 )
