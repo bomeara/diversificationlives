@@ -363,7 +363,7 @@ PlotRateUncertainty <- function(fitted.model, tree, good_adaptive_samples, ...) 
     # ltt_data <- ape::ltt.plot.coords(tree)
     # ltt_data$logN <- log(ltt_data$N)
     par(mfcol=c(1,3))
-    ylimits <- range(c(min(max(mu), max(lambda),0.5), max(min(mu), min(lambda), -0.5)))
+    ylimits <- range(c(min(max(mu), max(lambda),0.9), max(min(mu), min(lambda), -0.9)))
     for (i in sequence(3)) {
         rates <- lambda
         title <- "Speciation rate"
@@ -525,7 +525,7 @@ AdaptiveSupport <- function(fitted.model, tree, delta=2, n_per_rep=12, n_per_goo
     # }
     original_params[original_params==0] <- 1e-8
     #save(list=ls(), file="before_mcmc.rda")
-    mcmc_results <- sample_ridge(obj=likelihood_lambda_discreteshift_mu_discreteshift_for_mcmc, initial=log(original_params), nsteps=20, restart_steps=10, scale=w, fitted.model=fitted.model, tree=tree)
+    mcmc_results <- sample_ridge(obj=likelihood_lambda_discreteshift_mu_discreteshift_for_mcmc, initial=log(original_params), nsteps=4000, restart_steps=500, scale=w, fitted.model=fitted.model, tree=tree)
     #mcmc_results <- mcmc::metrop(obj=likelihood_lambda_discreteshift_mu_discreteshift_for_mcmc, initial=log(original_params), nbatch=10000, blen=1, scale=w, fitted.model=fitted.model, tree=tree, debug=TRUE)
     #likelihoods <- apply(mcmc_results$batch, 1, likelihood_lambda_discreteshift_mu_discreteshift_for_mcmc, fitted.model=fitted.model, tree=tree)
     mcmc_params <- exp(mcmc_results$parameters)
@@ -661,7 +661,7 @@ sample_ridge <- function(obj, initial,  scale, nsteps=1000, restart_steps=100, d
         if(loglikdiff>4) {
             scale[param_to_tweak] <- 0.1 * scale[param_to_tweak] # we're very far away from where we want to be
         }
-        print(paste("mcmc step", i, "parameter", names(parameters)[param_to_tweak], "difference from targeted likelihood is", loglikdiff, "setting scale to ", scale[param_to_tweak]))
+        print(paste("mcmc step", i, "parameter", names(parameters)[param_to_tweak], "difference from targeted likelihood is", round(loglikdiff,2), "setting scale to ", round(scale[param_to_tweak],6)))
     }
     return(list(loglikelihoods=loglikelihoods, parameters=parameters))
 }
