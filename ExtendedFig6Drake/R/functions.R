@@ -280,7 +280,7 @@ AdaptiveSampleBestModels <- function(everything, result_summary, tree, deltaAIC_
     adaptive_results <- vector(mode="list", length=nrow(result_summary))
     for (i in seq_along(everything)) {
         if(result_summary$deltaAIC[i]<deltaAIC_cutoff) {
-            adaptive_results[[i]] <- AdaptiveSupport(fitted_model=everything[[i]], tree=tree)
+            adaptive_results[[i]] <- AdaptiveSupport(fitted.model=everything[[i]], tree=tree)
         }
     }
     return(adaptive_results)
@@ -409,10 +409,10 @@ PlotAll <- function(x, tree, file="plot.pdf") {
 }
 
 # delta is desired ∆lnL to sample along
-AdaptiveSupport <- function(fitted_model, tree, delta=2, n_per_rep=12, n_per_good=36) {
-    original_params <- fitted_model$results$fit_param$param_fitted
-    best_loglikelihood <- fitted_model$loglikelihood
-    results <- likelihood_lambda_discreteshift_mu_discreteshift(fitted_model=fitted_model, tree=tree, randomize=FALSE)
+AdaptiveSupport <- function(fitted.model, tree, delta=2, n_per_rep=12, n_per_good=36) {
+    original_params <- fitted.model$results$fit_param$param_fitted
+    best_loglikelihood <- fitted.model$loglikelihood
+    results <- likelihood_lambda_discreteshift_mu_discreteshift(fitted.model=fitted.model, tree=tree, randomize=FALSE)
 
     # univariate
     for(focal_param in seq_along(original_params)) {
@@ -438,7 +438,7 @@ AdaptiveSupport <- function(fitted_model, tree, delta=2, n_per_rep=12, n_per_goo
             param_max[focal_param] <- max_value
 
             # repeated below
-            local_results <- do.call(rbind, parallel::mclapply(rep(list(fitted_model),n_per_rep), likelihood_lambda_discreteshift_mu_discreteshift, param_min=param_min, param_max=param_max, tree=tree, randomize=TRUE, mc.cores=parallel::detectCores()))
+            local_results <- do.call(rbind, parallel::mclapply(rep(list(fitted.model),n_per_rep), likelihood_lambda_discreteshift_mu_discreteshift, param_min=param_min, param_max=param_max, tree=tree, randomize=TRUE, mc.cores=parallel::detectCores()))
             results <- rbind(results, local_results)
 
             if(best_loglikelihood > max(unlist(local_results[,'loglikelihood']))+delta) {
@@ -450,7 +450,7 @@ AdaptiveSupport <- function(fitted_model, tree, delta=2, n_per_rep=12, n_per_goo
 
             } else {
                 good_sample <- TRUE
-                local_results_good <- do.call(rbind, parallel::mclapply(rep(list(fitted_model),n_per_good), likelihood_lambda_discreteshift_mu_discreteshift, param_min=param_min, param_max=param_max, tree=tree, randomize=TRUE, mc.cores=parallel::detectCores()))
+                local_results_good <- do.call(rbind, parallel::mclapply(rep(list(fitted.model),n_per_good), likelihood_lambda_discreteshift_mu_discreteshift, param_min=param_min, param_max=param_max, tree=tree, randomize=TRUE, mc.cores=parallel::detectCores()))
                 results <- rbind(results, local_results_good)
             }
 
@@ -483,7 +483,7 @@ AdaptiveSupport <- function(fitted_model, tree, delta=2, n_per_rep=12, n_per_goo
             param_max[paste0("mu",indices[focal_pair])] <- (1+(10^(.5*multiplier)))*max(good_enough_univariate[paste0("mu",indices[focal_pair])])
             param_max[paste0("lambda",indices[focal_pair])] <- (1+(10^(.5*multiplier)))*max(good_enough_univariate[paste0("lambda",indices[focal_pair])])
 
-            local_results <- do.call(rbind, parallel::mclapply(rep(list(fitted_model),2*n_per_rep), likelihood_lambda_discreteshift_mu_discreteshift, param_min=param_min, param_max=param_max, tree=tree, randomize=TRUE, mc.cores=parallel::detectCores()))
+            local_results <- do.call(rbind, parallel::mclapply(rep(list(fitted.model),2*n_per_rep), likelihood_lambda_discreteshift_mu_discreteshift, param_min=param_min, param_max=param_max, tree=tree, randomize=TRUE, mc.cores=parallel::detectCores()))
             results <- rbind(results, local_results)
             if(best_loglikelihood > max(unlist(local_results[,'loglikelihood']))+delta) {
                 print("too wide")
@@ -494,7 +494,7 @@ AdaptiveSupport <- function(fitted_model, tree, delta=2, n_per_rep=12, n_per_goo
 
             } else {
                 good_sample <- TRUE
-                local_results_good <- do.call(rbind, parallel::mclapply(rep(list(fitted_model),n_per_good), likelihood_lambda_discreteshift_mu_discreteshift, param_min=param_min, param_max=param_max, tree=tree, randomize=TRUE, mc.cores=parallel::detectCores()))
+                local_results_good <- do.call(rbind, parallel::mclapply(rep(list(fitted.model),n_per_good), likelihood_lambda_discreteshift_mu_discreteshift, param_min=param_min, param_max=param_max, tree=tree, randomize=TRUE, mc.cores=parallel::detectCores()))
                 results <- rbind(results, local_results_good)
             }
 
@@ -505,37 +505,43 @@ AdaptiveSupport <- function(fitted_model, tree, delta=2, n_per_rep=12, n_per_goo
     # multivariate
 
     # multivariate using mcmc
+    print("starting mcmc")
+
     good_enough_already <- subset(results, loglikelihood+delta>=best_loglikelihood)
+
+    print(paste("already have", nrow(good_enough_already), "results in close enough range in ", nrow(results), "trials of parameters"))
     good_enough_ranges <- abs(apply(good_enough_already[,-1], 2, max) - apply(good_enough_already[,-1], 2, min))
     if(any(good_enough_ranges==0)) {
         good_enough_ranges[which(good_enough_ranges==0)] <- 1e-8
     }
     w <- log(good_enough_ranges)
+    print("w")
+    print(w)
 
-    # lik <- function(x, fitted_model, tree) {
+    # lik <- function(x, fitted.model, tree) {
     #
-    #         return(likelihood_lambda_discreteshift_mu_discreteshift_for_mcmc(x,fitted_model=fitted_model, tree=tree))
+    #         return(likelihood_lambda_discreteshift_mu_discreteshift_for_mcmc(x,fitted.model=fitted.model, tree=tree))
     #
     # }
     original_params[original_params==0] <- 1e-8
 
-    mcmc_results <- sample_ridge(obj=likelihood_lambda_discreteshift_mu_discreteshift_for_mcmc, initial=log(original_params), nsteps=100, scale=w, fitted_model=fitted_model, tree=tree)
-    #mcmc_results <- mcmc::metrop(obj=likelihood_lambda_discreteshift_mu_discreteshift_for_mcmc, initial=log(original_params), nbatch=10000, blen=1, scale=w, fitted_model=fitted_model, tree=tree, debug=TRUE)
-    #likelihoods <- apply(mcmc_results$batch, 1, likelihood_lambda_discreteshift_mu_discreteshift_for_mcmc, fitted_model=fitted_model, tree=tree)
+    mcmc_results <- sample_ridge(obj=likelihood_lambda_discreteshift_mu_discreteshift_for_mcmc, initial=log(original_params), nsteps=100, scale=w, fitted.model=fitted.model, tree=tree)
+    #mcmc_results <- mcmc::metrop(obj=likelihood_lambda_discreteshift_mu_discreteshift_for_mcmc, initial=log(original_params), nbatch=10000, blen=1, scale=w, fitted.model=fitted.model, tree=tree, debug=TRUE)
+    #likelihoods <- apply(mcmc_results$batch, 1, likelihood_lambda_discreteshift_mu_discreteshift_for_mcmc, fitted.model=fitted.model, tree=tree)
     mcmc_params <- exp(mcmc_results$parameters)
     colnames(mcmc_params) <- names(original_params)
     mcmc_results_fixed = data.frame(loglikelihood=mcmc_results$loglikelihoods, mcmc_params)
 
     results <- rbind(results, mcmc_results_fixed)
 
-    # mcmc_results <- MCMCpack::MCMCmetrop1R(fun=likelihood_lambda_discreteshift_mu_discreteshift_for_mcmc, theta.init=log(original_params), mcmc=10, burnin=2, verbose=TRUE, fitted_model=fitted_model, tree=tree, force.samp=TRUE)
+    # mcmc_results <- MCMCpack::MCMCmetrop1R(fun=likelihood_lambda_discreteshift_mu_discreteshift_for_mcmc, theta.init=log(original_params), mcmc=10, burnin=2, verbose=TRUE, fitted.model=fitted.model, tree=tree, force.samp=TRUE)
 
-    # mcmc_results <- diversitree::mcmc(lik=likelihood_lambda_discreteshift_mu_discreteshift_for_mcmc, x.init=log(original_params), w=w, nsteps=1, fitted_model=fitted_model, tree=tree)
+    # mcmc_results <- diversitree::mcmc(lik=likelihood_lambda_discreteshift_mu_discreteshift_for_mcmc, x.init=log(original_params), w=w, nsteps=1, fitted.model=fitted.model, tree=tree)
 
 
     # print("beginning multivariate")
     # good_enough_already <- subset(results, loglikelihood+delta>=best_loglikelihood)
-     print(paste("already have", nrow(good_enough_already), "results in close enough range in ", nrow(results), "trials of parameters"))
+
     #
     # param_min_original <- apply(good_enough_already, 2, min)[-1]
     # param_max_original <- apply(good_enough_already, 2, max)[-1]
@@ -549,7 +555,7 @@ AdaptiveSupport <- function(fitted_model, tree, delta=2, n_per_rep=12, n_per_goo
     #     param_min <- max(0,(1-10^multiplier))*param_min_original
     #     param_max <- (1+(10^(.5*multiplier)))*param_max_original
     #
-    #     local_results <- do.call(rbind, parallel::mclapply(rep(list(fitted_model),8*n_per_rep), likelihood_lambda_discreteshift_mu_discreteshift, param_min=param_min, param_max=param_max, tree=tree, randomize=TRUE, mc.cores=parallel::detectCores()))
+    #     local_results <- do.call(rbind, parallel::mclapply(rep(list(fitted.model),8*n_per_rep), likelihood_lambda_discreteshift_mu_discreteshift, param_min=param_min, param_max=param_max, tree=tree, randomize=TRUE, mc.cores=parallel::detectCores()))
     #     results <- rbind(results, local_results)
     #     if(best_loglikelihood > max(unlist(local_results[,'loglikelihood']))+delta) {
     #         print("too wide")
@@ -560,7 +566,7 @@ AdaptiveSupport <- function(fitted_model, tree, delta=2, n_per_rep=12, n_per_goo
     #
     #     } else {
     #         good_sample <- TRUE
-    #         local_results_good <- do.call(rbind, parallel::mclapply(rep(list(fitted_model),8*n_per_good), likelihood_lambda_discreteshift_mu_discreteshift, param_min=param_min, param_max=param_max, tree=tree, randomize=TRUE, mc.cores=parallel::detectCores()))
+    #         local_results_good <- do.call(rbind, parallel::mclapply(rep(list(fitted.model),8*n_per_good), likelihood_lambda_discreteshift_mu_discreteshift, param_min=param_min, param_max=param_max, tree=tree, randomize=TRUE, mc.cores=parallel::detectCores()))
     #         results <- rbind(results, local_results_good)
     #     }
     #
@@ -574,8 +580,8 @@ AdaptiveSupport <- function(fitted_model, tree, delta=2, n_per_rep=12, n_per_goo
 # desired_interval: how finely to divide the slices for calculating smoothly changing (or not) lambda and mu
 # slice_ages: when to divide regimes
 # interpolation_method: same as method in ?approx. Constant or linear
-likelihood_lambda_discreteshift_mu_discreteshift <- function(fitted_model, tree, param_min=0*fitted_model$results$fit_param$param_fitted, param_max=4*(0.05+fitted_model$results$fit_param$param_fitted), randomize=TRUE) {
-    original_params <- fitted_model$results$fit_param$param_fitted
+likelihood_lambda_discreteshift_mu_discreteshift <- function(fitted.model, tree, param_min=0*fitted.model$results$fit_param$param_fitted, param_max=4*(0.05+fitted.model$results$fit_param$param_fitted), randomize=TRUE) {
+    original_params <- fitted.model$results$fit_param$param_fitted
     seed_params <- original_params
     # if any are exactly zero, won't get variation. So allow change
     new_params <- original_params
@@ -583,13 +589,13 @@ likelihood_lambda_discreteshift_mu_discreteshift <- function(fitted_model, tree,
         new_params <- runif(n=length(original_params), min=param_min, max=param_max)
         names(new_params) <- names(original_params)
     }
-    mu_values <- fitted_model$results$mu_function(fitted_model$results$age_grid_param, new_params)
+    mu_values <- fitted.model$results$mu_function(fitted.model$results$age_grid_param, new_params)
 
-    lambda_values <- fitted_model$results$lambda_function(fitted_model$results$age_grid_param, new_params)
+    lambda_values <- fitted.model$results$lambda_function(fitted.model$results$age_grid_param, new_params)
 
     loglikelihood_result <- castor::loglikelihood_hbd(
         tree=tree,
-        age_grid = fitted_model$results$age_grid_param,
+        age_grid = fitted.model$results$age_grid_param,
         lambda=lambda_values,
         mu=mu_values,
         rho0=1,
@@ -600,17 +606,17 @@ likelihood_lambda_discreteshift_mu_discreteshift <- function(fitted_model, tree,
 }
 
 
-likelihood_lambda_discreteshift_mu_discreteshift_for_mcmc <- function(log_params, fitted_model, tree) {
+likelihood_lambda_discreteshift_mu_discreteshift_for_mcmc <- function(log_params, fitted.model, tree) {
     params <- exp(log_params)
-    names(params) <- names(fitted_model$results$fit_param$param_fitted)
+    names(params) <- names(fitted.model$results$fit_param$param_fitted)
     print(params)
-    mu_values <- fitted_model$results$mu_function(fitted_model$results$age_grid_param, params)
+    mu_values <- fitted.model$results$mu_function(fitted.model$results$age_grid_param, params)
 
-    lambda_values <- fitted_model$results$lambda_function(fitted_model$results$age_grid_param, params)
+    lambda_values <- fitted.model$results$lambda_function(fitted.model$results$age_grid_param, params)
 
     loglikelihood_result <- castor::loglikelihood_hbd(
         tree=tree,
-        age_grid = fitted_model$results$age_grid_param,
+        age_grid = fitted.model$results$age_grid_param,
         lambda=lambda_values,
         mu=mu_values,
         rho0=1,
@@ -620,7 +626,7 @@ likelihood_lambda_discreteshift_mu_discreteshift_for_mcmc <- function(log_params
     return(ifelse(is.finite(loglikelihood_result$loglikelihood), loglikelihood_result$loglikelihood, -Inf))
 }
 
-#(obj=likelihood_lambda_discreteshift_mu_discreteshift_for_mcmc, initial=log(original_params), nbatch=10000, blen=1, scale=w, fitted_model=fitted_model, tree=tree, debug=TRUE)
+#(obj=likelihood_lambda_discreteshift_mu_discreteshift_for_mcmc, initial=log(original_params), nbatch=10000, blen=1, scale=w, fitted.model=fitted.model, tree=tree, debug=TRUE)
 #this assumes obj gives back the loglikelihood, NOT the negative log likelihood. Bigger is better, the MLE should be the max value for likelihood.
 sample_ridge <- function(obj, initial,  scale, nsteps=1000, desired_delta=2, ...) {
     loglikelihoods <- rep(NA, nsteps+1)
@@ -630,6 +636,7 @@ sample_ridge <- function(obj, initial,  scale, nsteps=1000, desired_delta=2, ...
     loglikelihoods[1] <- obj(parameters, ...)
     generating_params <- initial
     target_loglikelihood <- loglikelihoods[1]-desired_delta
+    print(paste("target_loglikelihood", target_loglikelihood))
     for (i in sequence(nsteps)) {
         new_params <- generating_params
         param_to_tweak <- sample.int(length(initial), 1)
