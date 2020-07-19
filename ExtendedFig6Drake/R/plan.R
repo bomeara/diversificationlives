@@ -22,6 +22,6 @@ plan <- drake_plan(
     result_summary = SummarizeSplitsAndLikelihoods(everything),
     adaptive_list = AdaptiveSampleBestModels(everything, result_summary, tree, deltaAIC_cutoff=12),
     plot_all = PlotAll(everything, tree, file=file_out("plot.pdf")),
-    plot_uncertainty = PlotRateUncertainty(everything, tree, adaptive_list, file=file_out("uncertainty.pdf")),
+    plot_uncertainty = PlotAllUncertainty(everything, tree, adaptive_list, file=file_out("uncertainty.pdf")),
     save_all = save(everything, result_summary, adaptive_list,tree, session, file=file_out("everything.rda"))
 )
