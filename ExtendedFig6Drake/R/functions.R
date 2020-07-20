@@ -467,8 +467,10 @@ AdaptiveSupport <- function(fitted.model, tree, delta=2, n_per_rep=12, n_per_goo
     good_enough_univariate <- subset(results, loglikelihood+delta>=best_loglikelihood)
     for(focal_pair in seq_along(indices)) {
         print(paste0("focal_pair ", focal_pair))
-        param_min <- original_params
-        param_max <- original_params
+        best_params <- results[which.max(results[,'loglikelihood']),-1]
+        names(best_params) <- original_params
+        param_min <- best_params
+        param_max <- best_params
         multiplier <- -2
         good_sample <- FALSE
         run_num <- 0
@@ -524,13 +526,15 @@ AdaptiveSupport <- function(fitted.model, tree, delta=2, n_per_rep=12, n_per_goo
     #         return(likelihood_lambda_discreteshift_mu_discreteshift_for_mcmc(x,fitted.model=fitted.model, tree=tree))
     #
     # }
-    original_params[original_params==0] <- 1e-8
+    best_params <- results[which.max(results[,'loglikelihood']),-1]
+    names(best_params) <- original_params
+    best_params[best_params==0] <- 1e-8
     #save(list=ls(), file="before_mcmc.rda")
-    mcmc_results <- sample_ridge(obj=likelihood_lambda_discreteshift_mu_discreteshift_for_mcmc, initial=log(original_params), nsteps=4000, restart_if_far=50, scale=w, fitted.model=fitted.model, tree=tree)
+    mcmc_results <- sample_ridge(obj=likelihood_lambda_discreteshift_mu_discreteshift_for_mcmc, initial=log(best_params), nsteps=4000, restart_if_far=50, scale=w, fitted.model=fitted.model, tree=tree)
     #mcmc_results <- mcmc::metrop(obj=likelihood_lambda_discreteshift_mu_discreteshift_for_mcmc, initial=log(original_params), nbatch=10000, blen=1, scale=w, fitted.model=fitted.model, tree=tree, debug=TRUE)
     #likelihoods <- apply(mcmc_results$batch, 1, likelihood_lambda_discreteshift_mu_discreteshift_for_mcmc, fitted.model=fitted.model, tree=tree)
     mcmc_params <- exp(mcmc_results$parameters)
-    colnames(mcmc_params) <- names(original_params)
+    colnames(mcmc_params) <- names(best_params)
     mcmc_results_fixed = data.frame(loglikelihood=mcmc_results$loglikelihoods, mcmc_params)
 
     results <- rbind(results, mcmc_results_fixed)
@@ -667,10 +671,12 @@ sample_ridge <- function(obj, initial,  scale, nsteps=1000, restart_if_far=50, r
         }
         if(steps_since_negative_diff>=restart_if_far) {
             generating_params <- parameters[which.max(loglikelihoods),]
+            names(generating_params) <- names(initial)
             scale <- scale*0.1 # since we're so far away
         }
         if(i%%restart_run==0) {
             generating_params <- parameters[which.max(loglikelihoods),]
+            names(generating_params) <- names(initial)
         }
         print(paste("mcmc step", i, "parameter", names(parameters)[param_to_tweak], "difference from targeted likelihood is", round(loglikdiff,2), "setting scale to ", round(scale[param_to_tweak],6)))
     }
