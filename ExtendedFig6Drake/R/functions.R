@@ -467,7 +467,7 @@ AdaptiveSupport <- function(fitted.model, tree, delta=2, n_per_rep=12, n_per_goo
     good_enough_univariate <- subset(results, loglikelihood+delta>=best_loglikelihood)
     for(focal_pair in seq_along(indices)) {
         print(paste0("focal_pair ", focal_pair))
-        best_params <- results[which.max(results[,'loglikelihood']),-1]
+        best_params <- as.numeric(results[which.max(results[,'loglikelihood']),-1])
         names(best_params) <- original_params
         param_min <- best_params
         param_max <- best_params
@@ -526,7 +526,7 @@ AdaptiveSupport <- function(fitted.model, tree, delta=2, n_per_rep=12, n_per_goo
     #         return(likelihood_lambda_discreteshift_mu_discreteshift_for_mcmc(x,fitted.model=fitted.model, tree=tree))
     #
     # }
-    best_params <- results[which.max(results[,'loglikelihood']),-1]
+    best_params <- as.numeric(results[which.max(results[,'loglikelihood']),-1])
     names(best_params) <- original_params
     best_params[best_params==0] <- 1e-8
     #save(list=ls(), file="before_mcmc.rda")
@@ -670,13 +670,21 @@ sample_ridge <- function(obj, initial,  scale, nsteps=1000, restart_if_far=50, r
             scale[param_to_tweak] <- 0.1 * scale[param_to_tweak] # we're very far away from where we want to be
         }
         if(steps_since_negative_diff>=restart_if_far) {
-            generating_params <- parameters[which.max(loglikelihoods),]
+            print("old")
+            print(generating_params)
+            generating_params <- as.numeric(parameters[which.max(loglikelihoods),])
             names(generating_params) <- names(initial)
+            print("new")
+            print(generating_params)
             scale <- scale*0.1 # since we're so far away
         }
         if(i%%restart_run==0) {
-            generating_params <- parameters[which.max(loglikelihoods),]
+            print("old")
+            print(generating_params)
+            generating_params <- as.numeric(parameters[which.max(loglikelihoods),])
             names(generating_params) <- names(initial)
+            print("new")
+            print(generating_params)
         }
         print(paste("mcmc step", i, "parameter", names(parameters)[param_to_tweak], "difference from targeted likelihood is", round(loglikdiff,2), "setting scale to ", round(scale[param_to_tweak],6)))
     }
