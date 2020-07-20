@@ -114,7 +114,7 @@ param_lambda7p_mu_multiplier_lambda <- function(desired_interval = 0.1, tree, co
 # desired_interval: how finely to divide the slices for calculating smoothly changing (or not) lambda and mu
 # slice_ages: when to divide regimes
 # interpolation_method: same as method in ?approx. Constant or linear
-param_lambda_discreteshift_mu_discreteshift <- function(desired_interval = 0.1, tree, condition="crown", ncores=parallel::detectCores(), slice_ages = seq(from=0, to=ceiling(castor::get_tree_span(tree)$max_distance), by=1), interpolation_method="constant") {
+param_lambda_discreteshift_mu_discreteshift <- function(desired_interval = 0.1, tree, condition="crown", ncores=parallel::detectCores(), slice_ages = seq(from=0, to=ceiling(castor::get_tree_span(tree)$max_distance), by=1), interpolation_method="constant", Ntrials=3) {
     root_age = castor::get_tree_span(tree)$max_distance
     rho = 1
     age_grid_param = seq(from=0,to=root_age+desired_interval,by=desired_interval)
@@ -158,7 +158,7 @@ param_lambda_discreteshift_mu_discreteshift <- function(desired_interval = 0.1, 
                                                rho0          = rho_function,
                                                age_grid      = age_grid_param,
                                                condition     = condition,
-                                               Ntrials       = 10,    # perform 10 fitting trials
+                                               Ntrials       = Ntrials,
                                                Nthreads      = ncores,
                                                fit_control       = list(rel.tol=1e-8)
                                            )
@@ -260,14 +260,15 @@ EvenSplit <- function(tree, nregimes, minsize=1, type="data", minage=0, maxage=c
 
 
 
-SplitAndLikelihood <- function(tree, nregimes, minsize=1, type="data", interpolation_method="linear", verbose=TRUE) {
+SplitAndLikelihood <- function(tree, nregimes, minsize=1, type="data", interpolation_method="linear", verbose=TRUE, Ntrials=3, ncores=parallel::detectCores(), instance=1) {
+    #instance is just to allow parallel starts to run and keep track of them
     splits <- EvenSplit(tree=tree, nregimes=nregimes, minsize=minsize, type=type)
     desired_interval = min(0.05, 0.2*min(abs(diff(splits$time))))
-    results <- param_lambda_discreteshift_mu_discreteshift(desired_interval = desired_interval, tree=tree, condition="crown", ncores=parallel::detectCores(), slice_ages = unique(sort(c(0, abs(splits$time), castor::get_tree_span(tree)$max_distance))), interpolation_method=interpolation_method)
+    results <- param_lambda_discreteshift_mu_discreteshift(desired_interval = desired_interval, tree=tree, condition="crown", ncores=ncores, slice_ages = unique(sort(c(0, abs(splits$time), castor::get_tree_span(tree)$max_distance))), interpolation_method=interpolation_method, Ntrials=Ntrials)
     if(verbose) {
         print(c(nregimes=nregimes, interpolation_method=interpolation_method, AIC=results$fit_param$AIC))
     }
-    return(list(splits=splits, results=results, desired_interval=desired_interval, nregimes=nregimes, interpolation_method=interpolation_method, type=type, AIC=results$fit_param$AIC, loglikelihood=results$fit_param$loglikelihood))
+    return(list(splits=splits, results=results, desired_interval=desired_interval, nregimes=nregimes, interpolation_method=interpolation_method, type=type, AIC=results$fit_param$AIC, loglikelihood=results$fit_param$loglikelihood, instance=instance))
 }
 
 SummarizeSplitsAndLikelihoods <- function(x) {
