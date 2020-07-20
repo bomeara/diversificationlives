@@ -468,7 +468,7 @@ AdaptiveSupport <- function(fitted.model, tree, delta=2, n_per_rep=12, n_per_goo
     for(focal_pair in seq_along(indices)) {
         print(paste0("focal_pair ", focal_pair))
         best_params <- as.numeric(results[which.max(results[,'loglikelihood']),-1])
-        names(best_params) <- original_params
+        names(best_params) <- names(original_params)
         param_min <- best_params
         param_max <- best_params
         multiplier <- -2
@@ -527,7 +527,7 @@ AdaptiveSupport <- function(fitted.model, tree, delta=2, n_per_rep=12, n_per_goo
     #
     # }
     best_params <- as.numeric(results[which.max(results[,'loglikelihood']),-1])
-    names(best_params) <- original_params
+    names(best_params) <- names(original_params)
     best_params[best_params==0] <- 1e-8
     #save(list=ls(), file="before_mcmc.rda")
     mcmc_results <- sample_ridge(obj=likelihood_lambda_discreteshift_mu_discreteshift_for_mcmc, initial=log(best_params), nsteps=4000, restart_if_far=50, scale=w, fitted.model=fitted.model, tree=tree)
