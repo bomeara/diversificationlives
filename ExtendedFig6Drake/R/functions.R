@@ -388,7 +388,7 @@ PlotRateUncertainty <- function(fitted.model, tree, good_adaptive_samples, ...) 
 }
 
 PlotAllUncertainty <- function(x, tree, adaptive_list, file="uncertainty.pdf", desired_delta=2) {
-    pdf(file=file, width=10, height=5)
+    pdf(file=file, width=15, height=5)
     for(i in seq_along(adaptive_list)) {
         if(class(adaptive_list[[i]])=="data.frame") {
             good_enough <- subset(adaptive_list[[i]], loglikelihood>max(loglikelihood)-desired_delta)
@@ -440,7 +440,7 @@ AdaptiveSupport <- function(fitted.model, tree, delta=2, n_per_rep=12, n_per_goo
             # repeated below
             local_results <- do.call(rbind, parallel::mclapply(rep(list(fitted.model),n_per_rep), likelihood_lambda_discreteshift_mu_discreteshift, param_min=param_min, param_max=param_max, tree=tree, randomize=TRUE, mc.cores=parallel::detectCores()))
             results <- rbind(results, local_results)
-
+            best_loglikelihood <- max(results[,'loglikelihood'], na.rm=TRUE)
             if(best_loglikelihood > max(unlist(local_results[,'loglikelihood']))+delta) {
                 print("too wide")
                 multiplier <- multiplier-.5
@@ -485,6 +485,7 @@ AdaptiveSupport <- function(fitted.model, tree, delta=2, n_per_rep=12, n_per_goo
 
             local_results <- do.call(rbind, parallel::mclapply(rep(list(fitted.model),2*n_per_rep), likelihood_lambda_discreteshift_mu_discreteshift, param_min=param_min, param_max=param_max, tree=tree, randomize=TRUE, mc.cores=parallel::detectCores()))
             results <- rbind(results, local_results)
+            best_loglikelihood <- max(results[,'loglikelihood'], na.rm=TRUE)
             if(best_loglikelihood > max(unlist(local_results[,'loglikelihood']))+delta) {
                 print("too wide")
                 multiplier <- multiplier-.5
