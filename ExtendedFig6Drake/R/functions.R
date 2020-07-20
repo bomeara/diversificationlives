@@ -666,11 +666,11 @@ sample_ridge <- function(obj, initial,  scale, nsteps=1000, restart_if_far=50, r
             scale[param_to_tweak] <- 0.1 * scale[param_to_tweak] # we're very far away from where we want to be
         }
         if(steps_since_negative_diff>=restart_if_far) {
-            generating_params <- parameters[which.max(likelihoods),]
+            generating_params <- parameters[which.max(loglikelihoods),]
             scale <- scale*0.1 # since we're so far away
         }
         if(i%%restart_run==0) {
-            generating_params <- parameters[which.max(likelihoods),]
+            generating_params <- parameters[which.max(loglikelihoods),]
         }
         print(paste("mcmc step", i, "parameter", names(parameters)[param_to_tweak], "difference from targeted likelihood is", round(loglikdiff,2), "setting scale to ", round(scale[param_to_tweak],6)))
     }
