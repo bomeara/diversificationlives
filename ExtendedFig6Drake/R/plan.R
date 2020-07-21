@@ -11,10 +11,11 @@ plan_original <- drake_plan(
     try_many = target(
         SplitAndLikelihood(tree, nregimes=nregimes, interpolation_method=interpolation_method, type=type),
         transform = cross(
-            nregimes=c(7,10,11,12),
+            nregimes=c(3,4),
             interpolation_method=c("linear"),
             #type=c("data", "time")
-            type=c("time")
+            type=c("time"),
+            instance=c(1,2)
         )
     ),
     everything = target(
