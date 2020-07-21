@@ -711,7 +711,7 @@ sample_ridge <- function(obj, initial,  scale, nsteps=1000, restart_if_far=50, r
 }
 
 
-OptimizeLogSpace <- function(fitted.model,eval_f=likelihood_lambda_discreteshift_mu_discreteshift_for_mcmc) {
+OptimizeLogSpace <- function(fitted.model,eval_f=likelihood_lambda_discreteshift_mu_discreteshift_for_mcmc, tree=tree) {
     best_param <- fitted.model$results$fit_param$param_fitted
     best_param[which(best_param==0)] <- 1e-9
     opts <- list("algorithm" = "NLOPT_LN_SBPLX", "maxeval" = 100)

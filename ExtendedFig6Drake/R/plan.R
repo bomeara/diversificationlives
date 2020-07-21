@@ -47,7 +47,7 @@ my_plan <- drake_plan(
         )
     ),
     optimize_many = target(
-        OptimizeLogSpace(try_many),
+        OptimizeLogSpace(try_many, tree=tree),
         transform = map(try_many)
     ),
     adaptive_many = target(
