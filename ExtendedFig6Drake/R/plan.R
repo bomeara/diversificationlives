@@ -39,7 +39,7 @@ my_plan <- drake_plan(
     try_many = target(
         SplitAndLikelihood(tree, nregimes=nregimes, interpolation_method=interpolation_method, type=type, Ntrials=3, ncores=3),
         transform = cross(
-            nregimes=c(11,12),
+            nregimes=c(3,4),
             interpolation_method=c("linear"),
             #type=c("data", "time")
             type=c("time"),
