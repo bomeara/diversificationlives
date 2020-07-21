@@ -18,11 +18,16 @@ plan_original <- drake_plan(
             instance=c(1,2)
         )
     ),
+    optimize_many = target(
+        OptimizeLogSpace(try_many, tree=tree),
+        transform = map(try_many)
+    ),
     everything = target(
-        list(try_many),
-        transform=combine(try_many)
+        list(optimize_many),
+        transform=combine(optimize_many)
     ),
     result_summary = SummarizeSplitsAndLikelihoods(everything),
+    print_result_summary = print(result_summary),
     adaptive_list = AdaptiveSampleBestModels(everything, result_summary, tree, deltaAIC_cutoff=10),
     plot_all = PlotAll(everything, tree, file=file_out("plot.pdf")),
     plot_uncertainty = PlotAllUncertainty(everything, tree, adaptive_list, file=file_out("uncertainty.pdf")),
