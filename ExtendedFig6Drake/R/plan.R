@@ -50,22 +50,13 @@ my_plan <- drake_plan(
         OptimizeLogSpace(try_many, tree=tree),
         transform = map(try_many)
     ),
-    adaptive_many = target(
-        AdaptiveSupport(optimize_many, tree=tree),
-        transform = map(optimize_many)
-    ),
     everything = target(
         list(optimize_many),
         transform=combine(optimize_many)
     ),
-    adaptive_list = target(
-        list(adaptive_many),
-        transform=combine(adaptive_many)
-
-    ),
     result_summary = SummarizeSplitsAndLikelihoods(everything),
-    #adaptive_list = AdaptiveSampleBestModels(everything, result_summary, tree, deltaAIC_cutoff=10),
+    adaptive_list = AdaptiveSampleBestModels(everything, result_summary, tree, deltaAIC_cutoff=10),
     plot_all = PlotAll(everything, tree, file=file_out("plot.pdf")),
-    #plot_uncertainty = PlotAllUncertainty(everything, tree, adaptive_list, file=file_out("uncertainty.pdf")),
+    plot_uncertainty = PlotAllUncertainty(everything, tree, adaptive_list, file=file_out("uncertainty.pdf")),
     save_all = save(everything, result_summary, adaptive_list,tree, session, file=file_out("everything.rda"))
 )
