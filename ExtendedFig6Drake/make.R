@@ -5,7 +5,7 @@ envir <- new.env(parent = globalenv())
 source("R/packages.R", local = envir)
 source("R/functions.R", local = envir)
 source("R/plan.R", local = envir)
-make(envir$plan, envir = envir, parallelism = "future", jobs = parallel::detectCores())
+make(envir$my_plan, envir = envir, parallelism = "future", jobs = parallel::detectCores())
 #
 # source("R/packages.R")  # loads packages
 # source("R/functions.R")

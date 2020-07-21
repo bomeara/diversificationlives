@@ -142,7 +142,24 @@ param_lambda_discreteshift_mu_discreteshift <- function(desired_interval = 0.1, 
         return(rho) # rho does not depend on any of the parameters
     }
     param_values <- c(lambda_params, mu_params)
-    param_guess <- c(rep(0.1, length(lambda_params)), rep(0.01, length(mu_params)))
+    ape_estimate <- ape::birthdeath(tree)
+    # ef = d/b
+    # netdiv = b - d
+    # b = netdiv + d
+    # d = ef * b
+    # b = netdiv + ef * b
+    # b - ef * b = netdiv
+    # b * (1-ef) = netdiv
+    # b = netdiv / (1-ef)
+    # d = ef * netdiv / ( 1 - ef)
+    ef_range <- unname(ape_estimate$CI['d/b', ])
+    netdiv_range <- unname(ape_estimate$CI['b-d',])
+    birth_range <- abs(range(c(netdiv_range,rev(netdiv_range)) / (1-ef_range)))
+    death_range <- abs(range(ef_range * c(netdiv_range, rev(netdiv_range)) / (1-ef_range)))
+
+
+    param_guess <- c(runif(n=length(lambda_params), min=min(birth_range), max=max(birth_range)), runif(n=length(mu_params), min=min(death_range), max=max(death_range)))
+
     names(param_guess) <- names(param_values)
 
     fit_param = NA
@@ -262,6 +279,7 @@ EvenSplit <- function(tree, nregimes, minsize=1, type="data", minage=0, maxage=c
 
 SplitAndLikelihood <- function(tree, nregimes, minsize=1, type="data", interpolation_method="linear", verbose=TRUE, Ntrials=3, ncores=parallel::detectCores(), instance=1) {
     #instance is just to allow parallel starts to run and keep track of them
+    set.seed(round(rexp(1, 0.00000001))+instance)
     splits <- EvenSplit(tree=tree, nregimes=nregimes, minsize=minsize, type=type)
     desired_interval = min(0.05, 0.2*min(abs(diff(splits$time))))
     results <- param_lambda_discreteshift_mu_discreteshift(desired_interval = desired_interval, tree=tree, condition="crown", ncores=ncores, slice_ages = unique(sort(c(0, abs(splits$time), castor::get_tree_span(tree)$max_distance))), interpolation_method=interpolation_method, Ntrials=Ntrials)
@@ -612,7 +630,7 @@ likelihood_lambda_discreteshift_mu_discreteshift <- function(fitted.model, tree,
 }
 
 
-likelihood_lambda_discreteshift_mu_discreteshift_for_mcmc <- function(log_params, fitted.model, tree) {
+likelihood_lambda_discreteshift_mu_discreteshift_for_mcmc <- function(log_params, fitted.model, tree, return_neg=FALSE) {
     params <- exp(log_params)
     names(params) <- names(fitted.model$results$fit_param$param_fitted)
     #print(params)
@@ -629,7 +647,7 @@ likelihood_lambda_discreteshift_mu_discreteshift_for_mcmc <- function(log_params
         splines_degree=1
     )
     #print(loglikelihood_result$loglikelihood)
-    return(ifelse(is.finite(loglikelihood_result$loglikelihood), loglikelihood_result$loglikelihood, -Inf))
+    return(ifelse(is.finite(loglikelihood_result$loglikelihood), ifelse(return_neg, -1, 1) * loglikelihood_result$loglikelihood, -Inf))
 }
 
 #(obj=likelihood_lambda_discreteshift_mu_discreteshift_for_mcmc, initial=log(original_params), nbatch=10000, blen=1, scale=w, fitted.model=fitted.model, tree=tree, debug=TRUE)
@@ -690,4 +708,23 @@ sample_ridge <- function(obj, initial,  scale, nsteps=1000, restart_if_far=50, r
         print(paste("mcmc step", i, "parameter", names(parameters)[param_to_tweak], "difference from targeted likelihood is", round(loglikdiff,2), "setting scale to ", round(scale[param_to_tweak],6)))
     }
     return(list(loglikelihoods=loglikelihoods, parameters=parameters))
+}
+
+
+OptimizeLogSpace <- function(fitted.model,eval_f=likelihood_lambda_discreteshift_mu_discreteshift_for_mcmc) {
+    best_param <- fitted.model$results$fit_param$param_fitted
+    best_param[which(best_param==0)] <- 1e-9
+    opts <- list("algorithm" = "NLOPT_LN_SBPLX", "maxeval" = 100)
+    result <- nloptr::nloptr(x0 =log(best_param),eval_f=eval_f, opts=opts, fitted.model=fitted.model, tree=tree, return_neg=TRUE) # return neg so minimize
+    if(is.finite(result$objective)) {
+        if(result$objective < (-1)*fitted.model$loglikelihood) {
+            result_param <- exp(result$solution)
+            names(result_param) <- names(best_param)
+            fitted.model$results$fit_param$param_fitted <- result_param
+            fitted.model$AIC <- fitted.model$AIC + 2*fitted.model$loglikelihood + 2*result$objective
+            fitted.model$loglikelihood <- (-1) * result$objective
+
+        }
+    }
+    return(fitted.model)
 }
