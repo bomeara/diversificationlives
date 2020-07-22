@@ -22,16 +22,22 @@ plan_original <- drake_plan(
         OptimizeLogSpace(try_many, tree=tree),
         transform = map(try_many)
     ),
+    everything_try = target(
+        list(try_many),
+        transform=combine(try_many)
+    ),
     everything = target(
         list(optimize_many),
         transform=combine(optimize_many)
     ),
     result_summary = SummarizeSplitsAndLikelihoods(everything),
     print_result_summary = print(result_summary),
-    adaptive_list = AdaptiveSampleBestModels(everything, result_summary, tree, deltaAIC_cutoff=10),
+    #adaptive_list = AdaptiveSampleBestModels(everything, result_summary, tree, deltaAIC_cutoff=10),
     plot_all = PlotAll(everything, tree, file=file_out("plot.pdf")),
-    plot_uncertainty = PlotAllUncertainty(everything, tree, adaptive_list, file=file_out("uncertainty.pdf")),
-    save_all = save(everything, result_summary, adaptive_list,tree, session, file=file_out("everything.rda"))
+    #plot_uncertainty = PlotAllUncertainty(everything, tree, adaptive_list, file=file_out("uncertainty.pdf")),
+    #save_all = save(everything, result_summary, adaptive_list,tree, session, file=file_out("everything.rda"))
+    save_all = save(everything, result_summary, everything_try,tree, session, file=file_out("everything.rda"))
+
 )
 
 # Note that drake will not work with multiple cores called inside functions https://github.com/ropensci/drake/issues/675#issuecomment-458222414
