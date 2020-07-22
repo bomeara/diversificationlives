@@ -382,7 +382,7 @@ PlotRateUncertainty <- function(fitted.model, tree, good_adaptive_samples, ...) 
     # ltt_data <- ape::ltt.plot.coords(tree)
     # ltt_data$logN <- log(ltt_data$N)
     par(mfcol=c(1,3))
-    ylimits <- range(c(min(max(mu), max(lambda),0.9), max(min(mu), min(lambda), -0.9)))
+    ylimits <- range(c(min(max(mu), max(lambda)), max(min(mu), min(lambda))))
     for (i in sequence(3)) {
         rates <- lambda
         title <- "Speciation rate"
@@ -393,7 +393,7 @@ PlotRateUncertainty <- function(fitted.model, tree, good_adaptive_samples, ...) 
         if(i==3) {
             rates <- netdiv
             title <- "Net diversification rate"
-            ylimits <- range(c(min(max(netdiv),0.5), max(min(netdiv), -0.5)))
+            ylimits <- range(c(min(max(netdiv)), max(min(netdiv))))
         }
         plot(x=ages, y=rates[,1], type="n", bty="n", ylim=ylimits, ylab=title, xlab="Time")
         polygon(x=c(ages, rev(ages)), y=c(apply(rates,1,min), rev(apply(rates,1,max))), col="gray", border=NA)
@@ -407,7 +407,7 @@ PlotRateUncertainty <- function(fitted.model, tree, good_adaptive_samples, ...) 
 }
 
 PlotAllUncertainty <- function(x, tree, adaptive_list, file="uncertainty.pdf", desired_delta=2) {
-    pdf(file=file, width=15, height=5)
+    pdf(file=file, width=20, height=5)
     for(i in seq_along(adaptive_list)) {
         if(class(adaptive_list[[i]])=="data.frame") {
             good_enough <- subset(adaptive_list[[i]], loglikelihood>max(loglikelihood)-desired_delta)
