@@ -714,7 +714,7 @@ sample_ridge <- function(obj, initial,  scale, nsteps=1000, restart_if_far=50, r
 OptimizeLogSpace <- function(fitted.model,eval_f=likelihood_lambda_discreteshift_mu_discreteshift_for_mcmc, tree=tree) {
     best_param <- fitted.model$results$fit_param$param_fitted
     best_param[which(best_param==0)] <- 1e-9
-    opts <- list("algorithm" = "NLOPT_LN_SBPLX", "maxeval" = 100)
+    opts <- list("algorithm" = "NLOPT_LN_SBPLX", "maxeval" = 4000)
     result <- nloptr::nloptr(x0 =log(best_param),eval_f=eval_f, opts=opts, fitted.model=fitted.model, tree=tree, return_neg=TRUE) # return neg so minimize
     if(is.finite(result$objective)) {
         if(result$objective < (-1)*fitted.model$loglikelihood) {
