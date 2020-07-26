@@ -291,6 +291,10 @@ SplitAndLikelihood <- function(tree, nregimes, minsize=1, type="data", interpola
 
 SummarizeSplitsAndLikelihoods <- function(x) {
     summary.df <- data.frame(nregimes=sapply(x, "[[", "nregimes"), interpolation_method=sapply(x, "[[", "interpolation_method"), AIC=sapply(x, "[[", "AIC"), loglikelihood=sapply(x, "[[", "loglikelihood"), stringsAsFactors=FALSE)
+    summary.df$starting_loglikelihood = NA
+    for (i in seq_along(x)) {
+        summary.df$starting_loglikelihood[i] <- max(x[[i]]$results$fit_param$trial_objective_values, na.rm=TRUE)
+    }
     summary.df$deltaAIC <- summary.df$AIC-min(summary.df$AIC)
     return(summary.df)
 }
