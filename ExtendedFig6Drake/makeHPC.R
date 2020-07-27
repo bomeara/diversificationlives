@@ -11,7 +11,7 @@ cl <- makeClusterPSOCK(workers)
 future::plan(cluster, workers=cl)
 
 
-make(planHPC, parallelism = "future", jobs = 24)
+make(plan_hpc, parallelism = "future", jobs = 24)
 #
 # source("R/packages.R")  # loads packages
 # source("R/functions.R")
