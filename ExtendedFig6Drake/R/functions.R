@@ -553,7 +553,7 @@ AdaptiveSupport <- function(fitted.model, tree, delta=2, n_per_rep=12, n_per_goo
     names(best_params) <- names(original_params)
     best_params[best_params==0] <- 1e-8
     #save(list=ls(), file="before_mcmc.rda")
-    mcmc_results <- sample_ridge(obj=likelihood_lambda_discreteshift_mu_discreteshift_for_mcmc, initial=log(best_params), nsteps=4000, restart_if_far=50, scale=w, fitted.model=fitted.model, tree=tree)
+    mcmc_results <- sample_ridge(obj=likelihood_lambda_discreteshift_mu_discreteshift_for_mcmc, initial=log(best_params), nsteps=2000, restart_if_far=50, scale=w, fitted.model=fitted.model, tree=tree)
     #mcmc_results <- mcmc::metrop(obj=likelihood_lambda_discreteshift_mu_discreteshift_for_mcmc, initial=log(original_params), nbatch=10000, blen=1, scale=w, fitted.model=fitted.model, tree=tree, debug=TRUE)
     #likelihoods <- apply(mcmc_results$batch, 1, likelihood_lambda_discreteshift_mu_discreteshift_for_mcmc, fitted.model=fitted.model, tree=tree)
     mcmc_params <- exp(mcmc_results$parameters)
