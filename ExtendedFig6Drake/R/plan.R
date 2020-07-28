@@ -5,7 +5,7 @@ future::plan(future::multiprocess)
 
 plan_original <- drake_plan(
     session = utils::sessionInfo(),
-    tree = ape::read.tree("data/tree_Extended_Data_Fig_6.tre"),
+    tree = ape::read.tree("~/Documents/diversificationlives/ExtendedFig6Drake/data/tree_Extended_Data_Fig_6.tre"),
     #many_regimes = TryManyRegimes(tree, maxregimes=13),
     #save(many_regimes, file=file_out("results.rda"))
     try_many = target(
