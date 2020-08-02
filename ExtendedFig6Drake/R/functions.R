@@ -282,11 +282,14 @@ SplitAndLikelihood <- function(tree, nregimes, minsize=1, type="data", interpola
     set.seed(round(rexp(1, 0.00000001))+instance)
     splits <- EvenSplit(tree=tree, nregimes=nregimes, minsize=minsize, type=type)
     desired_interval = min(0.05, 0.2*min(abs(diff(splits$time))))
-    results <- param_lambda_discreteshift_mu_discreteshift(desired_interval = desired_interval, tree=tree, condition="crown", ncores=ncores, slice_ages = unique(sort(c(0, abs(splits$time), castor::get_tree_span(tree)$max_distance))), interpolation_method=interpolation_method, Ntrials=Ntrials)
+    results <- NA
+    try(results <- param_lambda_discreteshift_mu_discreteshift(desired_interval = desired_interval, tree=tree, condition="crown", ncores=ncores, slice_ages = unique(sort(c(0, abs(splits$time), castor::get_tree_span(tree)$max_distance))), interpolation_method=interpolation_method, Ntrials=Ntrials))
     if(verbose) {
-        print(c(nregimes=nregimes, interpolation_method=interpolation_method, AIC=results$fit_param$AIC))
+        try(print(c(nregimes=nregimes, interpolation_method=interpolation_method, AIC=results$fit_param$AIC)))
     }
-    return(list(splits=splits, results=results, desired_interval=desired_interval, nregimes=nregimes, interpolation_method=interpolation_method, type=type, AIC=results$fit_param$AIC, loglikelihood=results$fit_param$loglikelihood, instance=instance))
+    return_object <- list(splits=splits, results=results, desired_interval=desired_interval, nregimes=nregimes, interpolation_method=interpolation_method, type=type, AIC=NA, loglikelihood=NA, instance=instance)
+    try(return_object <- list(splits=splits, results=results, desired_interval=desired_interval, nregimes=nregimes, interpolation_method=interpolation_method, type=type, AIC=results$fit_param$AIC, loglikelihood=results$fit_param$loglikelihood, instance=instance))
+    return(return_object)
 }
 
 SummarizeSplitsAndLikelihoods <- function(x) {
@@ -716,6 +719,9 @@ sample_ridge <- function(obj, initial,  scale, nsteps=1000, restart_if_far=50, r
 
 
 OptimizeLogSpace <- function(fitted.model,eval_f=likelihood_lambda_discreteshift_mu_discreteshift_for_mcmc, tree=tree) {
+    if(is.na(fitted.model$AIC)) {
+        return(fitted.model)
+    }
     best_param <- fitted.model$results$fit_param$param_fitted
     best_param[which(best_param==0)] <- 1e-9
     opts <- list("algorithm" = "NLOPT_LN_SBPLX", "maxeval" = 4000)

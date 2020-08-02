@@ -9,13 +9,13 @@ plan_original <- drake_plan(
     #many_regimes = TryManyRegimes(tree, maxregimes=13),
     #save(many_regimes, file=file_out("results.rda"))
     try_many = target(
-        SplitAndLikelihood(tree, nregimes=nregimes, interpolation_method=interpolation_method, type=type, Ntrials=4, ncores=1),
+        SplitAndLikelihood(tree, nregimes=nregimes, interpolation_method=interpolation_method, type=type, Ntrials=1, ncores=1),
         transform = cross(
             nregimes=c(10,11,12),
             interpolation_method=c("linear"),
             #type=c("data", "time")
             type=c("time"),
-            instance=c(1,2,3,4,5,6)
+            instance=c(1,2,3,4,5,6,7,8,9,10,11,12)
         )
     ),
     optimize_many = target(
