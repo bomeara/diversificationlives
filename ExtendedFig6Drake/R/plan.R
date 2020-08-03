@@ -35,7 +35,7 @@ plan_original <- drake_plan(
 
 # Note that drake will not work with multiple cores called inside functions https://github.com/ropensci/drake/issues/675#issuecomment-458222414
 
-future::plan(future::multiprocess)
+#future::plan(future::multiprocess)
 my_plan <- drake_plan(
     session = utils::sessionInfo(),
     tree = ape::read.tree("data/tree_Extended_Data_Fig_6.tre"),

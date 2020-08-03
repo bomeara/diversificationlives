@@ -15,4 +15,4 @@ source("R/plan.R")      # creates the drake plan
 
 options(clustermq.scheduler = "multicore")
 
-make(plan, parallelism = "clustermq", jobs = parallel::detectCores())
+make(plan_original, parallelism = "clustermq", jobs = parallel::detectCores())
