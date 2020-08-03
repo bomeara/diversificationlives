@@ -1,7 +1,6 @@
 # Note that drake will not work with multiple cores called inside functions https://github.com/ropensci/drake/issues/675#issuecomment-458222414
 
-future::plan(future::multiprocess)
-
+#future::plan(future::multiprocess)
 
 plan_original <- drake_plan(
     session = utils::sessionInfo(),
