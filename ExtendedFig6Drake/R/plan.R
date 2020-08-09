@@ -51,12 +51,12 @@ plan_manystart <- drake_plan(
             instance=c(1,2,3,4,5,6,7,8,9,10,11,12)
         )
     ),
-    save_try = save(tree, session, try_many, file=file_out("trymany.rda")),
+    #save_try = save(tree, session, try_many, file=file_out("trymany.rda")),
     optimize_many = target(
         OptimizeLogSpace(try_many, tree=tree),
         transform = map(try_many)
     ),
-    save_optim = save(tree, session, optimize_many, file=file_out("optimmany.rda")),
+    #save_optim = save(tree, session, optimize_many, file=file_out("optimmany.rda")),
     everything = target(
         list(optimize_many),
         transform=combine(optimize_many)
