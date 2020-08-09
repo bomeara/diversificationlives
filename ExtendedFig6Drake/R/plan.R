@@ -48,7 +48,7 @@ plan_manystart <- drake_plan(
             interpolation_method=c("linear"),
             #type=c("data", "time")
             type=c("time"),
-            instance=instances
+            instance=c(1,2,3,4,5,6,7,8,9,10,11,12)
         )
     ),
     save_try = save(tree, session, try_many, file=file_out("trymany.rda")),
