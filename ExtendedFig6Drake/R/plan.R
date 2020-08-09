@@ -66,7 +66,7 @@ plan_manystart <- drake_plan(
     print_result_summary = print(result_summary),
     adaptive_list = AdaptiveSampleBestModels(everything, result_summary, tree, deltaAIC_cutoff=10),
     save_adaptive = save(tree, session, result_summary, everything, adaptive_list, file=file_out("adaptive.rda")),
-    plot_all = PlotAll(everything, tree, file=file_out(paste0(hostname,"_plot.pdf"))),
+    plot_all = PlotAll(everything, tree, file=file_out("plot.pdf")),
     plot_uncertainty = PlotAllUncertainty(everything, tree, adaptive_list, file=file_out("uncertainty.pdf")),
     save_all = save(everything, result_summary, adaptive_list,tree, session, file=file_out("everything.rda"))
 )
