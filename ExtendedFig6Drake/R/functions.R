@@ -281,7 +281,7 @@ SplitAndLikelihood <- function(tree, nregimes, minsize=1, type="data", interpola
     #instance is just to allow parallel starts to run and keep track of them
     seed_to_use <- round(rexp(1, 0.00000001))+instance+as.integer(gsub("[^0-9-]", "", strsplit(system("hostname -I", intern=TRUE), " ")[[1]][1]))
     set.seed(seed_to_use)
-    iterate_on_seed <- runif(set.seed)
+    iterate_on_seed <- runif(seed_to_use)
     rm(iterate_on_seed)
     splits <- EvenSplit(tree=tree, nregimes=nregimes, minsize=minsize, type=type)
     desired_interval = min(0.05, 0.2*min(abs(diff(splits$time))))
