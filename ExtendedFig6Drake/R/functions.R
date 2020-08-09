@@ -279,7 +279,7 @@ EvenSplit <- function(tree, nregimes, minsize=1, type="data", minage=0, maxage=c
 
 SplitAndLikelihood <- function(tree, nregimes, minsize=1, type="data", interpolation_method="linear", verbose=TRUE, Ntrials=3, ncores=parallel::detectCores(), instance=1) {
     #instance is just to allow parallel starts to run and keep track of them
-    set.seed(round(rexp(1, 0.00000001))+instance)
+    set.seed(round(rexp(1, 0.00000001))+instance+as.integer(gsub("[^0-9-]", "", system("hostname -I", intern=TRUE))))
     splits <- EvenSplit(tree=tree, nregimes=nregimes, minsize=minsize, type=type)
     desired_interval = min(0.05, 0.2*min(abs(diff(splits$time))))
     results <- NA
