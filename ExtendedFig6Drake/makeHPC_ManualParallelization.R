@@ -2,7 +2,7 @@
 
 Sys.setenv('R_MAX_VSIZE'=32000000000)
 
-set.seed(as.integer(sqrt(as.numeric(gsub("\\.", "", as.character(ipify::get_ip()))))))
+#set.seed(as.integer(sqrt(as.numeric(gsub("\\.", "", as.character(ipify::get_ip()))))))
 
 setwd("/share/diversificationlives/ExtendedFig6Drake")
 
