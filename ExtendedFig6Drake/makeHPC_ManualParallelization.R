@@ -4,6 +4,11 @@ Sys.setenv('R_MAX_VSIZE'=32000000000)
 
 set.seed(as.integer(sqrt(as.numeric(gsub("\\.", "", as.character(ipify::get_ip()))))))
 
+setwd("/share/diversificationlives/ExtendedFig6Drake")
+
+# ansible linux -a 'nohup Rscript /share/diversificationlives/ExtendedFig6Drake/makeHPC_ManualParallelization.R &'
+
+
 # source("R/packages.R")
 # source("R/functions.R")
 
@@ -25,4 +30,5 @@ set.seed(as.integer(sqrt(as.numeric(gsub("\\.", "", as.character(ipify::get_ip()
 # }
 
 rando <- runif(1)
+Sys.sleep(60)
 save(rando, file=paste0("rando_", Sys.info()['nodename'], ".rda"))
