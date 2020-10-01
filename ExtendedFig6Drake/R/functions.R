@@ -309,10 +309,34 @@ AdaptiveSampleBestModels <- function(everything, result_summary, tree, deltaAIC_
     adaptive_results <- vector(mode="list", length=nrow(result_summary))
     for (i in seq_along(everything)) {
         if(result_summary$deltaAIC[i]<deltaAIC_cutoff) {
+			print(i)
             adaptive_results[[i]] <- AdaptiveSupport(fitted.model=everything[[i]], tree=tree)
         }
     }
     return(adaptive_results)
+}
+
+AdaptiveSampleOneOfBestModels <- function(everything, result_summary, tree, deltaAIC_cutoff=20) {
+    adaptive_results <- vector(mode="list", length=nrow(result_summary))
+    for (i in seq_along(everything)) {
+        if(result_summary$deltaAIC[i]<deltaAIC_cutoff) {
+			print(i)
+            adaptive_results[[i]] <- AdaptiveSupport(fitted.model=everything[[i]], tree=tree)
+        }
+    }
+    return(adaptive_results)
+}
+
+SubsetBestModels <- function(everything, result_summary, tree, deltaAIC_cutoff=20) {
+    subset_list <- vector(mode="list", length=nrow(result_summary))
+    for (i in seq_along(everything)) {
+        if(result_summary$deltaAIC[i]<deltaAIC_cutoff) {
+			print(i)
+            subset_list[[i]] <- everything[[i]]
+        }
+    }
+	subset_list <- subset_list[!unlist(lapply(subset_list, is.null))]
+    return(subset_list)
 }
 # TryManyRegimes <- function(tree, maxregimes=5) {
 #     conditions <- expand.grid(nregimes=sequence(maxregimes), interpolation_method=c("linear", "constant"))
@@ -438,11 +462,13 @@ PlotAll <- function(x, tree, file="plot.pdf") {
 }
 
 # delta is desired ∆lnL to sample along
-AdaptiveSupport <- function(fitted.model, tree, delta=2, n_per_rep=12, n_per_good=36) {
+AdaptiveSupport <- function(fitted.model, tree, delta=2, n_per_rep=12, n_per_good=36, cache_file=NULL) {
     original_params <- fitted.model$results$fit_param$param_fitted
     best_loglikelihood <- fitted.model$loglikelihood
     results <- likelihood_lambda_discreteshift_mu_discreteshift(fitted.model=fitted.model, tree=tree, randomize=FALSE)
-
+	if(!is.null(cache_file)) {
+		save(results, file=cache_file)
+	}
     # univariate
     for(focal_param in seq_along(original_params)) {
         multiplier <- -2
@@ -467,8 +493,11 @@ AdaptiveSupport <- function(fitted.model, tree, delta=2, n_per_rep=12, n_per_goo
             param_max[focal_param] <- max_value
 
             # repeated below
-            local_results <- do.call(rbind, parallel::mclapply(rep(list(fitted.model),n_per_rep), likelihood_lambda_discreteshift_mu_discreteshift, param_min=param_min, param_max=param_max, tree=tree, randomize=TRUE, mc.cores=parallel::detectCores()))
-            results <- rbind(results, local_results)
+            local_results <- do.call(dplyr::bind_rows, parallel::mclapply(rep(list(fitted.model),n_per_rep), likelihood_lambda_discreteshift_mu_discreteshift, param_min=param_min, param_max=param_max, tree=tree, randomize=TRUE, mc.cores=parallel::detectCores()))
+            results <- dplyr::bind_rows(results, local_results)
+			if(!is.null(cache_file)) {
+				save(results, file=cache_file)
+			}
             best_loglikelihood <- max(results[,'loglikelihood'], na.rm=TRUE)
             if(best_loglikelihood > max(unlist(local_results[,'loglikelihood']))+delta) {
                 print("too wide")
@@ -479,8 +508,11 @@ AdaptiveSupport <- function(fitted.model, tree, delta=2, n_per_rep=12, n_per_goo
 
             } else {
                 good_sample <- TRUE
-                local_results_good <- do.call(rbind, parallel::mclapply(rep(list(fitted.model),n_per_good), likelihood_lambda_discreteshift_mu_discreteshift, param_min=param_min, param_max=param_max, tree=tree, randomize=TRUE, mc.cores=parallel::detectCores()))
-                results <- rbind(results, local_results_good)
+                local_results_good <- do.call(dplyr::bind_rows, parallel::mclapply(rep(list(fitted.model),n_per_good), likelihood_lambda_discreteshift_mu_discreteshift, param_min=param_min, param_max=param_max, tree=tree, randomize=TRUE, mc.cores=parallel::detectCores()))
+                results <- dplyr::bind_rows(results, local_results_good)
+				if(!is.null(cache_file)) {
+					save(results, file=cache_file)
+				}
             }
 
             #print(local_results[,1]-best_loglikelihood)
@@ -514,8 +546,11 @@ AdaptiveSupport <- function(fitted.model, tree, delta=2, n_per_rep=12, n_per_goo
             param_max[paste0("mu",indices[focal_pair])] <- (1+(10^(.5*multiplier)))*max(good_enough_univariate[paste0("mu",indices[focal_pair])])
             param_max[paste0("lambda",indices[focal_pair])] <- (1+(10^(.5*multiplier)))*max(good_enough_univariate[paste0("lambda",indices[focal_pair])])
 
-            local_results <- do.call(rbind, parallel::mclapply(rep(list(fitted.model),2*n_per_rep), likelihood_lambda_discreteshift_mu_discreteshift, param_min=param_min, param_max=param_max, tree=tree, randomize=TRUE, mc.cores=parallel::detectCores()))
-            results <- rbind(results, local_results)
+            local_results <- do.call(dplyr::bind_rows, parallel::mclapply(rep(list(fitted.model),2*n_per_rep), likelihood_lambda_discreteshift_mu_discreteshift, param_min=param_min, param_max=param_max, tree=tree, randomize=TRUE, mc.cores=parallel::detectCores()))
+            results <- dplyr::bind_rows(results, local_results)
+			if(!is.null(cache_file)) {
+				save(results, file=cache_file)
+			}
             best_loglikelihood <- max(results[,'loglikelihood'], na.rm=TRUE)
             if(best_loglikelihood > max(unlist(local_results[,'loglikelihood']))+delta) {
                 print("too wide")
@@ -526,8 +561,11 @@ AdaptiveSupport <- function(fitted.model, tree, delta=2, n_per_rep=12, n_per_goo
 
             } else {
                 good_sample <- TRUE
-                local_results_good <- do.call(rbind, parallel::mclapply(rep(list(fitted.model),n_per_good), likelihood_lambda_discreteshift_mu_discreteshift, param_min=param_min, param_max=param_max, tree=tree, randomize=TRUE, mc.cores=parallel::detectCores()))
-                results <- rbind(results, local_results_good)
+                local_results_good <- do.call(dplyr::bind_rows, parallel::mclapply(rep(list(fitted.model),n_per_good), likelihood_lambda_discreteshift_mu_discreteshift, param_min=param_min, param_max=param_max, tree=tree, randomize=TRUE, mc.cores=parallel::detectCores()))
+                results <- dplyr::bind_rows(results, local_results_good)
+				if(!is.null(cache_file)) {
+					save(results, file=cache_file)
+				}
             }
 
         }
@@ -566,7 +604,7 @@ AdaptiveSupport <- function(fitted.model, tree, delta=2, n_per_rep=12, n_per_goo
     colnames(mcmc_params) <- names(best_params)
     mcmc_results_fixed = data.frame(loglikelihood=mcmc_results$loglikelihoods, mcmc_params)
 
-    results <- rbind(results, mcmc_results_fixed)
+    results <- dplyr::bind_rows(results, mcmc_results_fixed)
 
     # mcmc_results <- MCMCpack::MCMCmetrop1R(fun=likelihood_lambda_discreteshift_mu_discreteshift_for_mcmc, theta.init=log(original_params), mcmc=10, burnin=2, verbose=TRUE, fitted.model=fitted.model, tree=tree, force.samp=TRUE)
 
@@ -740,4 +778,29 @@ OptimizeLogSpace <- function(fitted.model,eval_f=likelihood_lambda_discreteshift
         }
     }
     return(fitted.model)
+}
+
+AggregateEverythingFromSavedFies <- function() {
+	rdafiles <- list.files(path="/Users/bomeara/Desktop", pattern="omeara.*", full.names=TRUE)
+	everything_compiled <- list()
+	for (i in seq_along(rdafiles)) {
+		load(rdafiles[i])
+		#new_objects <- c(ls(pattern="optimize"), ls(pattern="try"))
+		new_objects <- ls(pattern="many_11")
+		rm(list=ls(pattern="many_12"))
+		rm(list=ls(pattern="many_10"))
+		for (j in seq_along(new_objects)) {
+			everything_compiled[[length(everything_compiled)+1]] <- get(new_objects[j])
+		}
+		
+		rm(list=ls(pattern="many_"))
+	}
+	return(everything_compiled)
+}
+
+GetParamsFromAggregation <- function(subset_list) {
+	params <- lapply(lapply(lapply(subset_list, "[[", "results"), "[[", "fit_param"), "[[", "param_fitted")
+	params2 <- params[!unlist(lapply(params, is.null))]
+	params_all <- dplyr::bind_rows(params2)
+	return(params_all)
 }
