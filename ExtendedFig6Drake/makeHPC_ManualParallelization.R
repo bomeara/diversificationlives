@@ -30,5 +30,5 @@ setwd("/share/diversificationlives/ExtendedFig6Drake")
 # }
 
 rando <- runif(1)
-Sys.sleep(60)
 save(rando, file=paste0("rando_", Sys.info()['nodename'], ".rda"))
+Sys.sleep(60)
