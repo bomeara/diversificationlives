@@ -6,7 +6,7 @@ set.seed(as.integer(round(runif(1, min=1, max=1e5)) + sqrt(as.numeric(gsub("\\."
 
 setwd("/share/diversificationlives/ExtendedFig6Drake")
 
-# ansible linux -a 'nohup Rscript /share/diversificationlives/ExtendedFig6Drake/makeHPC_ManualParallelization.R &'
+# ansible linux -a 'nohup Rscript /share/diversificationlives/ExtendedFig6Drake/makeHPC_ManualParallelization_delta2.R &'
 
 
 source("R/packages.R")
