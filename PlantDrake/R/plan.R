@@ -6,7 +6,7 @@ plan <- drake_plan(
     #many_regimes = TryManyRegimes(tree, maxregimes=13),
     #save(many_regimes, file=file_out("results.rda"))
     try_many = target(
-        SplitAndLikelihood(tree, nregimes=nregimes, interpolation_method=interpolation_method, type=type),
+        SplitAndLikelihood(tree, nregimes=nregimes, interpolation_method=interpolation_method, type=type, ncores=1),
         transform = cross(
             nregimes=c(1,2,3,5,7,10,15,20,25,30,35,40),
             interpolation_method=c("linear"),
