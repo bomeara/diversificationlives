@@ -183,6 +183,8 @@ param_lambda_discreteshift_mu_discreteshift <- function(desired_interval = 0.1, 
     return(list(fit_param=fit_param, lambda_function=lambda_function, mu_function=mu_function, age_grid_param=age_grid_param))
 }
 
+
+
 param_lambda_discreteshift_ef_fixed <- function(desired_interval = 0.1, tree, condition="crown", ncores=parallel::detectCores(), slice_ages = seq(from=0, to=ceiling(castor::get_tree_span(tree)$max_distance), by=1), interpolation_method="constant", ef=0.0) {
     root_age = castor::get_tree_span(tree)$max_distance
     rho = 1
@@ -230,6 +232,44 @@ param_lambda_discreteshift_ef_fixed <- function(desired_interval = 0.1, tree, co
     })
     return(list(fit_param=fit_param, lambda_function=lambda_function, mu_function=mu_function, age_grid_param=age_grid_param))
 }
+
+param_pdr_discreteshift <- function(desired_interval = 0.1, tree, condition="crown", ncores=parallel::detectCores(), slice_ages = seq(from=0, to=ceiling(castor::get_tree_span(tree)$max_distance), by=1), interpolation_method="constant", ef=0.0) {
+    root_age = castor::get_tree_span(tree)$max_distance
+    rho = 1
+    age_grid_param = seq(from=0,to=root_age+desired_interval,by=desired_interval)
+
+    
+
+  	rholambda0_function = function(params){
+             return(params['rholambda0'])
+     }
+  PDR_function = function(ages,params){
+             return(params['A']*exp(-params['B']*ages));
+     }
+	  param_values  = c(A=NA, B=NA, rholambda0=NA)
+    # param_values <- c(lambda_params)
+    # param_guess <- c(rep(0.1, length(param_values)))
+    # names(param_guess) <- names(param_values)
+    fit_param = NA
+    try({
+        fit_param <- castor::fit_hbd_pdr_parametric(	tree,
+                                               param_values  = param_values,
+                       						   param_guess   = c(1,0,1),
+                           					   param_min     = c(-10,-10,0),
+                           					   param_max     = c(10,10,10),
+                           					   param_scale   = 1, # all params are in the order of 1
+                                               PDR = PDR_function, 
+                                               rholambda0 = rholambda0_function,
+                                               age_grid      = age_grid_param,
+                                               condition     = condition,
+                                               Ntrials       = 10,    # perform 10 fitting trials
+                                               Nthreads      = ncores,
+                                               fit_control       = list(rel.tol=1e-8, trace=1)
+                                           )
+    })
+    return(list(fit_param=fit_param, age_grid_param=age_grid_param))
+}
+
 
 
 #' Split a tree into even sized chunks
