@@ -3,6 +3,9 @@
 
 future::plan(future::multiprocess)
 
+setwd("/share/diversificationlives/PlantDrake")
+try(drake::drake_cache("/share/diversificationlives/PlantDrake/.drake")$unlock())
+
 # envir <- new.env(parent = globalenv())
 # source("R/packages.R", local = envir)
 # source("R/functions.R", local = envir)
