@@ -142,7 +142,7 @@ param_lambda_discreteshift_mu_discreteshift <- function(desired_interval = 0.1, 
         return(rho) # rho does not depend on any of the parameters
     }
     param_values <- c(lambda_params, mu_params)
-    ape_estimate <- ape::birthdeath(tree)
+    ape_estimate <- ape::birthdeath(ape::multi2di(tree))
     # ef = d/b
     # netdiv = b - d
     # b = netdiv + d
