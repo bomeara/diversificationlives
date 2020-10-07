@@ -14,3 +14,6 @@ source("R/functions.R")
 source("R/plan.R")      # creates the drake plan
 
 make(plan, parallelism = "future", jobs = parallel::detectCores())
+
+
+# ansible linux -a 'nohup Rscript /share/diversificationlives/PlantDrake/make.R &'

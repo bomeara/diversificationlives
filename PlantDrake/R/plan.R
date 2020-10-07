@@ -17,6 +17,6 @@ plan <- drake_plan(
         transform=combine(try_many)
     ),
     result_summary = SummarizeSplitsAndLikelihoods(everything),
-    plot_all = PlotAll(everything, tree, file=file_out("plot.pdf")),
-    save_all = save(everything, result_summary, file=file_out("everything.rda"))
+    plot_all = PlotAll(everything, tree, file=paste0(system("hostname", intern=TRUE), "_plot.pdf")),
+    save_all = save(everything, result_summary, file=paste0(system("hostname", intern=TRUE), "_everything.rda"))
 )
