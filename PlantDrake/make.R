@@ -5,7 +5,7 @@ envir <- new.env(parent = globalenv())
 source("R/packages.R", local = envir)
 source("R/functions.R", local = envir)
 source("R/plan.R", local = envir)
-make(envir$plan, envir = envir)
+make(envir$plan, envir = envir, jobs = 12)
 #
 # source("R/packages.R")  # loads packages
 # source("R/functions.R")
