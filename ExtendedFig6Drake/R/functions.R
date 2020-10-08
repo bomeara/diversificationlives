@@ -185,7 +185,7 @@ param_lambda_discreteshift_mu_discreteshift <- function(desired_interval = 0.1, 
 
 
 
-param_lambda_discreteshift_ef_fixed <- function(desired_interval = 0.1, tree, condition="crown", ncores=parallel::detectCores(), slice_ages = seq(from=0, to=ceiling(castor::get_tree_span(tree)$max_distance), by=1), interpolation_method="constant", ef=0.0) {
+param_lambda_discreteshift_ef_fixed <- function(desired_interval = 0.1, tree, condition="crown", ncores=parallel::detectCores(), slice_ages = seq(from=0, to=ceiling(castor::get_tree_span(tree)$max_distance), by=1), interpolation_method="linear", ef=0.0) {
     root_age = castor::get_tree_span(tree)$max_distance
     rho = 1
     age_grid_param = seq(from=0,to=root_age+desired_interval,by=desired_interval)
@@ -210,8 +210,27 @@ param_lambda_discreteshift_ef_fixed <- function(desired_interval = 0.1, tree, co
         return(rho) # rho does not depend on any of the parameters
     }
     param_values <- c(lambda_params)
-    param_guess <- c(rep(0.1, length(param_values)))
+    
+	ape_estimate <- ape::birthdeath(ape::multi2di(tree))
+    # ef = d/b
+    # netdiv = b - d
+    # b = netdiv + d
+    # d = ef * b
+    # b = netdiv + ef * b
+    # b - ef * b = netdiv
+    # b * (1-ef) = netdiv
+    # b = netdiv / (1-ef)
+    # d = ef * netdiv / ( 1 - ef)
+    ef_range <- unname(ape_estimate$CI['d/b', ])
+    netdiv_range <- unname(ape_estimate$CI['b-d',])
+    birth_range <- abs(range(c(netdiv_range,rev(netdiv_range)) / (1-ef_range)))
+    death_range <- abs(range(ef_range * c(netdiv_range, rev(netdiv_range)) / (1-ef_range)))
+
+
+    param_guess <- c(runif(n=length(lambda_params), min=min(birth_range), max=max(birth_range)))
+
     names(param_guess) <- names(param_values)
+
     fit_param = NA
     try({
         fit_param <- fit_hbd_model_parametric(	tree,
@@ -334,6 +353,25 @@ SplitAndLikelihood <- function(tree, nregimes, minsize=1, type="data", interpola
     try(return_object <- list(splits=splits, results=results, desired_interval=desired_interval, nregimes=nregimes, interpolation_method=interpolation_method, type=type, AIC=results$fit_param$AIC, loglikelihood=results$fit_param$loglikelihood, instance=instance))
     return(return_object)
 }
+
+SplitAndLikelihoodEFFixed <- function(tree, nregimes, minsize=1, type="data", interpolation_method="linear", verbose=TRUE, Ntrials=3, ncores=parallel::detectCores(), instance=1, ef=0.99) {
+    #instance is just to allow parallel starts to run and keep track of them
+    seed_to_use <- round(rexp(1, 0.00000001))+instance+as.integer(gsub("[^0-9-]", "", strsplit(system("hostname -I", intern=TRUE), " ")[[1]][1]))
+    set.seed(seed_to_use)
+    iterate_on_seed <- runif(seed_to_use)
+    rm(iterate_on_seed)
+    splits <- EvenSplit(tree=tree, nregimes=nregimes, minsize=minsize, type=type)
+    desired_interval = min(0.05, 0.2*min(abs(diff(splits$time))))
+    results <- NA
+    try(results <- param_lambda_discreteshift_ef_fixed(desired_interval = desired_interval, tree=tree, condition="crown", ncores=ncores, slice_ages = unique(sort(c(0, abs(splits$time), castor::get_tree_span(tree)$max_distance))), interpolation_method=interpolation_method, Ntrials=Ntrials, ef=ef))
+    if(verbose) {
+        try(print(c(nregimes=nregimes, interpolation_method=interpolation_method, AIC=results$fit_param$AIC)))
+    }
+    return_object <- list(splits=splits, results=results, desired_interval=desired_interval, nregimes=nregimes, interpolation_method=interpolation_method, type=type, AIC=NA, loglikelihood=NA, instance=instance)
+    try(return_object <- list(splits=splits, results=results, desired_interval=desired_interval, nregimes=nregimes, interpolation_method=interpolation_method, type=type, AIC=results$fit_param$AIC, loglikelihood=results$fit_param$loglikelihood, instance=instance))
+    return(return_object)
+}
+
 
 SummarizeSplitsAndLikelihoods <- function(x) {
     summary.df <- data.frame(nregimes=sapply(x, "[[", "nregimes"), interpolation_method=sapply(x, "[[", "interpolation_method"), AIC=sapply(x, "[[", "AIC"), loglikelihood=sapply(x, "[[", "loglikelihood"), stringsAsFactors=FALSE)
