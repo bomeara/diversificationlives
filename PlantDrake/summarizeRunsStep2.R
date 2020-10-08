@@ -2,7 +2,7 @@ setwd("/share/diversificationlives/PlantDrake")
 library(dplyr)
 library(ggplot2)
 library(ggbeeswarm)
-summaries <- list.files(pattern="inprocess", full.names=TRUE)
+summaries <- list.files(pattern="ef_*inprocess", full.names=TRUE)
 summary_df <- data.frame()
 for (i in seq_along(summaries)) {
 	print(summaries[i])
