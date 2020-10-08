@@ -18,7 +18,7 @@ source("R/plan.R")      # creates the drake plan
 try(drake::drake_cache("/share/diversificationlives/PlantDrake/.drake")$unlock())
 
 
-make(plan, parallelism = "future", jobs = parallel::detectCores(), cache=drake::new_cache("~/Documents/localcache")) # cache so that they don't all try writing to same cache
+make(plan, parallelism = "future", jobs = parallel::detectCores(), cache=drake::new_cache("~/Documents/localcache"), keep_going=TRUE) # cache so that they don't all try writing to same cache
 
 
 # ansible linux -a 'nohup Rscript /share/diversificationlives/PlantDrake/make.R &'
