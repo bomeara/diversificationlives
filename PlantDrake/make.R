@@ -4,6 +4,9 @@
 future::plan(future::multiprocess)
 
 setwd("/share/diversificationlives/PlantDrake")
+file.remove(".RData")
+try(drake::drake_cache("/share/diversificationlives/PlantDrake/.drake")$unlock())
+
 
 # envir <- new.env(parent = globalenv())
 # source("R/packages.R", local = envir)
@@ -15,7 +18,6 @@ source("R/packages.R")  # loads packages
 source("R/functions.R")
 source("R/plan.R")      # creates the drake plan
 
-try(drake::drake_cache("/share/diversificationlives/PlantDrake/.drake")$unlock())
 
 
 make(plan, parallelism = "future", jobs = parallel::detectCores(), cache=drake::new_cache("~/Documents/localcache"), keep_going=TRUE) # cache so that they don't all try writing to same cache
