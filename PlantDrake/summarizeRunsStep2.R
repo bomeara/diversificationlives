@@ -7,7 +7,7 @@ summary_df <- data.frame()
 for (i in seq_along(summaries)) {
 	print(summaries[i])
 	load(summaries[i])
-	trials <-  ls(pattern="try")
+	trials <-  ls(pattern="ef_")
 	for (j in seq_along(trials)) {
 		summary_df <- dplyr::bind_rows(summary_df, data.frame(name=trials[j], AIC=get(trials[j])$AIC, type=get(trials[j])$type, nregimes=get(trials[j])$nregimes, source=summaries[i]))	
 		print(tail(summary_df, 1))

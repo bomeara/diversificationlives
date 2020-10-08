@@ -35,6 +35,6 @@ plan <- drake_plan(
         transform=combine(ef_fixed)
     ),
     result_summary = SummarizeSplitsAndLikelihoods(everything),
-    plot_all = PlotAll(everything, tree, file=paste0(system("ef_hostname", intern=TRUE), "_plot.pdf")),
-    save_all = save(everything, result_summary, file=paste0(system("ef_hostname", intern=TRUE), "_everything.rda"))
+    plot_all = PlotAll(everything, tree, file=paste0("ef_", system("hostname", intern=TRUE), "_plot.pdf")),
+    save_all = save(everything, result_summary, file=paste0("ef_", system("hostname", intern=TRUE), "_everything.rda"))
 )
