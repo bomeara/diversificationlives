@@ -5,7 +5,7 @@ future::plan(future::multiprocess)
 
 setwd("/share/diversificationlives/PlantDrake")
 file.remove(".RData")
-try(drake::drake_cache("/share/diversificationlives/PlantDrake/.drake")$unlock())
+try(drake::drake_cache("/home/bomeara/Documents/localcache")$unlock())
 
 
 # envir <- new.env(parent = globalenv())
