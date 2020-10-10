@@ -318,7 +318,7 @@ EvenSplit <- function(tree, nregimes, minsize=1, type="data", minage=0, maxage=c
         splitrows <- round(sequence(nregimes-1)*(nrow(ltt_points)-1)/nregimes) #split after this row
         splittimes <- (ltt_points[splitrows,1]+ltt_points[splitrows+1,1])/2
     } else {
-      splittimes <- sequence(nregimes-1)*min(ltt_points[,1])/(nregimes)
+      splittimes <- sequence(nregimes-1)*max(-abs(maxage), min(ltt_points[,1]))/(nregimes)
       splitrows <- c()
       for (i in seq_along(splittimes)) {
         splitrows[i] <- which(ltt_points[,1]>splittimes[i])[1]-1

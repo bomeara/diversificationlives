@@ -38,3 +38,24 @@ plan <- drake_plan(
     plot_all = PlotAll(everything, tree, file=paste0("ef_", system("hostname", intern=TRUE), "_plot.pdf")),
     save_all = save(everything, result_summary, file=paste0("ef_", system("hostname", intern=TRUE), "_everything.rda"))
 )
+
+plan_adaptive <- drake_plan(
+    tree = ape::read.tree("data/GBMB.ultra.tre"),
+    ef_fixed = target(
+        SplitAndLikelihoodEFFixed(tree, nregimes=nregimes, interpolation_method=interpolation_method, type=type, ncores=1),
+        transform = cross(
+            nregimes=c(33,35,37),
+            interpolation_method=c("linear"),
+			type=c("data")
+        )
+    ),
+    everything = target(
+        list(ef_fixed),
+        transform=combine(ef_fixed)
+    ),
+    result_summary = SummarizeSplitsAndLikelihoods(everything),
+    print_result_summary = print(result_summary),
+    adaptive_list = AdaptiveSampleBestModels(everything, result_summary, tree, deltaAIC_cutoff=10),
+    save_adaptive = save(tree, session, result_summary, everything, adaptive_list, file=paste0("ef_adaptive_", system("hostname", intern=TRUE), ".rda"))
+)
+
