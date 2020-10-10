@@ -601,54 +601,56 @@ AdaptiveSupport <- function(fitted.model, tree, delta=2, n_per_rep=12, n_per_goo
         }
     }
 
-    # bivariate
+    # bivariate if both mu and lambda vary
     indices <- sort(as.numeric(unique(gsub("mu", "", gsub("lambda", "", names(original_params))))))
-    good_enough_univariate <- subset(results, loglikelihood+delta>=best_loglikelihood)
-    for(focal_pair in seq_along(indices)) {
-        print(paste0("focal_pair ", focal_pair))
-        best_params <- as.numeric(results[which.max(results[,'loglikelihood']),-1])
-        names(best_params) <- names(original_params)
-        param_min <- best_params
-        param_max <- best_params
-        multiplier <- -2
-        good_sample <- FALSE
-        run_num <- 0
-        run_max <- 10
-        while(!good_sample & run_num < run_max) {
-            print(multiplier)
-            run_num <- run_num+1
-            param_min[paste0("mu",indices[focal_pair])] <- max(0,(1-10^multiplier))*min(good_enough_univariate[paste0("mu",indices[focal_pair])])
-            param_min[paste0("lambda",indices[focal_pair])] <- max(0,(1-10^multiplier))*min(good_enough_univariate[paste0("lambda",indices[focal_pair])])
+	if(any(grepl("mu", names(original_params)))) {
+		good_enough_univariate <- subset(results, loglikelihood+delta>=best_loglikelihood)
+		for(focal_pair in seq_along(indices)) {
+			print(paste0("focal_pair ", focal_pair))
+			best_params <- as.numeric(results[which.max(results[,'loglikelihood']),-1])
+			names(best_params) <- names(original_params)
+			param_min <- best_params
+			param_max <- best_params
+			multiplier <- -2
+			good_sample <- FALSE
+			run_num <- 0
+			run_max <- 10
+			while(!good_sample & run_num < run_max) {
+				print(multiplier)
+				run_num <- run_num+1
+				param_min[paste0("mu",indices[focal_pair])] <- max(0,(1-10^multiplier))*min(good_enough_univariate[paste0("mu",indices[focal_pair])])
+				param_min[paste0("lambda",indices[focal_pair])] <- max(0,(1-10^multiplier))*min(good_enough_univariate[paste0("lambda",indices[focal_pair])])
 
 
-            param_max[paste0("mu",indices[focal_pair])] <- (1+(10^(.5*multiplier)))*max(good_enough_univariate[paste0("mu",indices[focal_pair])])
-            param_max[paste0("lambda",indices[focal_pair])] <- (1+(10^(.5*multiplier)))*max(good_enough_univariate[paste0("lambda",indices[focal_pair])])
+				param_max[paste0("mu",indices[focal_pair])] <- (1+(10^(.5*multiplier)))*max(good_enough_univariate[paste0("mu",indices[focal_pair])])
+				param_max[paste0("lambda",indices[focal_pair])] <- (1+(10^(.5*multiplier)))*max(good_enough_univariate[paste0("lambda",indices[focal_pair])])
 
-            local_results <- do.call(dplyr::bind_rows, parallel::mclapply(rep(list(fitted.model),2*n_per_rep), likelihood_lambda_discreteshift_mu_discreteshift, param_min=param_min, param_max=param_max, tree=tree, randomize=TRUE, mc.cores=parallel::detectCores()))
-            results <- dplyr::bind_rows(results, local_results)
-			if(!is.null(cache_file)) {
-				save(results, file=cache_file)
-			}
-            best_loglikelihood <- max(results[,'loglikelihood'], na.rm=TRUE)
-            if(best_loglikelihood > max(unlist(local_results[,'loglikelihood']))+delta) {
-                print("too wide")
-                multiplier <- multiplier-.5
-            } else if(best_loglikelihood < min(unlist(local_results[,'loglikelihood']))+delta) {
-                print("too narrow")
-                multiplier <- multiplier+0.5
-
-            } else {
-                good_sample <- TRUE
-                local_results_good <- do.call(dplyr::bind_rows, parallel::mclapply(rep(list(fitted.model),n_per_good), likelihood_lambda_discreteshift_mu_discreteshift, param_min=param_min, param_max=param_max, tree=tree, randomize=TRUE, mc.cores=parallel::detectCores()))
-                results <- dplyr::bind_rows(results, local_results_good)
+				local_results <- do.call(dplyr::bind_rows, parallel::mclapply(rep(list(fitted.model),2*n_per_rep), likelihood_lambda_discreteshift_mu_discreteshift, param_min=param_min, param_max=param_max, tree=tree, randomize=TRUE, mc.cores=parallel::detectCores()))
+				results <- dplyr::bind_rows(results, local_results)
 				if(!is.null(cache_file)) {
 					save(results, file=cache_file)
 				}
-            }
+				best_loglikelihood <- max(results[,'loglikelihood'], na.rm=TRUE)
+				if(best_loglikelihood > max(unlist(local_results[,'loglikelihood']))+delta) {
+					print("too wide")
+					multiplier <- multiplier-.5
+				} else if(best_loglikelihood < min(unlist(local_results[,'loglikelihood']))+delta) {
+					print("too narrow")
+					multiplier <- multiplier+0.5
 
-        }
+				} else {
+					good_sample <- TRUE
+					local_results_good <- do.call(dplyr::bind_rows, parallel::mclapply(rep(list(fitted.model),n_per_good), likelihood_lambda_discreteshift_mu_discreteshift, param_min=param_min, param_max=param_max, tree=tree, randomize=TRUE, mc.cores=parallel::detectCores()))
+					results <- dplyr::bind_rows(results, local_results_good)
+					if(!is.null(cache_file)) {
+						save(results, file=cache_file)
+					}
+				}
 
-    }
+			}
+
+		}
+	}
 
     # multivariate
 
