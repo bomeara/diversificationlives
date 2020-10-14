@@ -20,7 +20,7 @@ source("R/plan.R")      # creates the drake plan
 
 
 
-make(plan_adaptive, parallelism = "future", jobs = parallel::detectCores(), cache=drake::new_cache("~/Documents/localcache"), keep_going=TRUE) # cache so that they don't all try writing to same cache
+make(plan_adaptive, parallelism = "future", jobs = parallel::detectCores(), cache=drake::new_cache("~/Documents/localcache"), keep_going=TRUE, lock_envir=FALSE) # cache so that they don't all try writing to same cache
 
 
 # ansible linux -a 'nohup Rscript /share/diversificationlives/PlantDrake/make_adaptive.R &'
