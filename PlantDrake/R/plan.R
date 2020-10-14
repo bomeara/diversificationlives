@@ -56,9 +56,9 @@ plan_adaptive <- drake_plan(
     result_summary = SummarizeSplitsAndLikelihoods(everything),
     print_result_summary = print(result_summary),
 	adaptive_list = target(
-		AdaptiveSampleBestModels(everything, result_summary, tree, deltaAIC_cutoff=deltaAIC_cutoff),
+		AdaptiveSampleBestModels(everything, result_summary, tree, deltaAIC_cutoff=deltaAIC_cutoff, ncores=3),
 		transform = cross(
-			deltaAIC_cutoff=c(2,3,5,7,10)
+			deltaAIC_cutoff=c(2,3,5,10)
 		)
 	),
 	everything2 = target(

@@ -383,12 +383,12 @@ SummarizeSplitsAndLikelihoods <- function(x) {
     return(summary.df)
 }
 
-AdaptiveSampleBestModels <- function(everything, result_summary, tree, deltaAIC_cutoff=20) {
+AdaptiveSampleBestModels <- function(everything, result_summary, tree, deltaAIC_cutoff=20, ncores=parallel::detectCores()) {
     adaptive_results <- vector(mode="list", length=nrow(result_summary))
     for (i in seq_along(everything)) {
         if(result_summary$deltaAIC[i]<deltaAIC_cutoff) {
 			print(i)
-            adaptive_results[[i]] <- AdaptiveSupport(fitted.model=everything[[i]], tree=tree)
+            adaptive_results[[i]] <- AdaptiveSupport(fitted.model=everything[[i]], tree=tree, ncores=ncores)
         }
     }
     return(adaptive_results)
@@ -540,7 +540,7 @@ PlotAll <- function(x, tree, file="plot.pdf") {
 }
 
 # delta is desired ∆lnL to sample along
-AdaptiveSupport <- function(fitted.model, tree, delta=2, n_per_rep=12, n_per_good=36, cache_file=NULL) {
+AdaptiveSupport <- function(fitted.model, tree, delta=2, n_per_rep=12, n_per_good=36, cache_file=NULL, ncores=parallel::detectCores()) {
     original_params <- fitted.model$results$fit_param$param_fitted
     best_loglikelihood <- fitted.model$loglikelihood
     results <- likelihood_lambda_discreteshift_mu_discreteshift(fitted.model=fitted.model, tree=tree, randomize=FALSE)
@@ -571,7 +571,7 @@ AdaptiveSupport <- function(fitted.model, tree, delta=2, n_per_rep=12, n_per_goo
             param_max[focal_param] <- max_value
 
             # repeated below
-            local_results <- do.call(dplyr::bind_rows, parallel::mclapply(rep(list(fitted.model),n_per_rep), likelihood_lambda_discreteshift_mu_discreteshift, param_min=param_min, param_max=param_max, tree=tree, randomize=TRUE, mc.cores=parallel::detectCores()))
+            local_results <- do.call(dplyr::bind_rows, parallel::mclapply(rep(list(fitted.model),n_per_rep), likelihood_lambda_discreteshift_mu_discreteshift, param_min=param_min, param_max=param_max, tree=tree, randomize=TRUE, mc.cores=ncores))
             results <- dplyr::bind_rows(results, local_results)
 			if(!is.null(cache_file)) {
 				save(results, file=cache_file)
@@ -586,7 +586,7 @@ AdaptiveSupport <- function(fitted.model, tree, delta=2, n_per_rep=12, n_per_goo
 
             } else {
                 good_sample <- TRUE
-                local_results_good <- do.call(dplyr::bind_rows, parallel::mclapply(rep(list(fitted.model),n_per_good), likelihood_lambda_discreteshift_mu_discreteshift, param_min=param_min, param_max=param_max, tree=tree, randomize=TRUE, mc.cores=parallel::detectCores()))
+                local_results_good <- do.call(dplyr::bind_rows, parallel::mclapply(rep(list(fitted.model),n_per_good), likelihood_lambda_discreteshift_mu_discreteshift, param_min=param_min, param_max=param_max, tree=tree, randomize=TRUE, mc.cores=ncores))
                 results <- dplyr::bind_rows(results, local_results_good)
 				if(!is.null(cache_file)) {
 					save(results, file=cache_file)
@@ -625,7 +625,7 @@ AdaptiveSupport <- function(fitted.model, tree, delta=2, n_per_rep=12, n_per_goo
 				param_max[paste0("mu",indices[focal_pair])] <- (1+(10^(.5*multiplier)))*max(good_enough_univariate[paste0("mu",indices[focal_pair])])
 				param_max[paste0("lambda",indices[focal_pair])] <- (1+(10^(.5*multiplier)))*max(good_enough_univariate[paste0("lambda",indices[focal_pair])])
 
-				local_results <- do.call(dplyr::bind_rows, parallel::mclapply(rep(list(fitted.model),2*n_per_rep), likelihood_lambda_discreteshift_mu_discreteshift, param_min=param_min, param_max=param_max, tree=tree, randomize=TRUE, mc.cores=parallel::detectCores()))
+				local_results <- do.call(dplyr::bind_rows, parallel::mclapply(rep(list(fitted.model),2*n_per_rep), likelihood_lambda_discreteshift_mu_discreteshift, param_min=param_min, param_max=param_max, tree=tree, randomize=TRUE, mc.cores=ncores))
 				results <- dplyr::bind_rows(results, local_results)
 				if(!is.null(cache_file)) {
 					save(results, file=cache_file)
@@ -640,7 +640,7 @@ AdaptiveSupport <- function(fitted.model, tree, delta=2, n_per_rep=12, n_per_goo
 
 				} else {
 					good_sample <- TRUE
-					local_results_good <- do.call(dplyr::bind_rows, parallel::mclapply(rep(list(fitted.model),n_per_good), likelihood_lambda_discreteshift_mu_discreteshift, param_min=param_min, param_max=param_max, tree=tree, randomize=TRUE, mc.cores=parallel::detectCores()))
+					local_results_good <- do.call(dplyr::bind_rows, parallel::mclapply(rep(list(fitted.model),n_per_good), likelihood_lambda_discreteshift_mu_discreteshift, param_min=param_min, param_max=param_max, tree=tree, randomize=TRUE, mc.cores=ncores))
 					results <- dplyr::bind_rows(results, local_results_good)
 					if(!is.null(cache_file)) {
 						save(results, file=cache_file)
