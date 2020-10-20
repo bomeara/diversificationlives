@@ -44,9 +44,9 @@ plan_adaptive <- drake_plan(
     ef_fixed = target(
         SplitAndLikelihoodEFFixed(tree, nregimes=nregimes, interpolation_method=interpolation_method, type=type, ncores=1),
         transform = cross(
-            nregimes=c(31,32,33,34,35,36,37,38,39),
+            nregimes=c(1,2,3,5,7,10,15,20,25,30,35,40),
             interpolation_method=c("linear"),
-			type=c("data")
+			type=c("data","time")
         )
     ),
     everything = target(
