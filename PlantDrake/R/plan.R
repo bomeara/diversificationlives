@@ -65,7 +65,7 @@ plan_adaptive <- drake_plan(
         list(adaptive_list_new),
         transform=combine(adaptive_list_new)
     ),
-    save_adaptive = save(tree, session, result_summary_adaptive_new, everything_adaptive, everything_adaptive_new, file=paste0("ef_adaptive_", system("hostname", intern=TRUE), ".rda"))
+    save_adaptive = save(tree, session, result_summary_adaptive_new, everything_adaptive, everything_adaptive_new, file=paste0("ef_adaptive_new_", system("hostname", intern=TRUE), ".rda"))
 )
 
 
