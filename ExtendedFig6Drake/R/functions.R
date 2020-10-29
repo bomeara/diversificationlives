@@ -374,7 +374,7 @@ SplitAndLikelihoodEFFixed <- function(tree, nregimes, minsize=1, type="data", in
 
 
 SummarizeSplitsAndLikelihoods <- function(x) {
-    summary.df <- data.frame(nregimes=sapply(x, "[[", "nregimes"), interpolation_method=sapply(x, "[[", "interpolation_method"), AIC=sapply(x, "[[", "AIC"), loglikelihood=sapply(x, "[[", "loglikelihood"), stringsAsFactors=FALSE)
+    summary.df <- data.frame(nregimes=sapply(x, "[[", "nregimes"), interpolation_method=sapply(x, "[[", "interpolation_method"), AIC=sapply(x, "[[", "AIC"), loglikelihood=sapply(x, "[[", "loglikelihood"), type=sapply(x, "[[", "type"), stringsAsFactors=FALSE)
     summary.df$starting_loglikelihood = NA
     for (i in seq_along(x)) {
         summary.df$starting_loglikelihood[i] <- max(x[[i]]$results$fit_param$trial_objective_values, na.rm=TRUE)
@@ -383,23 +383,23 @@ SummarizeSplitsAndLikelihoods <- function(x) {
     return(summary.df)
 }
 
-AdaptiveSampleBestModels <- function(everything, result_summary, tree, deltaAIC_cutoff=20, ncores=parallel::detectCores()) {
+AdaptiveSampleBestModels <- function(everything, result_summary, tree, deltaAIC_cutoff=20, ncores=parallel::detectCores(), delta_internal=2) {
     adaptive_results <- vector(mode="list", length=nrow(result_summary))
     for (i in seq_along(everything)) {
         if(result_summary$deltaAIC[i]<deltaAIC_cutoff) {
 			print(i)
-            adaptive_results[[i]] <- AdaptiveSupport(fitted.model=everything[[i]], tree=tree, ncores=ncores)
+            adaptive_results[[i]] <- AdaptiveSupport(fitted.model=everything[[i]], tree=tree, ncores=ncores, delta=delta_internal)
         }
     }
     return(adaptive_results)
 }
 
-AdaptiveSampleOneOfBestModels <- function(everything, result_summary, tree, deltaAIC_cutoff=20) {
+AdaptiveSampleOneOfBestModels <- function(everything, result_summary, tree, deltaAIC_cutoff=20, delta_internal=2) {
     adaptive_results <- vector(mode="list", length=nrow(result_summary))
     for (i in seq_along(everything)) {
         if(result_summary$deltaAIC[i]<deltaAIC_cutoff) {
 			print(i)
-            adaptive_results[[i]] <- AdaptiveSupport(fitted.model=everything[[i]], tree=tree)
+            adaptive_results[[i]] <- AdaptiveSupport(fitted.model=everything[[i]], tree=tree, delta=delta_internal)
         }
     }
     return(adaptive_results)
