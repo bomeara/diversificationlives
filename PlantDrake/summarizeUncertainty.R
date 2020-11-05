@@ -1,5 +1,7 @@
 library(drake)
 setwd("/share/diversificationlives/PlantDrake")
+source("R/packages.R")
+source("R/functions.R")
 files <- list.files(pattern="ef_adaptive_new_.*.rda")
 for(i in seq_along(files)) {
 	load(files[i])
