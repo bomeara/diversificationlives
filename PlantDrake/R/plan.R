@@ -66,10 +66,10 @@ plan_adaptive <- drake_plan(
         transform=combine(adaptive_list_new)
     ),
 	everything_adaptive_compiled = CompileEverythingAdaptiveNew(everything_adaptive_new),
-    save_adaptive = save(tree, session, result_summary_adaptive_new, everything_adaptive, everything_adaptive_new, everything_adaptive_compiled, file=paste0("ef_adaptive_new_", system("hostname", intern=TRUE), ".rda")),
-	plot_uncertainty2 = PlotAllUncertainty(everything_adaptive, tree, everything_adaptive_compiled,  file=paste0("ef_adaptive_new", system("hostname", intern=TRUE), "_2_plot.pdf"), desired_delta=2),
-	plot_uncertainty5 = PlotAllUncertainty(everything_adaptive, tree, everything_adaptive_compiled,  file=paste0("ef_adaptive_new", system("hostname", intern=TRUE), "_5_plot.pdf"), desired_delta=5),
-	plot_uncertainty10 = PlotAllUncertainty(everything_adaptive, tree, everything_adaptive_compiled,  file=paste0("ef_adaptive_new", system("hostname", intern=TRUE), "_10_plot.pdf"), desired_delta=10)
+    save_adaptive = save(tree, session, result_summary_adaptive_new, everything_adaptive, everything_adaptive_new, everything_adaptive_compiled, file=paste0("ef_adaptive_new_", system("hostname", intern=TRUE), ".rda"))
+#	plot_uncertainty2 = PlotAllUncertainty(everything_adaptive, tree, everything_adaptive_compiled,  file=paste0("ef_adaptive_new_", system("hostname", intern=TRUE), "_2_plot.pdf"), desired_delta=2),
+#	plot_uncertainty5 = PlotAllUncertainty(everything_adaptive, tree, everything_adaptive_compiled,  file=paste0("ef_adaptive_new_", system("hostname", intern=TRUE), "_5_plot.pdf"), desired_delta=5),
+#	plot_uncertainty10 = PlotAllUncertainty(everything_adaptive, tree, everything_adaptive_compiled,  file=paste0("ef_adaptive_new_", system("hostname", intern=TRUE), "_10_plot.pdf"), desired_delta=10)
 )
 
 
