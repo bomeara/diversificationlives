@@ -19,3 +19,4 @@ g <- ggplot(data=summary_df, aes(x=nregimes, y=deltaAIC, group=type)) + geom_lin
 pdf(file="summary.pdf")
 print(g)
 dev.off()
+

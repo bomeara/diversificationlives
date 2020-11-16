@@ -4,10 +4,11 @@ source("R/packages.R")
 source("R/functions.R")
 files <- list.files(pattern="ef_adaptive_new_.*.rda")
 for(i in seq_along(files)) {
+	print(files[i])
 	try(load(files[i]))
 	if(exists("everything_adaptive_compiled")) {
 		for(element_index in seq_along(everything_adaptive_compiled)) {
-			element_adaptive_compiled[[element_index]]$source = files[i]
+			everything_adaptive_compiled[[element_index]]$source = files[i]
 		}
 		if(i==1) {
 			global_everything_adaptive_compiled <- everything_adaptive_compiled
