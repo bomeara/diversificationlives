@@ -27,8 +27,8 @@ rownames(imdb_ratings) <- imdb_ratings$tconst
 
 series <- c(Simpsons = "tt0096697", My_Little_Pony = "tt1751105", Star_Trek_DS9 = "tt0106145", Daily_Show = "tt0115147")
 
-GetTVRankings <- function(parent_tconst="tt0096697", angios=angios, input_imdb_episodes=imdb_episodes, input_imdb_ratings=imdb_ratings) {
-	tvseries_episodes <- subset(input_imdb_episodes, parentTconst==parent_tconst)
+GetTVRankings <- function(parent_tconst="tt0096697") {
+	tvseries_episodes <- subset(imdb_episodes, parentTconst==parent_tconst)
 	tvseries_episodes$seasonNumber <- as.numeric(tvseries_episodes$seasonNumber)
 	tvseries_episodes$episodeNumber <- as.numeric(tvseries_episodes$episodeNumber)
 	tvseries_episodes <- tvseries_episodes[!is.na(tvseries_episodes$seasonNumber),]
@@ -36,7 +36,7 @@ GetTVRankings <- function(parent_tconst="tt0096697", angios=angios, input_imdb_e
 	tvseries_episodes <- tvseries_episodes[order(tvseries_episodes$seasonNumber, tvseries_episodes$episodeNumber), ]
 	tvseries_episodes$averageRating <- NA
 	for (i in sequence(nrow(tvseries_episodes))) {
-		try(tvseries_episodes$averageRating[i] <- input_imdb_ratings$averageRating[which(input_imdb_ratings$tconst==tvseries_episodes$tconst[i])])
+		try(tvseries_episodes$averageRating[i] <- imdb_ratings$averageRating[which(imdb_ratings$tconst==tvseries_episodes$tconst[i])])
 	}
 	tvseries_episodes <- tvseries_episodes[!is.na(tvseries_episodes$averageRating),]
 	tvseries_episodes$order <- sequence(nrow(tvseries_episodes))
@@ -46,15 +46,33 @@ GetTVRankings <- function(parent_tconst="tt0096697", angios=angios, input_imdb_e
 	return(tvseries_as_predictor)
 }
 
-ModelPerSeries <- function(chosen_series, phy=phy, f.constant=f.constant, f.exp=f.exp) {
+ModelPerSeries <- function(chosen_series) {
 	rankings <- GetTVRankings(chosen_series)
 	series_fit <- fit_env(phy, env_data=rankings, tot_time=max(node.age(phy)$ages), f.lamb=f.constant, f.mu=f.exp, lamb_par=c(0.2161), mu_par= c(0.2023, 0.0772), f=0.9, dt=dt)
 	return(series_fit)
 }
 
-#TVSeries_rankings <- parallel::mclapply(series, GetTVRankings, mc.cores=min(4, length(series)))
+
+TVSeries_rankings <- parallel::mclapply(series, GetTVRankings, mc.cores=min(4, length(series)))
 
 TVSeries_models <- parallel::mclapply(series, ModelPerSeries, mc.cores=min(4, length(series)))
+
+# TVSeries_model_1 <- ModelPerSeries(series[1])
+# TVSeries_model_2 <- ModelPerSeries(series[2])
+# TVSeries_model_3 <- ModelPerSeries(series[3])
+# TVSeries_model_4 <- ModelPerSeries(series[4])
+
+AllPredictors <- rbind(
+	data.frame(Age=TVSeries_rankings[[1]]$Age, Predictor=TVSeries_rankings[[1]]$TV_seriesRating, Set=names(series)[1]),
+	data.frame(Age=TVSeries_rankings[[2]]$Age, Predictor=TVSeries_rankings[[2]]$TV_seriesRating, Set=names(series)[2]),
+	data.frame(Age=TVSeries_rankings[[3]]$Age, Predictor=TVSeries_rankings[[3]]$TV_seriesRating, Set=names(series)[3]),
+	data.frame(Age=TVSeries_rankings[[4]]$Age, Predictor=TVSeries_rankings[[4]]$TV_seriesRating, Set=names(series)[4]),
+	data.frame(Age=angios$Age, Predictor=angios$Angiosperms, Set="Angiosperms")
+
+)
+all_predictors_plot <- ggplot(AllPredictors, mapping=aes(x=Age, y=Predictor, group=Set)) + geom_line(aes(colour=Set)) + scale_x_reverse() + coord_geo() 
+print(all_predictors_plot)
+
 
 # just to check getting similar results
 BcstDAngioVar_EXPO <- fit_env(phy, env_data=angios, tot_time=max(node.age(phy)$ages), f.lamb=f.constant, f.mu=f.exp, lamb_par=c(0.2161), mu_par= c(0.2023, 0.0772), f=0.9, dt=dt)
@@ -200,8 +218,9 @@ for (i in sequence(ncol(random_results))) {
 }
 random_df_good <- subset(random_df, deltaAICC<=2)
 random_angios <- ggplot(random_df_good, mapping=aes(x=angios_random.Age, y=angios_random.Angiosperms, group=rep)) + geom_line() + scale_x_reverse() + coord_geo()
-random_angios
-mu_pars_good  <- (lapply(random_results[2,good], "[[", "mu_par"))
-mu_pars_good_v <- unlist(mu_pars_good)
-mu_pars_df <- data.frame(mu=mu_pars_good_v[gtools::odd(seq_along(mu_pars_good))], a=mu_pars_good_v[gtools::even(seq_along(mu_pars_good))])
-plot(mu_pars_df$mu, mu_pars_df$a)
+# random_angios
+# mu_pars_good  <- (lapply(random_results[2,good], "[[", "mu_par"))
+# mu_pars_good_v <- unlist(mu_pars_good)
+# mu_pars_df <- data.frame(mu=mu_pars_good_v[gtools::odd(seq_along(mu_pars_good))], a=mu_pars_good_v[gtools::even(seq_along(mu_pars_good))])
+# plot(mu_pars_df$mu, mu_pars_df$a)
+save(list=ls(), file="simple.rda")
