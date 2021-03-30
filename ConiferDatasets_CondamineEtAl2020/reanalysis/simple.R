@@ -70,8 +70,10 @@ AllPredictors <- rbind(
 	data.frame(Age=angios$Age, Predictor=angios$Angiosperms, Set="Angiosperms")
 
 )
+pdf(file="PredictorsPlot.pdf")
 all_predictors_plot <- ggplot(AllPredictors, mapping=aes(x=Age, y=Predictor, group=Set)) + geom_line(aes(colour=Set)) + scale_x_reverse() + coord_geo() 
 print(all_predictors_plot)
+dev.off()
 
 
 # just to check getting similar results
@@ -150,6 +152,36 @@ print(lapply(angios_models, "[[", "lamb_par"))
 print(lapply(angios_models, "[[", "mu_par"))
 print(lapply(angios_models, "[[", "LH"))
 
+
+all_models <- c(list(BcstDAngioVar_EXPO=BcstDAngioVar_EXPO, BcstDAngioVar_LIN=BcstDAngioVar_LIN, BAngioVarDcst_LIN=BAngioVarDcst_LIN, BAngioVarDcst_EXPO=BAngioVarDcst_EXPO, BcstDAngioVar_EXPO_angios_true=BcstDAngioVar_EXPO, BcstDAngioVar_EXPO_angios_delayed_rise_max42=BcstDAngioVar_EXPO_angios_delayed_rise_max42, BcstDAngioVar_EXPO_angios_instant_rise_20=BcstDAngioVar_EXPO_angios_instant_rise_20),TVSeries_models)
+
+deltaAICc <- unlist(lapply(all_models, "[[", "aicc")) - min(unlist(lapply(all_models, "[[", "aicc")))
+print(deltaAICc)
+print(lapply(all_models, "[[", "lamb_par"))
+print(lapply(all_models, "[[", "mu_par"))
+print(lapply(all_models, "[[", "LH"))
+
+all_models_df <- data.frame(name=names(deltaAICc), deltaAICc=unname(unlist(deltaAICc)), likelihood=unname(unlist(lapply(all_models, "[[", "LH"))))
+lambda_par_df <- t(plyr::rbind.fill(as.data.frame(lapply(all_models, "[[", "lamb_par"))))
+mu_par_df <- t(plyr::rbind.fill(as.data.frame(lapply(all_models, "[[", "mu_par"))))
+all_models_df$lambda_1 <- NA
+all_models_df$lambda_2 <- NA
+all_models_df$mu_1 <- NA
+all_models_df$mu_2 <- NA
+for (i in sequence(nrow(lambda_par_df))) {
+  all_models_df$lambda_1[i] <- lambda_par_df[i,1]
+  if(lambda_par_df[i,1]!=lambda_par_df[i,2]) {
+    all_models_df$lambda_2[i] <- lambda_par_df[i,2]
+  }
+  all_models_df$mu_1[i] <- mu_par_df[i,1]
+  if(mu_par_df[i,1]!=mu_par_df[i,2]) {
+    all_models_df$mu_2[i] <- mu_par_df[i,2]
+  }
+}
+
+all_models_df <- all_models_df[order(all_models_df$deltaAICc),]
+write.csv(all_models_df, file="AllModels.csv")
+
 mu_original <- f.exp(angios$Age, angios$Angiosperms, BcstDAngioVar_EXPO$mu_par)
 mu_max42 <- f.exp(angios_delayed_rise_max42$Age, angios_delayed_rise_max42$Angiosperms, BcstDAngioVar_EXPO_angios_delayed_rise_max42$mu_par)
 mu_instant_rise_20 <- f.exp(angios_instant_rise_20$Age, angios_instant_rise_20$Angiosperms, BcstDAngioVar_EXPO_angios_instant_rise_20$mu_par)
@@ -168,8 +200,10 @@ lambda_plot <- ggplot(div_data, mapping=aes(x=age, y=lambda, group=category)) + 
 angio_plot <- ggplot(div_data, mapping=aes(x=age, y=angiosperms, group=category)) + geom_line(aes(colour=category)) + scale_x_reverse() + coord_geo()
 
 ltt_plot <- ggplot(all_times_tall, mapping=aes(x=age, y=value, group=variable)) + geom_line(aes(colour=variable)) + scale_x_reverse() + coord_geo() + scale_y_log10()
-print(ggarrange(lambda_plot, mu_plot, angio_plot, ltt_plot, ncol=2, nrow=2))
 
+pdf(file="LambaMuAngio.pdf", width=15, height=15)
+print(ggarrange(lambda_plot, mu_plot, angio_plot, ltt_plot, ncol=2, nrow=2))
+dev.off
 rise_of_angios <- (apply(subset(all_times, age>=80 & age<=150), 2, range))
 rise_of_angios_diff <- diff(rise_of_angios)
 print("during the rise of angiosperms")
@@ -197,7 +231,7 @@ try_random <- function(angios) {
 }
 
 plan(multisession)
-random_results <- future_replicate(500, try_random(angios))
+random_results <- future_replicate(100, try_random(angios))
 save(random_results, file="ConiferRandomValues.rda")
 AICC <- unlist(lapply(random_results[2,], "[[", "aicc"))
 deltaAICC <- AICC-BcstDAngioVar_EXPO$aicc
