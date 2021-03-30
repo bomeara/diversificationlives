@@ -3,9 +3,25 @@ GetX <- function(phy) {
 }
 
 #magnitude is a fraction: 0.5 mean shrink the focal interval by half, 1.4 increase by 40%
-ChangeX <- function(magnitude, interval, X) {
+ChangeX_Percentage <- function(magnitude, interval, X) {
 	offsets <- c(X, X[length(X)])-c(0,X)
 	new_length <- offsets[interval]*magnitude
+	X[seq(from=interval, to=length(X), by=1)] <- X[seq(from=interval, to=length(X), by=1)] - offsets[interval] + new_length
+	return(X)
+}
+
+ChangeX_Absolute <- function(magnitude, interval, X) {
+	offsets <- c(X, X[length(X)])-c(0,X)
+	new_length <- offsets[interval]+magnitude
+	X[seq(from=interval, to=length(X), by=1)] <- X[seq(from=interval, to=length(X), by=1)] - offsets[interval] + new_length
+	return(X)
+}
+
+ChangeX_Normalized_By_Branches <- function(magnitude, interval, X) {
+    ntip <- min(as.numeric(names(X))) - 1
+    nbranches <- ntip + 1 - interval
+	offsets <- c(X, X[length(X)])-c(0,X)
+	new_length <- offsets[interval]+magnitude/nbranches
 	X[seq(from=interval, to=length(X), by=1)] <- X[seq(from=interval, to=length(X), by=1)] - offsets[interval] + new_length
 	return(X)
 }
@@ -14,32 +30,55 @@ Optimize <- function(X, phy) {
 	opts <- list("algorithm" = "NLOPT_LN_SBPLX", "maxeval" = 100000, "ftol_rel" = .Machine$double.eps^.5)
 	condition.type="survival"
 	result <- nloptr(x0=log(c(.1,.05)), eval_f=GetLikelihood, ub=log(c(10,.99)), lb=c(-6,-6), opts=opts, tree=phy, X=X, condition.type=condition.type, verbose=FALSE)
-	
+    p <- exp(result$solution)
+	l <- p[1] / (1 + p[2])
+    m <- (p[1] * p[2]) / (1 + p[2])
 	
 	#result <- bd.shifts.optim(X, sampling=1, 0.2, 0.1)[[1]][[1]][[1]]
-	return(c(lnL=result$objective, lambda=exp(result$solution[1]), mu=exp(result$solution[2])))
+	return(c(lnL=result$objective, lambda=l, mu=m))
 }
 
 TryAllIntervals <- function(magnitude, X, phy) {
-	results <- Optimize(X, phy)
+	results <- as.data.frame(t(Optimize(X, phy)))
 	results$interval <- NA
 	results$magnitude <- NA
 	for(interval in sequence(length(X)-1)) {
-		result <- Optimize(ChangeX(magnitude, interval, X), phy)
+		result <- as.data.frame(t(Optimize(ChangeX_Normalized_By_Branches(magnitude, interval, X), phy)))
 		result$interval <- interval
 		result$magnitude <- magnitude
-		results <- rbind(results, result)
+		results <- plyr::rbind.fill(results, result)
 	}
 	rownames(results) <- NULL
 	results <- as.data.frame(results)
+    results$delta_lnL <- results$lnL[1] - results$lnL
+    results$delta_lambda <- results$lambda[1] - results$lambda
+    results$delta_mu <- results$mu[1] - results$mu
 	results <- rbind(results, rep(NA, ncol(results)))
 	#results[nrow(results)+1,sequence(ncol(results))] <- NA
 	results$X <- c(NA, unname(X))
 	results$Ntip <- c(ape::Ntip(phy), seq(from=ape::Ntip(phy), to=2, by=-1))
+   
 	return(results)
 }
 
+SimTree <- function(birth=0.1, death=0.05, time=50) {
+    return(geiger::drop.extinct(geiger::sim.bdtree(b=birth,d=death, stop="time", t=time, extinct=FALSE)))
+}
 
+DoMany <- function(nrep=100, magnitudes=c(0.01, 0.1, 0.5, 5)) {
+    all_results <- data.frame()
+    for (rep_index in sequence(nrep)) {
+        print(paste("Now doing",rep_index))
+        phy <-  SimTree()
+        X <- GetX(phy)
+        for (mag_index in seq_along(magnitudes)) {
+            local_result <- TryAllIntervals(magnitude=magnitudes[mag_index], X, phy)
+            local_result$tree <- rep_index
+            all_results <- plyr::rbind.fill(all_results, local_result)
+        }
+    }
+    return(all_results)
+}
 
 #### Code from earlier work
 
