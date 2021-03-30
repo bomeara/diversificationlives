@@ -72,9 +72,11 @@ DoMany <- function(nrep=100, magnitudes=c(0.01, 0.1, 0.5, 5)) {
         phy <-  SimTree()
         X <- GetX(phy)
         for (mag_index in seq_along(magnitudes)) {
-            local_result <- TryAllIntervals(magnitude=magnitudes[mag_index], X, phy)
-            local_result$tree <- rep_index
-            all_results <- plyr::rbind.fill(all_results, local_result)
+            try({
+                local_result <- TryAllIntervals(magnitude=magnitudes[mag_index], X, phy)
+                local_result$tree <- rep_index
+                all_results <- plyr::rbind.fill(all_results, local_result)
+            })
         }
     }
     return(all_results)
