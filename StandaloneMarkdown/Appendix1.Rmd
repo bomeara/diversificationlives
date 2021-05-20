@@ -8,7 +8,7 @@ output:
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE, warning=FALSE, message=FALSE, cache=TRUE, fig.width=7, fig.height=7)
+knitr::opts_chunk$set(echo = FALSE, warning=FALSE, message=FALSE, cache=TRUE, fig.width=7, fig.height=5)
 set.seed(1859)
 ```
 
@@ -57,17 +57,51 @@ coin_linear_likelihood <- function(x, nheads, nflips, fixed.slope=0.1, neg=FALSE
   }
   return(ifelse(neg, -1, 1)*totalheadsprobs[nheads+1])
 }
+
+coin_exponential_prob <- function(halflife, nheads, nflips) {
+  lambda <- log(2)/halflife
+  pheads <- 1*exp(-lambda*seq(from=1, to=nflips, by=1)) #by not starting at exp(-lambda * 0), it allows for something that has no heads on the first flip to have positive probability
+  return(pheads)
+}
+
+get_possibilities <- function(heads, flips) {
+ if(flips>25) {
+    stop("Too many flips for the expand.grid silly approach to work")
+ } 
+  possibilities <- expand.grid(rep(list(c(0,1)),flips))
+  possibilities <- possibilities[rowSums(possibilities)==heads,]
+  return(possibilities)
+}
+
+coin_exponential_likelihood <- function(halflife, nheads, nflips, neg=FALSE, possibilities=get_possibilities(heads=nheads, flips=nflips)) {
+  
+  pheads <- coin_exponential_prob(halflife, nheads, nflips)
+  ptails <- 1-pheads
+  prob_matrix <- rbind(ptails, pheads) # heads = 1, tails =0, so when we offset, tails is first row, heads second
+  
+  likelihood <- 0
+  for (i in sequence(nrow(possibilities))) {
+    positions <- as.numeric(possibilities[i,]+1)
+    local_prob <- 1
+    for (j in sequence(ncol(possibilities))) {
+      local_prob <- local_prob * unname(prob_matrix[positions[j],j])
+    }
+    likelihood <- likelihood + local_prob
+  }
+  print(c(halflife, likelihood))
+  return(ifelse(neg, -1, 1)*likelihood)
+}
 ```
 
 Now let's simulate some data:
 
 ```{r simdata, echo=TRUE}
-nflips <- 250
+nflips <- 100
 pheads <- 0.3
 nheads <- rbinom(n=1, size=nflips, prob=pheads)
 ```
 
-And fit it to three models: one with a constant estimated probability of heads, one with a linear increase in probability of heads with each flip (so by the end the probability of heads is 10% higher than when it started) and one where the probabilty of heads decreases with each flip (so that by the end it is 5% lower than when it started). In both the linear models, we estimate the probability of heads at the y-intercept.
+And fit it to three models: one with a constant estimated probability of heads, one with a linear increase in probability of heads with each flip (so by the end the probability of heads is 10% higher than when it started)  
 
 ```{r fit, echo=FALSE}
 fixed.slope.increase = 0.1
@@ -80,6 +114,9 @@ x <- seq(from=0, to=1, length.out=10000)
 y <- sapply(x, coin_simple_likelihood, nheads=nheads , nflips=nflips)
 fit.df <- data.frame(parameter=x, probability=y, model="simple")
 simple <- optimize(coin_simple_likelihood, interval=c(x[max(1,which.max(y)-20)], x[min(length(x),which.max(y)+20)]), nheads=nheads, nflips=nflips, maximum=TRUE, tol=1e-10)
+```
+
+```{r fit2, echo=FALSE}
 
 # Increasing
 x <- seq(from=-1.5, to=1, length.out=10000)
@@ -89,15 +126,34 @@ fit.df <- rbind(fit.df, data.frame(parameter=x[y>0], probability=y[y>0], model="
 
 # Decreasing
 
-x <- seq(from=-1.5, to=1, length.out=10000)
-y <- sapply(x, coin_linear_likelihood, nheads=nheads , nflips=nflips, fixed.slope=fixed.slope.decrease)
-linear_decrease <- optimize(coin_linear_likelihood, interval=c(x[max(1,which.max(y)-1000)], x[min(length(x),which.max(y)+1000)]), nheads=nheads, nflips=nflips,fixed.slope=fixed.slope.decrease, maximum=TRUE, tol=1e-10)
-fit.df <- rbind(fit.df, data.frame(parameter=x[y>0], probability=y[y>0], model="linear_decrease"))
+#x <- seq(from=-1.5, to=1, length.out=10000)
+#y <- sapply(x, coin_linear_likelihood, nheads=nheads , nflips=nflips, fixed.slope=fixed.slope.decrease)
+#linear_decrease <- optimize(coin_linear_likelihood, interval=c(x[max(1,which.max(y)-1000)], x[min(length(x),which.max(y)+1000)]), nheads=nheads, nflips=nflips,fixed.slope=fixed.slope.decrease, maximum=TRUE, tol=1e-10)
+#fit.df <- rbind(fit.df, data.frame(parameter=x[y>0], probability=y[y>0], model="linear_decrease"))
+```
+
+```{r fit3, echo=FALSE, eval=FALSE}
+
+# Exponential
+
+x <- seq(from=0.000001, to=2*nheads, length.out=25)
+possibilities <- get_possibilities(heads=nheads, flips=nflips)
+y <- sapply(x, coin_exponential_likelihood, nheads=nheads , nflips=nflips, possibilities=possibilities)
+```
+
+```{r fit4, echo=FALSE, eval=FALSE}
+
+
+exponential_fit <- optimize(coin_exponential_likelihood, interval=c(max(0.01,x[which.max(y)-2]),min(6,x[which.max(y)]+2)), nheads=nheads, nflips=nflips,possibilities=possibilities, maximum=TRUE)
+fit.df <- rbind(fit.df, data.frame(parameter=x[y>0], probability=y[y>0], model="exponential_decay"))
+
+
 ```
 
 ```{r results}
 library(knitr)
-result.table <- data.frame(Model=c("Simple", "Linear 10%", "Linear -5%"), LogLikelihood = log(c(simple$objective, linear_increase$objective, linear_decrease$objective)), MLE=c(simple$maximum, linear_increase$maximum, linear_decrease$maximum), stringsAsFactors=FALSE)
+#result.table <- data.frame(Model=c("Simple", "Linear 10%", "Exponential decay"), LogLikelihood = log(c(simple$objective, linear_increase$objective, exponential_fit$objective)), MLE=c(simple$maximum, linear_increase$maximum, exponential_fit$maximum), stringsAsFactors=FALSE)
+result.table <- data.frame(Model=c("Simple", "Linear 10%"), LogLikelihood = round(log(c(simple$objective, linear_increase$objective)),2), MLE=c(simple$maximum, linear_increase$maximum), stringsAsFactors=FALSE)
 knitr::kable(result.table, digits=3)
 ```
 
@@ -111,8 +167,8 @@ library(ggplot2)
 
 probability.df <- rbind(
   data.frame(flip=sequence(nflips), probability=simple$maximum, model="simple"),
-  data.frame(flip=sequence(nflips), probability=.1*sequence(nflips)/nflips + linear_increase$maximum, model="linear_increase"),
-  data.frame(flip=sequence(nflips), probability=-.05*sequence(nflips)/nflips + linear_decrease$maximum, model="linear_decrease")
+  data.frame(flip=sequence(nflips), probability=.1*sequence(nflips)/nflips + linear_increase$maximum, model="Linear Increase")
+  #data.frame(flip=sequence(nflips), probability=-.05*sequence(nflips)/nflips + exponential_fit$maximum, model="exponential_decay")
 )
 
 prob.plot <- ggplot(data=probability.df, aes(x=flip, y=probability, group=model)) + geom_smooth(aes(colour=model)) + ylab("Probability of heads for that flip") + xlab("Flip") + scale_colour_viridis_d(end=0.8)
@@ -168,7 +224,7 @@ ltt.lines(bb2, lwd=4, lty="dotted")
 
 We can fit a few models to these trees
 
-```{r fitbd}
+```{r fitbd, eval=TRUE}
 bd.results <- data.frame(model=c("Yule", "BD", "Exponential", "MiSSE 1", "MiSSE 2"), balanced=NA, pectinate=NA)
 
 bd.results[1,"balanced"] <- -ape::yule(bb1)$loglik
@@ -221,16 +277,16 @@ bd.results[5, "pectinate"] <- misse.bb2.2param$loglik
 
 ```
 
-```{r missetable}
+```{r missetable, eval=TRUE}
 knitr::kable(bd.results)
 ```
 
-```{r ancrecon}
+```{r ancrecon, eval=TRUE}
 misse.recon1.2param <- hisse::MarginReconMiSSE(bb1,f=1, pars=misse.bb1.2param$solution)
 misse.recon2.2param <- hisse::MarginReconMiSSE(bb2,f=1, pars=misse.bb2.2param$solution)
 ```
 
-```{r plotrecon, message=FALSE}
+```{r plotrecon, message=FALSE, eval=TRUE}
 plot.misse.states(misse.recon1.2param, show.tip.label=FALSE, legend="none")
 plot.misse.states(misse.recon2.2param, show.tip.label=FALSE, legend="none")
 ```

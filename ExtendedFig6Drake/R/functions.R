@@ -336,9 +336,11 @@ EvenSplit <- function(tree, nregimes, minsize=1, type="data", minage=0, maxage=c
 
 
 
-SplitAndLikelihood <- function(tree, nregimes, minsize=1, type="data", interpolation_method="linear", verbose=TRUE, Ntrials=3, ncores=parallel::detectCores(), instance=1) {
+SplitAndLikelihood <- function(tree, nregimes, minsize=1, type="data", interpolation_method="linear", verbose=TRUE, Ntrials=3, ncores=parallel::detectCores(), instance=1, seed_to_use=NULL) {
     #instance is just to allow parallel starts to run and keep track of them
-    seed_to_use <- round(rexp(1, 0.00000001))+instance+as.integer(gsub("[^0-9-]", "", strsplit(system("hostname -I", intern=TRUE), " ")[[1]][1]))
+	if(is.null(seed_to_use)) {
+    	seed_to_use <- round(rexp(1, 0.00000001))+instance+as.integer(gsub("[^0-9-]", "", strsplit(system("hostname -I", intern=TRUE), " ")[[1]][1]))
+	}	
     set.seed(seed_to_use)
     iterate_on_seed <- runif(seed_to_use)
     rm(iterate_on_seed)
@@ -758,8 +760,12 @@ likelihood_lambda_discreteshift_mu_discreteshift <- function(fitted.model, tree,
 }
 
 
-likelihood_lambda_discreteshift_mu_discreteshift_for_mcmc <- function(log_params, fitted.model, tree, return_neg=FALSE) {
-    params <- exp(log_params)
+likelihood_lambda_discreteshift_mu_discreteshift_for_mcmc <- function(par, fitted.model, tree, return_neg=FALSE, params_are_log_transformed=TRUE) {
+	if(params_are_log_transformed) {
+    	params <- exp(par)
+	} else {
+		params <- par	
+	}
     names(params) <- names(fitted.model$results$fit_param$param_fitted)
     #print(params)
     mu_values <- fitted.model$results$mu_function(fitted.model$results$age_grid_param, params)
