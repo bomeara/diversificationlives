@@ -10,6 +10,7 @@ tree <- ape::read.tree("data/tree_Extended_Data_Fig_6.tre")
 #tree  <- geiger::drop.extinct(geiger::sim.bdtree(stop="taxa", n=100, seed=42, extinct=FALSE))
 best <- SplitAndLikelihoodPDRdiscreteshift(tree=tree,nregimes=10, seed_to_use=42, ncores=2)
 best_neglnL <- likelihood_pdr_discreteshift_for_mcmc(best$results$fit_param$param_fitted, best, tree=tree, return_neg=TRUE, params_are_log_transformed=FALSE)
+save(list=ls(), file="best_pdr.rda")
 # tree <- rcoal(500)
 # nregimes=10
 # minsize=1
@@ -84,17 +85,17 @@ names(params) <- names(best$results$fit_param$param_fitted)
 #sd_vector <- 0.02*params*sqrt(1+param_numbers)
 sd_vector <- 0.02*abs(params)
 
-likelihood_pdr_discreteshift_for_mcmc(dentist:::dent_pr, best, tree=tree, return_neg=TRUE, params_are_log_transformed=FALSE)
-results <- dent_walk(par=params, fn=likelihood_pdr_discreteshift_for_mcmc, best_neglnL=best_neglnL, nsteps=100, tree=tree, fitted.model=best, return_neg=TRUE, print_freq=5, debug=TRUE, delta=2, params_are_log_transformed=FALSE, sd_vector=sd_vector, lower_bound=c(rep(-100, length(params)-1), 0), upper_bound=c(rep(100,length(params)-1), 100))
+#likelihood_pdr_discreteshift_for_mcmc(dentist:::dent_pr, best, tree=tree, return_neg=TRUE, params_are_log_transformed=FALSE)
+#results <- dent_walk(par=params, fn=likelihood_pdr_discreteshift_for_mcmc, best_neglnL=best_neglnL, nsteps=100, tree=tree, fitted.model=best, return_neg=TRUE, print_freq=5, debug=TRUE, delta=2, params_are_log_transformed=FALSE, sd_vector=sd_vector, lower_bound=c(rep(-100, length(params)-1), 0), upper_bound=c(rep(100,length(params)-1), 100))
 
-# all_results <- list()
-# for (i in sequence(1000)) {
-# 	param_numbers <- as.numeric(gsub("lambda", "", gsub("mu", "", names(params))))
-# 	sd_vector <- runif(1, min=0.001, max=0.05)*params*sqrt(1+param_numbers)
-# 	results <- dent_walk(par=params, fn=likelihood_lambda_discreteshift_mu_discreteshift_for_mcmc, best_neglnL=best_neglnL, nsteps=1000, tree=tree, fitted.model=best, return_neg=TRUE, print_freq=5, debug=TRUE, delta=2, params_are_log_transformed=FALSE, sd_vector=sd_vector, restart_after=15)
-# 	all_results[[i]] <- results
-# 	save(list=ls(), file="best_and_results.rda")
-# }
+all_results <- list()
+for (i in sequence(1000)) {
+	param_numbers <- as.numeric(gsub("lambda", "", gsub("mu", "", names(params))))
+	sd_vector <- abs(runif(1, min=0.001, max=0.05)*params)
+	results <- dent_walk(par=params, fn=likelihood_pdr_discreteshift_for_mcmc, best_neglnL=best_neglnL, nsteps=100, tree=tree, fitted.model=best, return_neg=TRUE, print_freq=5, debug=TRUE, delta=2, params_are_log_transformed=FALSE, sd_vector=sd_vector, lower_bound=c(rep(-100, length(params)-1), 0), upper_bound=c(rep(100,length(params)-1), 100))
+	all_results[[i]] <- results
+	save(list=ls(), file="best_pdr_sand_results.rda")
+}
 
 # load("best_and_results.rda")
 # source("R/functions.R")
