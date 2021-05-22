@@ -593,6 +593,42 @@ PlotRateUncertainty <- function(fitted.model, tree, good_adaptive_samples, oldes
     }
 }
 
+ComputeRatesPDR <- function(fitted.model, params=NULL) {
+    ages <- fitted.model$results$age_grid_param
+    if(is.null(params)) {
+        params <- fitted.model$results$fit_param$param_fitted
+    }
+    if(is.null(names(params))) {
+        names(params) <- names(fitted.model$results$fit_param$param_fitted)
+    }
+    pdr <- fitted.model$results$PDR_function(ages=ages, params=params)
+    return(data.frame(age=-ages, pdr=pdr))
+}
+
+PlotRateUncertaintyPDR <- function(fitted.model, tree, good_adaptive_samples, oldest_age=NULL, ...) {
+    pdr <- data.frame(matrix(NA, nrow=length(fitted.model$results$age_grid_param), ncol=nrow(good_adaptive_samples)))
+    ages <- (-1)*fitted.model$results$age_grid_param
+	rate_rows <- c(1:nrow(good_adaptive_samples))
+	
+	if(!is.null(oldest_age)) {
+		oldest_age <- -1*abs(oldest_age)	
+		rate_rows <- c(1:(which(ages<oldest_age)[1]))
+	}
+
+    for (i in sequence(nrow(good_adaptive_samples))) {
+        rates_local <- ComputeRatesPDR(fitted.model, good_adaptive_samples[i,-1])
+        pdr[,i] <- rates_local$pdr
+    }
+    ylimits=range(pdr)
+    # ltt_data <- ape::ltt.plot.coords(tree)
+    # ltt_data$logN <- log(ltt_data$N)
+    plot(x=ages[rate_rows], y=pdr[rate_rows,1], type="n", bty="n", ylim=ylimits, ylab="Pulled Diversification Rate", xlab="Time", ...)
+    polygon(x=c(ages, rev(ages)), y=c(apply(pdr,1,min), rev(apply(pdr,1,max))), col="gray", border=NA)
+    lines(ages[rate_rows], pdr[rate_rows,1], col="black", lwd=2)
+    axis(side=3, at=c(0, fitted.model$splits$time, min(ages)), labels=c(ape::Ntip(tree), fitted.model$splits$ntax.after, 2))
+    mtext("Number of taxa", side=3, line=3, cex=0.6)
+}
+
 PlotAllUncertainty <- function(x, tree, adaptive_list, file="uncertainty.pdf", desired_delta=2) {
     pdf(file=file, width=20, height=5)
     for(i in seq_along(adaptive_list)) {
