@@ -6,7 +6,8 @@ tree <- ape::read.tree("data/tree_Extended_Data_Fig_6.tre")
 #best <- SplitAndLikelihood(tree, nregimes=12, interpolation_method="linear", type="time", Ntrials=1, ncores=1, seed_to_use=42)
 #save(best, tree, file="best.rda")
 #load("best.rda")
-tree <- rcoal(500)
+#tree <- rcoal(500)
+tree  <- geiger::drop.extinct(geiger::sim.bdtree(stop="taxa", n=100, seed=42, extinct=FALSE))
 best <- SplitAndLikelihoodPDRdiscreteshift(tree=tree,nregimes=10, seed_to_use=42, ncores=2)
 best_neglnL <- likelihood_pdr_discreteshift_for_mcmc(best$results$fit_param$param_fitted, best, tree=tree, return_neg=TRUE, params_are_log_transformed=FALSE)
 # tree <- rcoal(500)
@@ -81,7 +82,10 @@ names(params) <- names(best$results$fit_param$param_fitted)
 
 #param_numbers <- as.numeric(gsub("pdr", "", gsub("mu", "", names(params))))
 #sd_vector <- 0.02*params*sqrt(1+param_numbers)
-results <- dent_walk(par=params, fn=likelihood_pdr_discreteshift_for_mcmc, best_neglnL=best_neglnL, nsteps=100, tree=tree, fitted.model=best, return_neg=TRUE, print_freq=5, debug=TRUE, delta=2, params_are_log_transformed=FALSE, sd_vector=sd_vector, restart_after=15)
+sd_vector <- 0.02*abs(params)
+
+likelihood_pdr_discreteshift_for_mcmc(dentist:::dent_pr, best, tree=tree, return_neg=TRUE, params_are_log_transformed=FALSE)
+results <- dent_walk(par=params, fn=likelihood_pdr_discreteshift_for_mcmc, best_neglnL=best_neglnL, nsteps=100, tree=tree, fitted.model=best, return_neg=TRUE, print_freq=5, debug=TRUE, delta=2, params_are_log_transformed=FALSE, sd_vector=sd_vector, lower_bound=c(rep(-100, length(params)-1), 0), upper_bound=c(rep(100,length(params)-1), 100))
 
 # all_results <- list()
 # for (i in sequence(1000)) {

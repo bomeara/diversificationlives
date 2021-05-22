@@ -298,8 +298,8 @@ param_pdr_discreteshift <- function(desired_interval = 0.1, tree, condition="cro
         fit_param <- castor::fit_hbd_pdr_parametric(	tree,
                                                param_values  = param_values,
                        						   param_guess   = param_guess,
-                           					   param_min     = c(rep(-10,length(pdr_params)),0),
-                           					   param_max     = c(rep(10,length(pdr_params)),1),
+                           					   param_min     = c(rep(-100,length(pdr_params)),0),
+                           					   param_max     = c(rep(100,length(pdr_params)),1),
                            					   param_scale   = 1, # all params are in the order of 1
                                                PDR = PDR_function, 
                                                rholambda0 = rholambda0_function,
