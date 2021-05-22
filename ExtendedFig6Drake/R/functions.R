@@ -481,11 +481,17 @@ PlotRates <- function(fitted.model, tree,...) {
     axis(side=4, at=seq(from=0, to=ape::Ntip(tree), length.out=5), labels=signif(seq(from=min(0, min(c(rates$lambda, rates$mu))), to=max(c(rates$lambda, rates$mu)), length.out=5),2))
 }
 
-PlotRateUncertainty <- function(fitted.model, tree, good_adaptive_samples, ...) {
+PlotRateUncertainty <- function(fitted.model, tree, good_adaptive_samples, oldest_age=NULL, ...) {
     lambda <- data.frame(matrix(NA, nrow=length(fitted.model$results$age_grid_param), ncol=nrow(good_adaptive_samples)))
     mu <- lambda
     netdiv <- lambda
     ages <- (-1)*fitted.model$results$age_grid_param
+	rate_rows <- c(1:nrow(good_adaptive_samples))
+	
+	if(!is.null(oldest_age)) {
+		oldest_age <- -1*abs(oldest_age)	
+		rate_rows <- c(1:(which(ages<oldest_age)[1]))
+	}
 
     for (i in sequence(nrow(good_adaptive_samples))) {
         rates_local <- ComputeRates(fitted.model, good_adaptive_samples[i,-1])
@@ -496,7 +502,7 @@ PlotRateUncertainty <- function(fitted.model, tree, good_adaptive_samples, ...) 
     # ltt_data <- ape::ltt.plot.coords(tree)
     # ltt_data$logN <- log(ltt_data$N)
     par(mfcol=c(1,3))
-    ylimits <- range(c(min(max(mu), max(lambda)), max(min(mu), min(lambda))))
+    ylimits <- range(c(min(max(mu[rate_rows,]), max(lambda[rate_rows,])), max(min(mu[rate_rows,]), min(lambda[rate_rows,]))))
     for (i in sequence(3)) {
         rates <- lambda
         title <- "Speciation rate"
@@ -507,14 +513,14 @@ PlotRateUncertainty <- function(fitted.model, tree, good_adaptive_samples, ...) 
         if(i==3) {
             rates <- netdiv
             title <- "Net diversification rate"
-            ylimits <- range(c(min(max(netdiv)), max(min(netdiv))))
+            ylimits <- range(c(min(max(netdiv[rate_rows,])), max(min(netdiv[rate_rows,]))))
         }
-        plot(x=ages, y=rates[,1], type="n", bty="n", ylim=ylimits, ylab=title, xlab="Time")
+        plot(x=ages[rate_rows], y=rates[rate_rows,1], type="n", bty="n", ylim=ylimits, ylab=title, xlab="Time", ...)
         polygon(x=c(ages, rev(ages)), y=c(apply(rates,1,min), rev(apply(rates,1,max))), col="gray", border=NA)
         # for(j in sequence(ncol(rates))) {
         #     lines(ages, rates[,j], col=rgb(0,0,0,0.1))
         # }
-        lines(ages, rates[,1], col=c("blue", "red", "purple")[i], lwd=2)
+        lines(ages[rate_rows], rates[rate_rows,1], col=c("blue", "red", "purple")[i], lwd=2)
         axis(side=3, at=c(0, fitted.model$splits$time, min(ages)), labels=c(ape::Ntip(tree), fitted.model$splits$ntax.after, 2))
         mtext("Number of taxa", side=3, line=3, cex=0.6)
     }
@@ -761,6 +767,31 @@ likelihood_lambda_discreteshift_mu_discreteshift <- function(fitted.model, tree,
 
 
 likelihood_lambda_discreteshift_mu_discreteshift_for_mcmc <- function(par, fitted.model, tree, return_neg=FALSE, params_are_log_transformed=TRUE) {
+	if(params_are_log_transformed) {
+    	params <- exp(par)
+	} else {
+		params <- par	
+	}
+    names(params) <- names(fitted.model$results$fit_param$param_fitted)
+    #print(params)
+    mu_values <- fitted.model$results$mu_function(fitted.model$results$age_grid_param, params)
+
+    lambda_values <- fitted.model$results$lambda_function(fitted.model$results$age_grid_param, params)
+
+    loglikelihood_result <- castor::loglikelihood_hbd(
+        tree=tree,
+        age_grid = fitted.model$results$age_grid_param,
+        lambda=lambda_values,
+        mu=mu_values,
+        rho0=1,
+        splines_degree=1
+    )
+    #print(loglikelihood_result$loglikelihood)
+    return(ifelse(is.finite(loglikelihood_result$loglikelihood), ifelse(return_neg, -1, 1) * loglikelihood_result$loglikelihood, -Inf))
+}
+
+
+likelihood_pdf_discreteshift_rho_fixed_for_mcmc <- function(par, fitted.model, tree, return_neg=FALSE, params_are_log_transformed=TRUE) {
 	if(params_are_log_transformed) {
     	params <- exp(par)
 	} else {
