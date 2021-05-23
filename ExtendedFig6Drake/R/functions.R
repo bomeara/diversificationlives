@@ -619,7 +619,7 @@ PlotRateUncertaintyPDR <- function(fitted.model, tree, good_adaptive_samples, ol
         rates_local <- ComputeRatesPDR(fitted.model, good_adaptive_samples[i,-1])
         pdr[,i] <- rates_local$pdr
     }
-    ylimits=range(pdr)
+    ylimits=range(pdr[rate_rows,])
     # ltt_data <- ape::ltt.plot.coords(tree)
     # ltt_data$logN <- log(ltt_data$N)
     plot(x=ages[rate_rows], y=pdr[rate_rows,1], type="n", bty="n", ylim=ylimits, ylab="Pulled Diversification Rate", xlab="Time", ...)
