@@ -20,9 +20,11 @@ all_results <- list()
 for (i in sequence(1000)) {
 	param_numbers <- as.numeric(gsub("lambda", "", gsub("mu", "", names(params))))
 	sd_vector <- abs(runif(1, min=0.001, max=0.05)*params)
-	results <- dent_walk(par=params, fn=likelihood_pdr_discreteshift_for_mcmc, best_neglnL=best_neglnL, nsteps=runif(1, min=200, max=4000), tree=tree, fitted.model=best, return_neg=TRUE, print_freq=5, debug=TRUE, delta=2, params_are_log_transformed=FALSE, sd_vector=sd_vector, lower_bound=c(rep(-100, length(params)-1), 0), upper_bound=c(rep(100,length(params)-1), 100))
+	results <- dent_walk(par=params, fn=likelihood_pdr_discreteshift_for_mcmc, best_neglnL=best_neglnL, nsteps=runif(1, min=200, max=10000), tree=tree, fitted.model=best, return_neg=TRUE, print_freq=50, debug=TRUE, delta=2, params_are_log_transformed=FALSE, sd_vector=sd_vector, lower_bound=c(rep(-100, length(params)-1), 0), upper_bound=c(rep(100,length(params)-1), 100))
 	all_results[[i]] <- results
 	save(list=ls(), file="best_pdr_and_results.rda")
+	focal_results <- do.call("rbind", lapply(all_results, "[[", "results"))
+	good_adaptive_samples=focal_results[which(focal_results$neglnL<2+min(focal_results$neglnL)),]
 	pdf(file="~/Dropbox/pdr_dentist.pdf", width=7, height=7)
 	PlotRateUncertaintyPDR(fitted.model=best, tree=tree, good_adaptive_samples, oldest_age=-100)
 	dev.off()
