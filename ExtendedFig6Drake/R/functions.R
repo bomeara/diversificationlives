@@ -605,7 +605,7 @@ ComputeRatesPDR <- function(fitted.model, params=NULL) {
     return(data.frame(age=-ages, pdr=pdr))
 }
 
-PlotRateUncertaintyPDR <- function(fitted.model, tree, good_adaptive_samples, oldest_age=NULL, ...) {
+PlotRateUncertaintyPDR <- function(fitted.model, tree, good_adaptive_samples, oldest_age=NULL, line_col="black", uncertainty_col="gray", ...) {
     pdr <- data.frame(matrix(NA, nrow=length(fitted.model$results$age_grid_param), ncol=nrow(good_adaptive_samples)))
     ages <- (-1)*fitted.model$results$age_grid_param
 	rate_rows <- c(1:nrow(good_adaptive_samples))
@@ -623,10 +623,115 @@ PlotRateUncertaintyPDR <- function(fitted.model, tree, good_adaptive_samples, ol
     # ltt_data <- ape::ltt.plot.coords(tree)
     # ltt_data$logN <- log(ltt_data$N)
     plot(x=ages[rate_rows], y=pdr[rate_rows,1], type="n", bty="n", ylim=ylimits, ylab="Pulled Diversification Rate", xlab="Time", ...)
-    polygon(x=c(ages, rev(ages)), y=c(apply(pdr,1,min), rev(apply(pdr,1,max))), col="gray", border=NA)
-    lines(ages[rate_rows], pdr[rate_rows,1], col="black", lwd=2)
+    polygon(x=c(ages, rev(ages)), y=c(apply(pdr,1,min), rev(apply(pdr,1,max))), col=uncertainty_col, border=NA)
+    lines(ages[rate_rows], pdr[rate_rows,1], col=line_col, lwd=2)
     axis(side=3, at=c(0, fitted.model$splits$time, min(ages)), labels=c(ape::Ntip(tree), fitted.model$splits$ntax.after, 2))
     mtext("Number of taxa", side=3, line=3, cex=0.6)
+}
+
+PlotRateUncertaintyPDR_TwoRuns <- function(fitted.model_A, fitted.model_B, tree, good_adaptive_samples_A, good_adaptive_samples_B, oldest_age=NULL, line_col_A="purple", line_col_B="orange", uncertainty_col_A=grDevices::adjustcolor( "purple", alpha.f = 0.3), uncertainty_col_B=grDevices::adjustcolor( "orange", alpha.f = 0.3), plotB=TRUE, ...) {
+    pdr_A <- data.frame(matrix(NA, nrow=length(fitted.model_A$results$age_grid_param), ncol=nrow(good_adaptive_samples_A)))
+	pdr_B <- data.frame(matrix(NA, nrow=length(fitted.model_B$results$age_grid_param), ncol=nrow(good_adaptive_samples_B)))
+
+    ages_A <- (-1)*fitted.model_A$results$age_grid_param
+	rate_rows_A <- c(1:nrow(good_adaptive_samples_A))
+    ages_B <- (-1)*fitted.model_B$results$age_grid_param
+	rate_rows_B <- c(1:nrow(good_adaptive_samples_B))	
+	if(!is.null(oldest_age)) {
+		oldest_age <- -1*abs(oldest_age)	
+		rate_rows_A <- c(1:(which(ages_A<oldest_age)[1]))
+		rate_rows_B <- c(1:(which(ages_B<oldest_age)[1]))
+
+	}
+
+    for (i in sequence(nrow(good_adaptive_samples_A))) {
+        rates_local <- ComputeRatesPDR(fitted.model_A, good_adaptive_samples_A[i,-1])
+        pdr_A[,i] <- rates_local$pdr
+		if(i %%100 == 0) {
+			print(paste0(round(100*i/nrow(good_adaptive_samples_A),2), "%"))	
+		}	
+    }
+	pdr_A_ranges <- data.frame(min=apply(pdr_A, 1, min), best=pdr_A[,1], max=apply(pdr_A, 1, max))
+	rm(pdr_A)
+	rm(good_adaptive_samples_A)
+ 
+     for (i in sequence(nrow(good_adaptive_samples_B))) {
+        rates_local <- ComputeRatesPDR(fitted.model_B, good_adaptive_samples_B[i,-1])
+        pdr_B[,i] <- rates_local$pdr
+		if(i %%100 == 0) {
+			print(paste0(round(100*i/nrow(good_adaptive_samples_B),2), "%"))	
+		}	
+    }  
+	pdr_B_ranges <- data.frame(min=apply(pdr_B, 1, min), best=pdr_B[,1], max=apply(pdr_B, 1, max))
+	rm(pdr_B)
+	rm(good_adaptive_samples_B)
+
+	
+	ylimits=range(c(pdr_A_ranges[rate_rows_A,], pdr_B_ranges[rate_rows_B,]))
+    # ltt_data <- ape::ltt.plot.coords(tree)
+    # ltt_data$logN <- log(ltt_data$N)
+    plot(x=ages_A[rate_rows_A], y=pdr_A_ranges$best[rate_rows_A], type="n", bty="n", ylim=ylimits, ylab="Pulled Diversification Rate", xlab="Time", ...)
+	if(sign(ylimits[1]) != sign(ylimits[2])) {
+		abline(h=0, col="gray")	
+	}
+    polygon(x=c(ages_A, rev(ages_A)), y=c(pdr_A_ranges$min, rev(pdr_A_ranges$max)), col=uncertainty_col_A, border=NA)
+    if(plotB) { polygon(x=c(ages_B, rev(ages_B)), y=c(pdr_B_ranges$min, rev(pdr_B_ranges$max)), col=uncertainty_col_B, border=NA) }
+
+    lines(ages_A[rate_rows_A], pdr_A_ranges$best[rate_rows_A], col=line_col_A, lwd=3)
+	 if(plotB) {lines(ages_B[rate_rows_B], pdr_B_ranges$best[rate_rows_B], col=line_col_B, lwd=3)}
+
+    axis(side=3, at=c(0, fitted.model_A$splits$time, min(ages_A)), labels=c(ape::Ntip(tree), fitted.model_A$splits$ntax.after, 2), col.ticks=line_col_A, col.axis=line_col_A)
+     if(plotB) { axis(side=3, at=c(0, fitted.model_B$splits$time, min(ages_B)), labels=c(ape::Ntip(tree), fitted.model_B$splits$ntax.after, 2), col.ticks=line_col_B, col.axis=line_col_B, padj=1) }
+
+    mtext("Number of taxa at points being optimized", side=3, line=3)
+}
+
+AnimateRateUncertaintyPDR <- function(fitted.model, tree, good_adaptive_samples, oldest_age=98.92190, nlines=10, ...) {
+	good_adaptive_samples_sampled <- good_adaptive_samples[c(1,sample(2:nrow(good_adaptive_samples), size=min(nlines,nrow(good_adaptive_samples)-1), replace=FALSE)),] #randomize order to better represent the uncertainty
+	for (param_index in seq(from=2, to=ncol(good_adaptive_samples), by=1)) {
+		good_adaptive_samples_sampled[nrow(good_adaptive_samples_sampled)+1,] <- good_adaptive_samples[which.max(good_adaptive_samples[,param_index]),]
+		good_adaptive_samples_sampled[nrow(good_adaptive_samples_sampled)+1,] <- good_adaptive_samples[which.min(good_adaptive_samples[,param_index]),]
+	}
+	good_adaptive_samples_sampled <- good_adaptive_samples_sampled[c(1,sample(2:nrow(good_adaptive_samples_sampled), size=nrow(good_adaptive_samples_sampled), replace=FALSE)),] # one more shuffle
+    pdr <- data.frame(matrix(NA, nrow=length(fitted.model$results$age_grid_param), ncol=nrow(good_adaptive_samples_sampled)))
+	neglnL <- good_adaptive_samples_sampled$neglnL
+	delta_neglnL <- neglnL-min(neglnL)
+    ages <- (-1)*fitted.model$results$age_grid_param
+	rate_rows <- c(1:nrow(good_adaptive_samples_sampled))
+	
+	if(!is.null(oldest_age)) {
+		oldest_age <- -1*abs(oldest_age)	
+		rate_rows <- c(1:(which(ages<oldest_age)[1]))
+	}
+
+    for (i in sequence(nrow(good_adaptive_samples_sampled))) {
+        rates_local <- ComputeRatesPDR(fitted.model, good_adaptive_samples_sampled[i,-1])
+        pdr[,i] <- rates_local$pdr
+    }
+	ages <- ages[rate_rows]
+	pdr <- pdr[rate_rows,]
+    ylimits=range(pdr[rate_rows,])
+	data_for_plot <- as.data.frame(matrix(ncol=4, nrow=prod(dim(pdr))))
+	colnames(data_for_plot) <- c("index", "age", "neglnL", "pdr")
+	current_row <- 1
+	for (i in sequence(ncol(pdr))) {
+		last_row <- current_row + length(ages) - 1
+		data_for_plot$index[current_row:last_row] <- i
+		data_for_plot$age[current_row:last_row] <- ages
+		data_for_plot$delta_neglnL[current_row:last_row] <- delta_neglnL[i]
+		data_for_plot$pdr[current_row:last_row] <- pdr[,i]
+		current_row <- last_row + 1
+		print(100*round(i/ncol(pdr),5))
+	}
+
+	g <- ggplot(data_for_plot, aes(x=age, y=pdr, colour=delta_neglnL)) + geom_line() + scale_fill_viridis_d() + transition_states(index, transition_length=2, state_length=1) + enter_fade() + exit_shrink() + ease_aes('sine-in-out') + shadow_mark(alpha=0.5)
+	anim_save("~/Dropbox/pdr_confidence.gif", g) 
+	
+    # plot(x=ages[rate_rows], y=pdr[rate_rows,1], type="n", bty="n", ylim=ylimits, ylab="Pulled Diversification Rate", xlab="Time", ...)
+    # polygon(x=c(ages, rev(ages)), y=c(apply(pdr,1,min), rev(apply(pdr,1,max))), col="gray", border=NA)
+    # lines(ages[rate_rows], pdr[rate_rows,1], col="black", lwd=2)
+    # axis(side=3, at=c(0, fitted.model$splits$time, min(ages)), labels=c(ape::Ntip(tree), fitted.model$splits$ntax.after, 2))
+    # mtext("Number of taxa", side=3, line=3, cex=0.6)
 }
 
 PlotAllUncertainty <- function(x, tree, adaptive_list, file="uncertainty.pdf", desired_delta=2) {

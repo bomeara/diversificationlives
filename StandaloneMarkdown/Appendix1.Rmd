@@ -186,12 +186,15 @@ An open question in Louca and Pennell (2020) is the status of SSE models, such a
 ```{r misseprep}
 library(hisse)
 library(ape)
+library(TreePar)
 phy1 <- ape::compute.brlen(ape::stree(4, type="balanced"))
 phy2 <- ape::compute.brlen(ape::stree(4, type="left"))
 phy1$edge.length[1:3] <- c(1,2,2)/3
 
 power = 5
-backbone <- ape::compute.brlen(ape::stree(2^power, type="balanced"))
+#backbone <- ape::compute.brlen(ape::stree(2^power, type="balanced"))
+backbone <- ape::compute.brlen(ape::stree(2^power, type="balanced"), method=3)
+
 bb1 <- backbone
 bb2 <- backbone
 phy1$tip.label <- paste0("p", phy1$tip.label)
@@ -225,46 +228,50 @@ ltt.lines(bb2, lwd=4, lty="dotted")
 We can fit a few models to these trees
 
 ```{r fitbd, eval=TRUE}
-bd.results <- data.frame(model=c("Yule", "BD", "Exponential", "MiSSE 1", "MiSSE 2"), balanced=NA, pectinate=NA)
+bd.results <- data.frame(model=c("Yule", "BD", "MiSSE 1", "MiSSE 2"), balanced=NA, pectinate=NA)
+bb1_yule <- ape::yule(bb1)
+bb2_yule <- ape::yule(bb2)
 
-bd.results[1,"balanced"] <- -ape::yule(bb1)$loglik
-bd.results[1,"pectinate"] <- -ape::yule(bb2)$loglik
+bd.results[1,"balanced"] <- TreePar::LikConstant(bb1_yule$lambda, 0, 1, TreeSim::getx(bb1))
+bd.results[1,"pectinate"] <- TreePar::LikConstant(bb2_yule$lambda, 0, 1, TreeSim::getx(bb2))
 
-bd.results[2, "balanced"] <- 0.5*ape::birthdeath(bb1)$dev
-bd.results[2, "pectinate"] <- 0.5*ape::birthdeath(bb2)$dev
-
-
-
-
-# From castor documentation
-PDR_function = function(ages,params){
-	return(params['A']*exp(-params['B']*ages));
-}
-rholambda0_function = function(params){
-	return(params['rholambda0'])
-}
-
-age_grid = seq(from=0, to=max(branching.times(bb1)), length.out=100)
+bb1_bd <- phytools::bd(ape::birthdeath(bb1))
+bb2_bd <- phytools::bd(ape::birthdeath(bb2))
+bd.results[2, "balanced"] <- TreePar::LikConstant(bb1_bd["b"], bb1_bd["d"], 1, TreeSim::getx(bb1))
+bd.results[2, "pectinate"] <- TreePar::LikConstant(bb2_bd["b"], bb2_bd["d"], 1, TreeSim::getx(bb2))
 
 
-fit_castor <- function(tree) {
-    return(castor::fit_hbd_pdr_parametric( tree,
-                    param_values  = c(A=NA, B=NA, rholambda0=NA),
-                      param_guess   = c(1,0,1),
-                      param_min     = c(-10,-10,0),
-                      param_max     = c(10,10,10),
-                      param_scale   = 1, # all params are in the order of 1
-                      PDR           = PDR_function,
-                      rholambda0    = rholambda0_function,
-                      age_grid      = age_grid,
-                      Ntrials       = 10,    # perform 10 fitting trials
-                      Nthreads      = 2,     # use 2 CPUs
-                      max_model_runtime = 1, # limit model evaluation to 1 second
-                      fit_control       = list(rel.tol=1e-6)))
-  }
-
-bd.results[3, "balanced"] <- fit_castor(bb1)$loglikelihood
-bd.results[3, "pectinate"] <- fit_castor(bb2)$loglikelihood
+# 
+# 
+# # From castor documentation
+# PDR_function = function(ages,params){
+# 	return(params['A']*exp(-params['B']*ages));
+# }
+# rholambda0_function = function(params){
+# 	return(params['rholambda0'])
+# }
+# 
+# age_grid = seq(from=0, to=max(branching.times(bb1)), length.out=100)
+# 
+# 
+# fit_castor <- function(tree) {
+#     return(castor::fit_hbd_pdr_parametric( tree,
+#                     param_values  = c(A=NA, B=NA, rholambda0=NA),
+#                       param_guess   = c(1,0,1),
+#                       param_min     = c(-10,-10,0),
+#                       param_max     = c(10,10,10),
+#                       param_scale   = 1, # all params are in the order of 1
+#                       PDR           = PDR_function,
+#                       rholambda0    = rholambda0_function,
+#                       age_grid      = age_grid,
+#                       Ntrials       = 10,    # perform 10 fitting trials
+#                       Nthreads      = 2,     # use 2 CPUs
+#                       max_model_runtime = 1, # limit model evaluation to 1 second
+#                       fit_control       = list(rel.tol=1e-6)))
+#   }
+# 
+# bd.results[3, "balanced"] <- fit_castor(bb1)$loglikelihood
+# bd.results[3, "pectinate"] <- fit_castor(bb2)$loglikelihood
 
 
 bd.results[4, "balanced"] <- hisse::MiSSE(bb1, turnover=c(1), eps=c(1))$loglik

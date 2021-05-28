@@ -39,5 +39,5 @@ for (i in sequence(1000)) {
 # apply(good_adaptive_samples, 2, range)
 
 # PlotRates(fitted.model=best, tree=tree)
-# PlotRateUncertainty(fitted.model=best, tree=tree, good_adaptive_samples, oldest_age=-100)
+# PlotRateUncertaintyPDR(fitted.model=best, tree=tree, good_adaptive_samples, oldest_age=-100)
 
