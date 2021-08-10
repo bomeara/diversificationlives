@@ -127,6 +127,13 @@ angios_instant_rise_20$Angiosperms[which(angios_instant_rise_data_mid$Age<=20)] 
 
 angios_delayed_rise_max42 <- angios
 angios_delayed_rise_max42$Angiosperms[which(angios_delayed_rise_max42$Age>42)] <- 0
+
+angios_delayed_rise_max66 <- angios
+angios_delayed_rise_max66$Angiosperms[which(angios_delayed_rise_max66$Age>66)] <- 0
+
+angios_early_rise_max66 <- angios
+angios_early_rise_max66$Angiosperms[which(angios_early_rise_max66$Age>66)] <- 0.86
+
 #angios_delayed_rise_min42 <- angios
 #angios_delayed_rise_min42$Angiosperms[which(angios_delayed_rise_min42$Age<=42)] <- 0
 
@@ -138,14 +145,105 @@ angios_delayed_rise_max42$Angiosperms[which(angios_delayed_rise_max42$Age>42)] <
 # BcstDAngioVar_EXPO_angios_delayed_rise_50 <- fit_env(phy, env_data=angios_delayed_rise_50, tot_time=max(node.age(phy)$ages), f.lamb=f.constant, f.mu=f.exp, lamb_par=c(0.2161), mu_par= c(0.2023, 0.0772), f=0.9, dt=dt)
 # BcstDAngioVar_EXPO_angios_delayed_rise_10 <- fit_env(phy, env_data=angios_delayed_rise_10, tot_time=max(node.age(phy)$ages), f.lamb=f.constant, f.mu=f.exp, lamb_par=c(0.2161), mu_par= c(0.2023, 0.0772), f=0.9, dt=dt)
 # BcstDAngioVar_EXPO_angios_delayed_rise_1 <- fit_env(phy, env_data=angios_delayed_rise_1, tot_time=max(node.age(phy)$ages), f.lamb=f.constant, f.mu=f.exp, lamb_par=c(0.2161), mu_par= c(0.2023, 0.0772), f=0.9, dt=dt)
-BcstDAngioVar_EXPO_angios_delayed_rise_max42 <- fit_env(phy, env_data=angios_delayed_rise_max42, tot_time=max(node.age(phy)$ages), f.lamb=f.constant, f.mu=f.exp, lamb_par=c(0.2161), mu_par= c(0.2023, 0.0772), f=0.9, dt=dt)
-#BcstDAngioVar_EXPO_angios_delayed_rise_min42 <- fit_env(phy, env_data=angios_delayed_rise_min42, tot_time=max(node.age(phy)$ages), f.lamb=f.constant, f.mu=f.exp, lamb_par=c(0.2161), mu_par= c(0.2023, 0.0772), f=0.9, dt=dt)
+BcstDAngioVar_LIN_angios_delayed_rise_max42 <- fit_env(phy, env_data=angios_delayed_rise_max42, tot_time=max(node.age(phy)$ages), f.lamb=f.constant, f.mu=f.linear, lamb_par=c(0.2161), mu_par= c(0.2023, 0.0772), f=0.9, dt=dt)
+BcstDAngioVar_LIN_angios_delayed_rise_max66 <- fit_env(phy, env_data=angios_delayed_rise_max66, tot_time=max(node.age(phy)$ages), f.lamb=f.constant, f.mu=f.linear, lamb_par=c(0.2161), mu_par= c(0.2023, 0.0772), f=0.9, dt=dt)
+BcstDAngioVar_LIN_angios_early_rise_max66 <- fit_env(phy, env_data=angios_early_rise_max66, tot_time=max(node.age(phy)$ages), f.lamb=f.constant, f.mu=f.linear, lamb_par=c(0.2161), mu_par= c(0.2023, 0.0772), f=0.9, dt=dt)
+
+threshold_models <- list()
+preK_angios <- seq(from=.0, to=1, by=0.1)
+for(preK_index in seq_along(preK_angios)){
+	angios_66_slice <- angios
+	angios_66_slice$Angiosperms[which(angios_66_slice$Age>66)] <- preK_angios[preK_index]
+	threshold_models[[preK_index]] <- fit_env(phy, env_data=angios_66_slice, tot_time=max(node.age(phy)$ages), f.lamb=f.constant, f.mu=f.linear, lamb_par=c(0.2161), mu_par= c(0.2023, 0.0772), f=0.9, dt=dt)
+	print(c(preK_angios[preK_index], threshold_models[[preK_index]]$aicc))
+}
+
+
+
+mu_par <- c(0.1, 0.01)
+f.mu <- function(t){lamb_par[1] * exp(lamb_par[2] * t)}
+f.lamb <- function(t){BcstDAngioVar_LIN$lamb_par[1]}
+
+f.mu<- function(t){BcstDAngioVar_LIN$mu_par[1] + exp(BcstDAngioVar_LIN$mu_par[2] * t)}
+f.lamb <- function(t){BcstDAngioVar_LIN$lamb_par[1]}
+
+fitted <- likelihood_bd(phy, tot_time=max(node.age(phy)$ages), f.lamb=f.lamb, f.mu=f.mu, f=0.9, cst.lamb=TRUE, cst.mu=FALSE, expo.lamb=FALSE, expo.mu=FALSE, dt=dt)
+
+source('fns.R')
+#BcstDAngioVar_LIN2 <- fit_env2(phy, env_data=angios, tot_time=max(node.age(phy)$ages), f.lamb=f.constant, f.mu=f.linear, lamb_par=BcstDAngioVar_LIN$lamb_par, mu_par= BcstDAngioVar_LIN$mu_par, f=0.9, dt=dt)
+current_aicc <- 0
+while(abs(current_aicc-BcstDAngioVar_LIN2$aicc)>0.5) {
+	angios_wiggle <- angios
+	#angios_wiggle$Angiosperms <- abs(angios_wiggle$Angiosperms+runif(nrow(angios_wiggle), min=-0.2, max=0.2))
+	random_vals <- c(0.86, runif(runif(1, 2, 15), min=0, max=1))
+	angios_wiggle$Angiosperms <- spline(x=c(0, sort(sample(angios$Age[2:(nrow(angios)-1)], size=length(random_vals)-2, replace=FALSE)), max(angios$Age)), y=random_vals, xout=angios_wiggle$Age)$y
+	#angios_wiggle$Angiosperms <- runif(nrow(angios_wiggle), min=0, max=1)
+
+	BcstDAngioVar_LIN3 <- fit_env2(phy, env_data=angios_wiggle, tot_time=max(node.age(phy)$ages), f.lamb=f.constant, f.mu=f.linear, lamb_par=BcstDAngioVar_LIN$lamb_par, mu_par= BcstDAngioVar_LIN$mu_par, f=0.9, dt=dt)
+	print(BcstDAngioVar_LIN2)
+	print(BcstDAngioVar_LIN3)
+	current_aicc <- BcstDAngioVar_LIN3$aicc
+	plot(angios_wiggle$Age, angios_wiggle$Angiosperms, col="red", type="l", ylim=c(0, max(c(angios$Angiosperms, angios_wiggle$Angiosperms))), main=paste0("∆AICc = ", current_aicc-BcstDAngioVar_LIN2$aicc))
+	lines(angios$Age, angios$Angiosperms, col="blue")
+}
+
+phylo=phy
+cst.lamb = FALSE
+ cst.mu = FALSE
+ expo.lamb = FALSE
+ expo.mu = FALSE
+  dt = 1e-3
+cond = "crown"
+
+    
+    nbtips <- Ntip(phylo)
+    log_indLikelihood <- c()
+    from_past <- cbind(phylo$edge, node.age(phylo)$ages)
+    ages <- rbind(from_past[, 2:3], c(nbtips + 1, 0))
+    ages <- ages[order(ages[, 1]), ]
+    age <- max(ages[, 2])
+    for (j in 1:(nbtips - 1)) {
+        node <- (nbtips + j)
+        edges <- phylo$edge[phylo$edge[, 1] == node, ]
+        tj <- age - ages[edges[1, 1], 2]
+        Psi_timevar_errap_tj <- RPANDA:::.Psi(0, tj, f.lamb, f.mu, f,
+            cst.lamb = cst.lamb, cst.mu = cst.mu, expo.lamb = expo.lamb,
+            expo.mu = expo.mu, dt = dt)
+			print(c(tj, Psi_timevar_errap_tj))
+        log_lik_tj <- log(f.lamb(tj)) + log(Psi_timevar_errap_tj)
+        log_indLikelihood <- c(log_indLikelihood, log_lik_tj)
+    }
+    log_indLikelihood <- c(log_indLikelihood, log(RPANDA:::.Psi(0, tot_time,
+        f.lamb, f.mu, f, cst.lamb = cst.lamb, cst.mu = cst.mu,
+        expo.lamb = expo.lamb, expo.mu = expo.mu, dt = dt)))
+    log_data_lik <- sum(log_indLikelihood) + nbtips * log(f)
+    if (cond == FALSE) {
+        log_final_lik <- log_data_lik
+    }
+    else if (cond == "stem") {
+        Phi <- RPANDA:::.Phi(tot_time, f.lamb, f.mu, f, cst.lamb = cst.lamb,
+            cst.mu = cst.mu, expo.lamb = expo.lamb, expo.mu = expo.mu,
+            dt = dt)
+        log_final_lik <- log_data_lik - log(1 - Phi)
+    }
+    else if (cond == "crown") {
+        Phi <- RPANDA:::.Phi(tot_time, f.lamb, f.mu, f, cst.lamb = cst.lamb,
+            cst.mu = cst.mu, expo.lamb = expo.lamb, expo.mu = expo.mu,
+            dt = dt)
+        log_final_lik <- log_data_lik - log(f.lamb(tot_time)) -
+            2 * log(1 - Phi)
+    }
+
+
 
 #BcstDAngioVar_EXPO_angios_instant_rise_data_mid <- fit_env(phy, env_data=angios_instant_rise_data_mid, tot_time=max(node.age(phy)$ages), f.lamb=f.constant, f.mu=f.exp, lamb_par=c(0.2161), mu_par= c(0.2023, 0.0772), f=0.9, dt=dt)
-BcstDAngioVar_EXPO_angios_instant_rise_20 <- fit_env(phy, env_data=angios_instant_rise_20, tot_time=max(node.age(phy)$ages), f.lamb=f.constant, f.mu=f.exp, lamb_par=c(0.2161), mu_par= c(0.2023, 0.0772), f=0.9, dt=dt)
+BcstDAngioVar_LIN_angios_instant_rise_20 <- fit_env(phy, env_data=angios_instant_rise_20, tot_time=max(node.age(phy)$ages), f.lamb=f.constant, f.mu=f.linear, lamb_par=c(0.2161), mu_par= c(0.2023, 0.0772), f=0.9, dt=dt)
 
 
-angios_models <- list(BcstDAngioVar_EXPO_angios_true=BcstDAngioVar_EXPO, BcstDAngioVar_EXPO_angios_delayed_rise_max42=BcstDAngioVar_EXPO_angios_delayed_rise_max42, BcstDAngioVar_EXPO_angios_instant_rise_20=BcstDAngioVar_EXPO_angios_instant_rise_20)
+angios_models <- list(BcstDAngioVar_LIN_angios_true=BcstDAngioVar_LIN, BcstDAngioVar_LIN_angios_delayed_rise_max42=BcstDAngioVar_LIN_angios_delayed_rise_max42, 
+BcstDAngioVar_LIN_angios_delayed_rise_max66=BcstDAngioVar_LIN_angios_delayed_rise_max66,
+BcstDAngioVar_LIN_angios_early_rise_max66, BcstDAngioVar_LIN_angios_early_rise_max66
+BcstDAngioVar_LIN_angios_instant_rise_20=BcstDAngioVar_LIN_angios_instant_rise_20)
 
 print(unlist(lapply(angios_models, "[[", "aicc")) - min(unlist(lapply(angios_models, "[[", "aicc"))))
 print(lapply(angios_models, "[[", "lamb_par"))
@@ -153,7 +251,9 @@ print(lapply(angios_models, "[[", "mu_par"))
 print(lapply(angios_models, "[[", "LH"))
 
 
-all_models <- c(list(BcstDAngioVar_EXPO=BcstDAngioVar_EXPO, BcstDAngioVar_LIN=BcstDAngioVar_LIN, BAngioVarDcst_LIN=BAngioVarDcst_LIN, BAngioVarDcst_EXPO=BAngioVarDcst_EXPO, BcstDAngioVar_EXPO_angios_true=BcstDAngioVar_EXPO, BcstDAngioVar_EXPO_angios_delayed_rise_max42=BcstDAngioVar_EXPO_angios_delayed_rise_max42, BcstDAngioVar_EXPO_angios_instant_rise_20=BcstDAngioVar_EXPO_angios_instant_rise_20),TVSeries_models)
+all_models <- c(list(BcstDAngioVar_EXPO=BcstDAngioVar_EXPO, BcstDAngioVar_LIN=BcstDAngioVar_LIN, BAngioVarDcst_LIN=BAngioVarDcst_LIN, BAngioVarDcst_EXPO=BAngioVarDcst_EXPO, BcstDAngioVar_EXPO_angios_true=BcstDAngioVar_EXPO, BcstDAngioVar_LIN_angios_delayed_rise_max42=BcstDAngioVar_LIN_angios_delayed_rise_max42, 
+BcstDAngioVar_LIN_angios_delayed_rise_max66=BcstDAngioVar_LIN_angios_delayed_rise_max66,
+BcstDAngioVar_LIN_angios_instant_rise_20=BcstDAngioVar_LIN_angios_instant_rise_20, BcstDAngioVar_LIN_angios_early_rise_max66=BcstDAngioVar_LIN_angios_early_rise_max66),TVSeries_models)
 
 deltaAICc <- unlist(lapply(all_models, "[[", "aicc")) - min(unlist(lapply(all_models, "[[", "aicc")))
 print(deltaAICc)
@@ -161,7 +261,7 @@ print(lapply(all_models, "[[", "lamb_par"))
 print(lapply(all_models, "[[", "mu_par"))
 print(lapply(all_models, "[[", "LH"))
 
-all_models_df <- data.frame(name=names(deltaAICc), deltaAICc=unname(unlist(deltaAICc)), likelihood=unname(unlist(lapply(all_models, "[[", "LH"))))
+all_models_df <- data.frame(name=names(deltaAICc), deltaAICc=unname(unlist(deltaAICc)), likelihood=unname(unlist(lapply(all_models, "[[", "LH"))), aicc=unname(unlist(lapply(all_models, "[[", "aicc"))))
 lambda_par_df <- t(plyr::rbind.fill(as.data.frame(lapply(all_models, "[[", "lamb_par"))))
 mu_par_df <- t(plyr::rbind.fill(as.data.frame(lapply(all_models, "[[", "mu_par"))))
 all_models_df$lambda_1 <- NA
