@@ -219,14 +219,12 @@ cond = "crown"
     log_data_lik <- sum(log_indLikelihood) + nbtips * log(f)
     if (cond == FALSE) {
         log_final_lik <- log_data_lik
-    }
-    else if (cond == "stem") {
+    } else if (cond == "stem") {
         Phi <- RPANDA:::.Phi(tot_time, f.lamb, f.mu, f, cst.lamb = cst.lamb,
             cst.mu = cst.mu, expo.lamb = expo.lamb, expo.mu = expo.mu,
             dt = dt)
         log_final_lik <- log_data_lik - log(1 - Phi)
-    }
-    else if (cond == "crown") {
+    } else if (cond == "crown") {
         Phi <- RPANDA:::.Phi(tot_time, f.lamb, f.mu, f, cst.lamb = cst.lamb,
             cst.mu = cst.mu, expo.lamb = expo.lamb, expo.mu = expo.mu,
             dt = dt)
@@ -242,7 +240,7 @@ BcstDAngioVar_LIN_angios_instant_rise_20 <- fit_env(phy, env_data=angios_instant
 
 angios_models <- list(BcstDAngioVar_LIN_angios_true=BcstDAngioVar_LIN, BcstDAngioVar_LIN_angios_delayed_rise_max42=BcstDAngioVar_LIN_angios_delayed_rise_max42, 
 BcstDAngioVar_LIN_angios_delayed_rise_max66=BcstDAngioVar_LIN_angios_delayed_rise_max66,
-BcstDAngioVar_LIN_angios_early_rise_max66, BcstDAngioVar_LIN_angios_early_rise_max66
+BcstDAngioVar_LIN_angios_early_rise_max66=BcstDAngioVar_LIN_angios_early_rise_max66,
 BcstDAngioVar_LIN_angios_instant_rise_20=BcstDAngioVar_LIN_angios_instant_rise_20)
 
 print(unlist(lapply(angios_models, "[[", "aicc")) - min(unlist(lapply(angios_models, "[[", "aicc"))))
