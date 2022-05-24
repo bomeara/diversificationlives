@@ -1,10 +1,8 @@
 # Doing https://books.ropensci.org/drake/hpc.html#advanced-options to allow parallel within
 
 
-future::plan(future::multiprocess)
+#future::plan(future::multiprocess)
 
-setwd("/share/diversificationlives/PlantDrake")
-file.remove(".RData")
 try(drake::drake_cache("/home/bomeara/Documents/localcache")$unlock())
 
 
@@ -20,7 +18,8 @@ source("R/plan.R")      # creates the drake plan
 
 
 
-make(plan, parallelism = "future", jobs = parallel::detectCores(), cache=drake::new_cache("~/Documents/localcache"), keep_going=TRUE) # cache so that they don't all try writing to same cache
-
+#make(plan, cache=drake::new_cache("~/Documents/localcache")) # cache so that they don't all try writing to same cache
+results = RunMany(nrep=100, ncore=parallel::detectCores())
+write(results, file=paste0(system("hostname", intern=TRUE), "_final_results.rda"))
 
 # ansible linux -a 'nohup Rscript /share/diversificationlives/PlantDrake/make.R &'
