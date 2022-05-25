@@ -1,5 +1,5 @@
-source("R/packages.R")  # loads packages
-source("R/functions.R")
+source("packages.R")  # loads packages
+source("functions.R")
 
 
 
